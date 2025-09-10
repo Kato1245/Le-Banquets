@@ -1,13 +1,24 @@
-// LoginForm.jsx
 import { useForm } from "react-hook-form"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
+import { useAuth } from "../../context/AuthContext" // Ruta corregida
 
 const LoginForm = () => {
     const { register, handleSubmit, formState: {errors}, reset } = useForm({mode: "onChange"})
+    const { login } = useAuth()
+    const navigate = useNavigate()
+    
     const onSubmit = (data) => {
         console.log(data)
+        // Simulamos un login exitoso
+        login({
+            id: 1,
+            username: data.email.split('@')[0],
+            email: data.email
+        })
         reset()
+        navigate('/')
     }
+    
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="mt-8 flex flex-col gap-6 max-w-md mx-auto p-8 bg-base-200 rounded-2xl shadow-lg">
             <h2 className="text-2xl font-bold text-center mb-4 text-primary">Bienvenido a Le Banquets</h2>

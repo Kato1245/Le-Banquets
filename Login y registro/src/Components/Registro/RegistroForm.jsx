@@ -1,16 +1,25 @@
-// RegistroForm.jsx
 import { useForm } from "react-hook-form"
 import { useRef } from "react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
+import { useAuth } from "../../context/AuthContext" // Ruta corregida
 
 const RegistroForm = () => {
     const { register, handleSubmit, formState: {errors}, reset, watch } = useForm({mode: "onChange"})
+    const { login } = useAuth()
+    const navigate = useNavigate()
     const password = useRef({})
     password.current = watch("password", "")
     
     const onSubmit = (data) => {
         console.log(data)
+        // Simulamos un registro exitoso
+        login({
+            id: Date.now(),
+            username: data.username,
+            email: data.email
+        })
         reset()
+        navigate('/')
     }
     
     return (
