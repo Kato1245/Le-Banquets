@@ -1,30 +1,43 @@
-import { useForm } from "react-hook-form"
-import { useRef } from "react"
-import { Link, useNavigate } from "react-router-dom"
-import { useAuth } from "../../context/AuthContext" // Ruta corregida
+// RegistroForm.jsx
+import { useForm } from "react-hook-form";
+import { useRef, useState } from "react";
+import { Link } from "react-router-dom";
+import ReCAPTCHA from "react-google-recaptcha";
 
 const RegistroForm = () => {
-    const { register, handleSubmit, formState: {errors}, reset, watch } = useForm({mode: "onChange"})
-    const { login } = useAuth()
-    const navigate = useNavigate()
-    const password = useRef({})
-    password.current = watch("password", "")
+    const { register, handleSubmit, formState: { errors }, reset, watch } = useForm({ mode: "onChange" });
+    const password = useRef({});
+    password.current = watch("password", "");
+
+    const [captchaValue, setCaptchaValue] = useState(null);
+    const [captchaError, setCaptchaError] = useState("");
+
+    const RECAPTCHA_SITE_KEY = "6LcLn78rAAAAAJvmvgAp8EuDFhKhVlNpnbWA3bHY";
     
     const onSubmit = (data) => {
-        console.log(data)
-        // Simulamos un registro exitoso
-        login({
-            id: Date.now(),
-            username: data.username,
-            email: data.email
-        })
-        reset()
-        navigate('/')
-    }
+        if (!captchaValue) {
+            setCaptchaError("Por favor, verifica que no eres un robot");
+            return;
+        }
+        
+        console.log({
+            ...data,
+            recaptchaToken: captchaValue
+        });
+        reset();
+        setCaptchaValue(null);
+        setCaptchaError("");
+    };
+    
+    const handleCaptchaChange = (value) => {
+        setCaptchaValue(value);
+        if (captchaError) {
+            setCaptchaError("");
+        }
+    };
     
     return (
-        <form onSubmit={handleSubmit(onSubmit)} 
-        className="mt-8 flex flex-col gap-6 max-w-md mx-auto p-8 bg-base-200 rounded-2xl shadow-lg">
+        <form onSubmit={handleSubmit(onSubmit)} className="mt-8 flex flex-col gap-6 max-w-md mx-auto p-8 bg-base-200 rounded-2xl shadow-lg">
             
             <div className="form-control">
                 <label className="label">
@@ -103,6 +116,16 @@ const RegistroForm = () => {
                 {errors.confirmPassword && <p className="text-error mt-2 text-sm">{errors.confirmPassword.message}</p>}
             </div>
             
+            <div className="form-control">
+                <div className="flex justify-center">
+                    <ReCAPTCHA
+                        sitekey={RECAPTCHA_SITE_KEY}
+                        onChange={handleCaptchaChange}
+                    />
+                </div>
+                {captchaError && <p className="text-error mt-2 text-sm text-center">{captchaError}</p>}
+            </div>
+            
             <div className="form-control mt-2">
                 <button className="btn bg-base-100 border-primary text-primary hover:bg-primary hover:text-base-100 hover:border-primary transition-all duration-300 text-lg font-normal normal-case" type="submit">Registrarse</button>
             </div>
@@ -111,6 +134,7 @@ const RegistroForm = () => {
                 <p className="text-sm">¿Ya tienes una cuenta? <Link to="/login" className="link link-hover text-primary font-semibold">Inicia sesión</Link></p>
             </div>
         </form>
-    )
-}
-export default RegistroForm
+    );
+};
+
+export default RegistroForm;
