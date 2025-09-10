@@ -1,6 +1,7 @@
-// Home.jsx - Versión corregida
+// Home.jsx - Versión mejorada con funcionalidades dinámicas
 import { Link } from "react-router-dom"
 import { useState } from "react"
+import { useAuth } from "../context/AuthContext"
 
 // Componente Carrusel (para sección separada)
 const CarruselBanquetes = () => {
@@ -122,6 +123,8 @@ const BusquedaFiltros = () => {
 
 // Componente Principal Home
 const Home = () => {
+    const { user } = useAuth();
+    
     return (
         <div className="min-h-screen bg-base-100">
             {/* Hero Section (original) */}
@@ -131,7 +134,11 @@ const Home = () => {
                     <div className="max-w-md">
                         <h1 className="mb-5 text-5xl font-bold">Le Banquets</h1>
                         <p className="mb-5">Organiza el evento de tus sueños con nuestro servicio de banquetes de clase mundial. Desde bodas hasta eventos corporativos, hacemos realidad tu visión.</p>
-                        <Link to="/registro" className="btn btn-primary">Comenzar ahora</Link>
+                        {user ? (
+                            <Link to="/eventos" className="btn btn-primary">Explorar Eventos</Link>
+                        ) : (
+                            <Link to="/registro" className="btn btn-primary">Comenzar ahora</Link>
+                        )}
                     </div>
                 </div>
             </section>
@@ -151,7 +158,7 @@ const Home = () => {
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-                    <div className="card bg-base-100 shadow-xl">
+                    <div className="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow duration-300">
                         <figure className="px-10 pt-10">
                             <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -165,7 +172,7 @@ const Home = () => {
                         </div>
                     </div>
                     
-                    <div className="card bg-base-100 shadow-xl">
+                    <div className="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow duration-300">
                         <figure className="px-10 pt-10">
                             <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -179,7 +186,7 @@ const Home = () => {
                         </div>
                     </div>
                     
-                    <div className="card bg-base-100 shadow-xl">
+                    <div className="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow duration-300">
                         <figure className="px-10 pt-10">
                             <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -215,7 +222,7 @@ const Home = () => {
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        <div className="card bg-base-100 shadow-lg">
+                        <div className="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow duration-300">
                             <div className="card-body">
                                 <div className="flex items-center mb-4">
                                     <div className="rating rating-sm">
@@ -239,7 +246,7 @@ const Home = () => {
                             </div>
                         </div>
                         
-                        <div className="card bg-base-100 shadow-lg">
+                        <div className="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow duration-300">
                             <div className="card-body">
                                 <div className="flex items-center mb-4">
                                     <div className="rating rating-sm">
@@ -263,7 +270,7 @@ const Home = () => {
                             </div>
                         </div>
                         
-                        <div className="card bg-base-100 shadow-lg">
+                        <div className="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow duration-300">
                             <div className="card-body">
                                 <div className="flex items-center mb-4">
                                     <div className="rating rating-sm">
@@ -296,8 +303,14 @@ const Home = () => {
                     <h2 className="text-3xl font-bold mb-6">¿Listo para planificar tu evento?</h2>
                     <p className="mb-8 text-lg">Regístrate hoy y comienza a crear el evento perfecto con nuestra ayuda experta.</p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                        <Link to="/registro" className="btn btn-secondary btn-lg">Crear cuenta</Link>
-                        <Link to="/login" className="btn btn-outline btn-lg btn-secondary">Iniciar sesión</Link>
+                        {user ? (
+                            <Link to="/mis-eventos" className="btn btn-secondary btn-lg">Mis Eventos</Link>
+                        ) : (
+                            <>
+                                <Link to="/registro" className="btn btn-secondary btn-lg">Crear cuenta</Link>
+                                <Link to="/login" className="btn btn-outline btn-lg btn-secondary">Iniciar sesión</Link>
+                            </>
+                        )}
                     </div>
                 </div>
             </section>
