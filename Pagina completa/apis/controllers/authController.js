@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 const User = require('../models/userModel');
 const jwt = require('jsonwebtoken');
 const { JWT_SECRET } = require('../middleware/auth');
+const db = require('../config/database');
 
 // Función para generar auth_id
 const generateAuthId = () => {
@@ -70,129 +71,181 @@ class AuthController {
     }
 
     static async login(req, res) {
+        try {
+            const { email, contrasena } = req.body;
+
+            console.log('Intento de login:', { email });
+
+            // Validar campos requeridos
+            if (!email || !contrasena) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Email y contraseña son requeridos'
+                });
+            }
+
+            let user = null;
+            let userType = null;
+            let table = null;
+
+            // Buscar primero en usuarios
+            user = await User.findByEmail(email, 'usuarios');
+            if (user) {
+                userType = 'usuario';
+                table = 'usuarios';
+            } else {
+                // Si no está en usuarios, buscar en propietarios
+                user = await User.findByEmail(email, 'propietarios');
+                if (user) {
+                    userType = 'propietario';
+                    table = 'propietarios';
+                }
+            }
+
+            // Si no se encuentra en ninguna tabla
+            if (!user) {
+                console.log('Usuario no encontrado:', email);
+                return res.status(401).json({
+                    success: false,
+                    message: 'Credenciales inválidas'
+                });
+            }
+
+            // Verificar si está activo
+            if (!user.esta_activo) {
+                return res.status(401).json({
+                    success: false,
+                    message: 'Cuenta desactivada. Contacte al administrador'
+                });
+            }
+
+            // Verificar contraseña
+            const isPasswordValid = await bcrypt.compare(contrasena, user.contrasena);
+            
+            if (!isPasswordValid) {
+                console.log('Contraseña incorrecta para:', email);
+                return res.status(401).json({
+                    success: false,
+                    message: 'Credenciales inválidas'
+                });
+            }
+
+            // Crear token JWT
+            const token = jwt.sign(
+                {
+                    userId: user.id,
+                    email: user.email,
+                    userType: userType
+                },
+                JWT_SECRET,
+                { expiresIn: '1h' }
+            );
+
+            // Eliminar contraseña de la respuesta
+            const userWithoutPassword = { ...user };
+            delete userWithoutPassword.contrasena;
+
+            console.log('Login exitoso para:', email, 'Tipo:', userType);
+
+            res.json({
+                success: true,
+                message: 'Login exitoso',
+                data: {
+                    user: userWithoutPassword,
+                    userType: userType,
+                    token: token,
+                    expiresIn: '24h'
+                }
+            });
+
+        } catch (error) {
+            console.error('Error en login:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Error interno del servidor'
+            });
+        }
+    }
+
+    static async getProfile(req, res) {
+        try {
+            // El usuario ya está autenticado por el middleware
+            const user = req.user;
+            const userType = req.userType;
+
+            // Eliminar contraseña de la respuesta
+            const userWithoutPassword = { ...user };
+            delete userWithoutPassword.contrasena;
+
+            res.json({
+                success: true,
+                message: 'Perfil obtenido exitosamente',
+                data: {
+                    user: userWithoutPassword,
+                    userType: userType
+                }
+            });
+
+        } catch (error) {
+            console.error('Error obteniendo perfil:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Error interno del servidor'
+            });
+        }
+    }
+
+static async updateProfile(req, res) {
     try {
-        const { email, contrasena } = req.body;
-
-        console.log('Intento de login:', { email });
-
-        // Validar campos requeridos
-        if (!email || !contrasena) {
+        const userId = req.user?.id;
+        if (!userId) {
             return res.status(400).json({
                 success: false,
-                message: 'Email y contraseña son requeridos'
+                message: "Usuario no encontrado en el token"
             });
         }
 
-        let user = null;
-        let userType = null;
-        let table = null;
+        // Mapeo frontend → backend
+        const { username, email, telefono } = req.body;
 
-        // Buscar primero en usuarios
-        user = await User.findByEmail(email, 'usuarios');
-        if (user) {
-            userType = 'usuario';
-            table = 'usuarios';
-        } else {
-            // Si no está en usuarios, buscar en propietarios
-            user = await User.findByEmail(email, 'propietarios');
-            if (user) {
-                userType = 'propietario';
-                table = 'propietarios';
-            }
-        }
+        // Crear objeto con los campos a actualizar
+        const fieldsToUpdate = {};
+        if (username !== undefined) fieldsToUpdate.nombre = username; // aquí mapeamos username → nombre
+        if (email !== undefined) fieldsToUpdate.email = email;
+        if (telefono !== undefined) fieldsToUpdate.telefono = telefono;
 
-        // Si no se encuentra en ninguna tabla
-        if (!user) {
-            console.log('Usuario no encontrado:', email);
-            return res.status(401).json({
+        if (Object.keys(fieldsToUpdate).length === 0) {
+            return res.status(400).json({
                 success: false,
-                message: 'Credenciales inválidas'
+                message: "No se recibieron campos para actualizar"
             });
         }
 
-        // Verificar si está activo
-        if (!user.esta_activo) {
-            return res.status(401).json({
+        const result = await User.updateById(userId, fieldsToUpdate, 'usuarios');
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({
                 success: false,
-                message: 'Cuenta desactivada. Contacte al administrador'
+                message: "Usuario no encontrado o datos iguales"
             });
         }
 
-        // Verificar contraseña
-        const isPasswordValid = await bcrypt.compare(contrasena, user.contrasena);
-        
-        if (!isPasswordValid) {
-            console.log('Contraseña incorrecta para:', email);
-            return res.status(401).json({
-                success: false,
-                message: 'Credenciales inválidas'
-            });
-        }
-
-        // Crear token JWT
-        const token = jwt.sign(
-            {
-                userId: user.id,
-                email: user.email,
-                userType: userType
-            },
-            JWT_SECRET,
-            { expiresIn: '1h' }
-        );
-
-        // Eliminar contraseña de la respuesta
-        const userWithoutPassword = { ...user };
-        delete userWithoutPassword.contrasena;
-
-        console.log('Login exitoso para:', email, 'Tipo:', userType);
+        const updatedUser = await User.findById(userId, 'usuarios');
+        if (updatedUser) delete updatedUser.contrasena;
 
         res.json({
             success: true,
-            message: 'Login exitoso',
-            data: {
-                user: userWithoutPassword,
-                userType: userType,
-                token: token,
-                expiresIn: '24h'
-            }
+            message: "Perfil actualizado correctamente",
+            data: updatedUser
         });
 
     } catch (error) {
-        console.error('Error en login:', error);
+        console.error("Error actualizando perfil:", error);
         res.status(500).json({
             success: false,
-            message: 'Error interno del servidor'
-        });
-    }
-}
-
-static async getProfile(req, res) {
-    try {
-        // El usuario ya está autenticado por el middleware
-        const user = req.user;
-        const userType = req.userType;
-
-        // Eliminar contraseña de la respuesta
-        const userWithoutPassword = { ...user };
-        delete userWithoutPassword.contrasena;
-
-        res.json({
-            success: true,
-            message: 'Perfil obtenido exitosamente',
-            data: {
-                user: userWithoutPassword,
-                userType: userType
-            }
-        });
-
-    } catch (error) {
-        console.error('Error obteniendo perfil:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error interno del servidor'
+            message: "Error interno del servidor"
         });
     }
 }
 }
-
 module.exports = AuthController;

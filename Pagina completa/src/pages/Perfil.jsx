@@ -13,12 +13,39 @@ const Perfil = () => {
     preferencias: []
   })
 
-  const handleSave = () => {
-    // Aquí iría la lógica para guardar los cambios
-    console.log("Datos guardados:", userData)
-    setIsEditing(false)
-    // Mostrar mensaje de éxito
+ const handleSave = async () => {
+  try {
+    const token = localStorage.getItem("token"); // tu JWT
+
+    const response = await fetch("http://localhost:3000/api/auth/profile", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        username: userData.username, // frontend manda username
+        email: userData.email,
+        telefono: userData.telefono
+      })
+    });
+
+    const data = await response.json();
+    console.log("Respuesta del backend:", data);
+
+    if (data.success) {
+      alert("Perfil actualizado correctamente");
+      setIsEditing(false);
+    } else {
+      alert("Error: " + data.message);
+    }
+
+  } catch (error) {
+    console.error("Error actualizando perfil:", error);
+    alert("Ocurrió un error al actualizar el perfil");
   }
+};
+
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
