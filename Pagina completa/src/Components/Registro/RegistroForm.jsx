@@ -1,4 +1,3 @@
-// RegistroForm.jsx
 import { useForm } from "react-hook-form";
 import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
@@ -11,22 +10,52 @@ const RegistroForm = () => {
 
     const [captchaValue, setCaptchaValue] = useState(null);
     const [captchaError, setCaptchaError] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [serverError, setServerError] = useState("");
 
     const RECAPTCHA_SITE_KEY = "6LcLn78rAAAAAJvmvgAp8EuDFhKhVlNpnbWA3bHY";
     
-    const onSubmit = (data) => {
+    const onSubmit = async (data) => {
         if (!captchaValue) {
             setCaptchaError("Por favor, verifica que no eres un robot");
             return;
         }
         
-        console.log({
-            ...data,
-            recaptchaToken: captchaValue
-        });
-        reset();
-        setCaptchaValue(null);
-        setCaptchaError("");
+        setIsSubmitting(true);
+        setServerError("");
+        
+        try {
+            // Preparar datos para enviar al backend
+            const userData = {
+                nombre: data.username,
+                email: data.email,
+                contrasena: data.password
+                // Los demás campos (documento, telefono, etc.) son opcionales
+            };
+
+            const response = await fetch('http://localhost:3000/api/auth/register/usuario', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(userData),
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                alert('Usuario registrado con éxito');
+                reset();
+                setCaptchaValue(null);
+            } else {
+                setServerError(result.message || 'Error en el registro');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            setServerError('Error de conexión con el servidor');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
     
     const handleCaptchaChange = (value) => {
@@ -38,6 +67,12 @@ const RegistroForm = () => {
     
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="mt-8 flex flex-col gap-6 max-w-md mx-auto p-8 bg-base-200 rounded-2xl shadow-lg">
+            
+            {serverError && (
+                <div className="alert alert-error">
+                    <span>{serverError}</span>
+                </div>
+            )}
             
             <div className="form-control">
                 <label className="label">
@@ -127,7 +162,13 @@ const RegistroForm = () => {
             </div>
             
             <div className="form-control mt-2">
-                <button className="btn bg-base-100 border-primary text-primary hover:bg-primary hover:text-base-100 hover:border-primary transition-all duration-300 text-lg font-normal normal-case" type="submit">Registrarse</button>
+                <button 
+                    className={`btn bg-base-100 border-primary text-primary hover:bg-primary hover:text-base-100 hover:border-primary transition-all duration-300 text-lg font-normal normal-case ${isSubmitting ? 'loading' : ''}`} 
+                    type="submit"
+                    disabled={isSubmitting}
+                >
+                    {isSubmitting ? 'Registrando...' : 'Registrarse'}
+                </button>
             </div>
             
             <div className="text-center mt-2">
