@@ -15,6 +15,17 @@ class AuthController {
             const userType = isPropietario ? 'propietario' : 'usuario';
             const { nombre, email, contrasena, documento, telefono, fecha_nacimiento, rut } = req.body;
 
+<<<<<<< progress-front
+            // Validar campos obligatorios
+            if (!nombre || !email || !contrasena) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Nombre, email y contraseña son obligatorios'
+                });
+            }
+
+=======
+>>>>>>> develop
             // Verificar si el usuario ya existe
             const table = userType === 'propietario' ? 'propietarios' : 'usuarios';
             const existingUser = await User.findByEmail(email, table);
@@ -48,6 +59,11 @@ class AuthController {
                 userData.rut = rut || null;
             }
 
+<<<<<<< progress-front
+            console.log('Intentando crear usuario:', { userData, table });
+
+=======
+>>>>>>> develop
             const result = await User.createUser(userData, table);
 
             res.status(201).json({
@@ -64,6 +80,15 @@ class AuthController {
             console.error('Error en registro:', error);
             res.status(500).json({
                 success: false,
+<<<<<<< progress-front
+                message: 'Error interno del servidor',
+                error: process.env.NODE_ENV === 'development' ? error.message : undefined
+            });
+        }
+    }
+
+    // ... (el resto del código se mantiene igual)
+=======
                 message: 'Error interno del servidor'
             });
         }
@@ -193,6 +218,7 @@ static async getProfile(req, res) {
         });
     }
 }
+>>>>>>> develop
 }
 
 module.exports = AuthController;
