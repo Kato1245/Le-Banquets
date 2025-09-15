@@ -16,29 +16,57 @@ const RegistroForm = () => {
 
     const RECAPTCHA_SITE_KEY = "6LcLn78rAAAAAJvmvgAp8EuDFhKhVlNpnbWA3bHY";
 
-    const onSubmit = (data) => {
-        if (!captchaValue) {
-            setCaptchaError("Por favor, verifica que no eres un robot");
-            return;
+    const onSubmit = async (data) => {
+    if (!captchaValue) {
+        setCaptchaError("Por favor, verifica que no eres un robot");
+        return;
+    }
+
+    try {
+        const response = await fetch('http://localhost:3000/api/auth/register/usuario', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                nombre: data.username,
+                email: data.email,
+                contrasena: data.password,
+                // Agrega otros campos si son requeridos
+                documento: "",
+                telefono: "", 
+                fecha_nacimiento: ""
+            }),
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            // Registro exitoso - ahora hacemos login automático
+            const loginResponse = await login(data.email, data.password);
+            
+            if (loginResponse.success) {
+                reset();
+                setCaptchaValue(null);
+                setCaptchaError("");
+                navigate('/');
+            } else {
+                // Solo registro exitoso, redirigir a login
+                reset();
+                setCaptchaValue(null);
+                setCaptchaError("");
+                navigate('/login');
+            }
+        } else {
+            // Mostrar error de registro
+            console.error('Error en registro:', result.message);
+            alert(result.message || 'Error en el registro');
         }
-
-        console.log({
-            ...data,
-            recaptchaToken: captchaValue
-        });
-
-        // Simulamos registro exitoso (como antes)
-        login({
-            id: Date.now(),
-            username: data.username,
-            email: data.email
-        });
-
-        reset();
-        setCaptchaValue(null);
-        setCaptchaError("");
-        navigate('/');
-    };
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error de conexión');
+    }
+};
 
     const handleCaptchaChange = (value) => {
         setCaptchaValue(value);
