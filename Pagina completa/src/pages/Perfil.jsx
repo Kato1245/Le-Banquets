@@ -150,28 +150,7 @@ const Perfil = () => {
                     )}
                   </div>
                 </div>
-                
-                {isEditing && (
-                  <div className="form-control mt-4">
-                    <label className="label">
-                      <span className="label-text">Preferencias de evento</span>
-                    </label>
-                    <div className="flex flex-wrap gap-2">
-                      {["Bodas", "Corporativos", "Fiestas", "Celebraciones"].map(pref => (
-                        <label key={pref} className="cursor-pointer label">
-                          <input
-                            type="checkbox"
-                            value={pref}
-                            checked={userData.preferencias.includes(pref)}
-                            onChange={handleChange}
-                            className="checkbox checkbox-primary checkbox-sm"
-                          />
-                          <span className="label-text ml-2">{pref}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                )}
+              
                 
                 <div className="card-actions justify-end mt-6">
                   {isEditing ? (
