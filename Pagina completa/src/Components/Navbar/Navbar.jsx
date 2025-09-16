@@ -16,7 +16,7 @@ const Navbar = () => {
       </div>
       
       {/* Elementos centrados */}
-      <div className="flex-none hidden md:flex justify-center flex-1">
+      <div className="flex-none hidden md:flex justify-center">
         <ul className="menu menu-horizontal px-1 gap-2">
           <li><Link to="/eventos" className="font-medium">Eventos</Link></li>
           <li><Link to="/salones" className="font-medium">Salones</Link></li>
