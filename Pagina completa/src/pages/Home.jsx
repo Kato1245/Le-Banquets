@@ -1,4 +1,4 @@
-// Home.jsx - Versión mejorada con funcionalidades dinámicas
+// Home.jsx - Versión mejorada sin barra de búsqueda
 import { Link } from "react-router-dom"
 import { useState } from "react"
 import { useAuth } from "../context/AuthContext"
@@ -67,60 +67,6 @@ const CarruselBanquetes = () => {
     );
 };
 
-// Componente Barra de Búsqueda y Filtros (mejorado)
-const BusquedaFiltros = () => {
-    const [searchTerm, setSearchTerm] = useState("");
-    const [selectedFilter, setSelectedFilter] = useState("todos");
-    
-    const filters = [
-        { id: "todos", label: "Todos" },
-        { id: "bodas", label: "Bodas" },
-        { id: "corporativos", label: "Corporativos" },
-        { id: "fiestas", label: "Fiestas" },
-        { id: "celebraciones", label: "Celebraciones" }
-    ];
-
-    const handleSearch = (e) => {
-        e.preventDefault();
-        console.log("Buscando:", searchTerm, "Filtro:", selectedFilter);
-    };
-
-    return (
-        <div className="bg-base-200 p-6 rounded-lg shadow-md">
-            <div className="flex flex-col md:flex-row items-center gap-4">
-                <div className="flex-grow w-full md:w-auto">
-                    <input
-                        type="text"
-                        placeholder="Buscar banquetes, salones, servicios..."
-                        className="input input-bordered w-full focus:input-primary"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                </div>
-                
-                <div className="flex flex-wrap gap-2 justify-center">
-                    {filters.map(filter => (
-                        <button
-                            key={filter.id}
-                            className={`btn btn-sm ${selectedFilter === filter.id ? 'btn-primary' : 'btn-ghost'}`}
-                            onClick={() => setSelectedFilter(filter.id)}
-                        >
-                            {filter.label}
-                        </button>
-                    ))}
-                </div>
-                
-                <button 
-                    className="btn btn-primary"
-                    onClick={handleSearch}
-                >
-                    Buscar
-                </button>
-            </div>
-        </div>
-    );
-};
-
 // Componente Principal Home
 const Home = () => {
     const { user } = useAuth();
@@ -143,13 +89,6 @@ const Home = () => {
                 </div>
             </section>
 
-            {/* Barra de búsqueda y filtros */}
-            <section className="py-12 px-4 md:px-8 bg-base-100">
-                <div className="max-w-6xl mx-auto">
-                    <BusquedaFiltros />
-                </div>
-            </section>
-
             {/* Features Section */}
             <section className="py-16 px-4 bg-base-100">
                 <div className="text-center mb-12">
@@ -169,6 +108,9 @@ const Home = () => {
                         <div className="card-body items-center text-center">
                             <h3 className="card-title">Catering Premium</h3>
                             <p>Menús personalizados creados por chefs expertos con ingredientes de la más alta calidad.</p>
+                            <div className="card-actions justify-end mt-4">
+                                <Link to="/catering" className="btn btn-primary btn-sm">Ver más</Link>
+                            </div>
                         </div>
                     </div>
                     
@@ -183,6 +125,9 @@ const Home = () => {
                         <div className="card-body items-center text-center">
                             <h3 className="card-title">Planificación de Eventos</h3>
                             <p>Coordinación completa de tu evento para que te concentres en disfrutar cada momento.</p>
+                            <div className="card-actions justify-end mt-4">
+                                <Link to="/eventos" className="btn btn-primary btn-sm">Ver más</Link>
+                            </div>
                         </div>
                     </div>
                     
@@ -197,6 +142,9 @@ const Home = () => {
                         <div className="card-body items-center text-center">
                             <h3 className="card-title">Locaciones Exclusivas</h3>
                             <p>Espacios elegantes y únicos que se adaptan a las necesidades específicas de tu evento.</p>
+                            <div className="card-actions justify-end mt-4">
+                                <Link to="/salones" className="btn btn-primary btn-sm">Ver más</Link>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -210,6 +158,9 @@ const Home = () => {
                         <p className="text-lg opacity-70 max-w-2xl mx-auto">Descubre los lugares exclusivos donde puedes realizar tus eventos</p>
                     </div>
                     <CarruselBanquetes />
+                    <div className="text-center mt-8">
+                        <Link to="/salones" className="btn btn-primary btn-lg">Ver todos los salones</Link>
+                    </div>
                 </div>
             </section>
 
