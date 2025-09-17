@@ -4,9 +4,23 @@ const jwt = require('jsonwebtoken');
 const { JWT_SECRET } = require('../middleware/auth');
 const db = require('../config/database');
 
+// Almacena intentos por IP (en memoria)
+const loginAttempts = new Map();
+const MAX_ATTEMPTS = 3;
+const LOCK_TIME = 5 * 60 * 1000; // 5 minutos en milisegundos
+
 // Función para generar auth_id
 const generateAuthId = () => {
     return 'auth_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+};
+
+// Función para obtener IP del cliente
+const getClientIP = (req) => {
+    return req.ip || 
+           req.connection.remoteAddress || 
+           req.socket.remoteAddress ||
+           (req.connection.socket ? req.connection.socket.remoteAddress : null) ||
+           'unknown-ip';
 };
 
 class AuthController {
@@ -73,8 +87,26 @@ class AuthController {
     static async login(req, res) {
         try {
             const { email, contrasena } = req.body;
+            const clientIP = getClientIP(req);
+            const attemptKey = `login_attempts_${clientIP}`;
 
-            console.log('Intento de login:', { email });
+            console.log('Intento de login desde IP:', clientIP, 'Email:', email);
+
+            // Verificar intentos previos
+            const currentAttempts = loginAttempts.get(attemptKey) || { count: 0, lockUntil: null };
+
+            // Si está bloqueado por IP
+            if (currentAttempts.lockUntil && Date.now() < currentAttempts.lockUntil) {
+                const remainingTime = Math.ceil((currentAttempts.lockUntil - Date.now()) / 1000 / 60);
+                console.log('IP bloqueada:', clientIP, 'Tiempo restante:', remainingTime, 'minutos');
+                
+                return res.status(429).json({
+                    success: false,
+                    message: `Demasiados intentos fallidos. Espere ${remainingTime} minutos antes de intentar nuevamente.`,
+                    locked: true,
+                    remainingTime: remainingTime
+                });
+            }
 
             // Validar campos requeridos
             if (!email || !contrasena) {
@@ -105,9 +137,26 @@ class AuthController {
             // Si no se encuentra en ninguna tabla
             if (!user) {
                 console.log('Usuario no encontrado:', email);
+                
+                // Incrementar intentos fallidos por IP
+                const newCount = currentAttempts.count + 1;
+                let lockUntil = null;
+                
+                if (newCount >= MAX_ATTEMPTS) {
+                    lockUntil = Date.now() + LOCK_TIME;
+                    console.log('IP bloqueada por máximo intentos:', clientIP);
+                }
+                
+                loginAttempts.set(attemptKey, { 
+                    count: newCount, 
+                    lockUntil: lockUntil 
+                });
+
                 return res.status(401).json({
                     success: false,
-                    message: 'Credenciales inválidas'
+                    message: 'Credenciales inválidas',
+                    attemptsLeft: MAX_ATTEMPTS - newCount,
+                    locked: newCount >= MAX_ATTEMPTS
                 });
             }
 
@@ -124,10 +173,33 @@ class AuthController {
             
             if (!isPasswordValid) {
                 console.log('Contraseña incorrecta para:', email);
+                
+                // Incrementar intentos fallidos por IP
+                const newCount = currentAttempts.count + 1;
+                let lockUntil = null;
+                
+                if (newCount >= MAX_ATTEMPTS) {
+                    lockUntil = Date.now() + LOCK_TIME;
+                    console.log('IP bloqueada por máximo intentos:', clientIP);
+                }
+                
+                loginAttempts.set(attemptKey, { 
+                    count: newCount, 
+                    lockUntil: lockUntil 
+                });
+
                 return res.status(401).json({
                     success: false,
-                    message: 'Credenciales inválidas'
+                    message: 'Credenciales inválidas',
+                    attemptsLeft: MAX_ATTEMPTS - newCount,
+                    locked: newCount >= MAX_ATTEMPTS
                 });
+            }
+
+            // Login exitoso - resetear intentos para esta IP
+            if (loginAttempts.has(attemptKey)) {
+                loginAttempts.delete(attemptKey);
+                console.log('Intentos reseteados para IP:', clientIP);
             }
 
             // Crear token JWT
@@ -138,14 +210,14 @@ class AuthController {
                     userType: userType
                 },
                 JWT_SECRET,
-                { expiresIn: '1h' }
+                { expiresIn: '24h' }
             );
 
             // Eliminar contraseña de la respuesta
             const userWithoutPassword = { ...user };
             delete userWithoutPassword.contrasena;
 
-            console.log('Login exitoso para:', email, 'Tipo:', userType);
+            console.log('Login exitoso para:', email, 'Tipo:', userType, 'Desde IP:', clientIP);
 
             res.json({
                 success: true,
@@ -195,57 +267,58 @@ class AuthController {
         }
     }
 
-static async updateProfile(req, res) {
-    try {
-        const userId = req.user?.id;
-        if (!userId) {
-            return res.status(400).json({
+    static async updateProfile(req, res) {
+        try {
+            const userId = req.user?.id;
+            if (!userId) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Usuario no encontrado en el token"
+                });
+            }
+
+            // Mapeo frontend → backend
+            const { username, email, telefono } = req.body;
+
+            // Crear objeto con los campos a actualizar
+            const fieldsToUpdate = {};
+            if (username !== undefined) fieldsToUpdate.nombre = username;
+            if (email !== undefined) fieldsToUpdate.email = email;
+            if (telefono !== undefined) fieldsToUpdate.telefono = telefono;
+
+            if (Object.keys(fieldsToUpdate).length === 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: "No se recibieron campos para actualizar"
+                });
+            }
+
+            const result = await User.updateById(userId, fieldsToUpdate, 'usuarios');
+
+            if (result.affectedRows === 0) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Usuario no encontrado o datos iguales"
+                });
+            }
+
+            const updatedUser = await User.findById(userId, 'usuarios');
+            if (updatedUser) delete updatedUser.contrasena;
+
+            res.json({
+                success: true,
+                message: "Perfil actualizado correctamente",
+                data: updatedUser
+            });
+
+        } catch (error) {
+            console.error("Error actualizando perfil:", error);
+            res.status(500).json({
                 success: false,
-                message: "Usuario no encontrado en el token"
+                message: "Error interno del servidor"
             });
         }
-
-        // Mapeo frontend → backend
-        const { username, email, telefono } = req.body;
-
-        // Crear objeto con los campos a actualizar
-        const fieldsToUpdate = {};
-        if (username !== undefined) fieldsToUpdate.nombre = username; // aquí mapeamos username → nombre
-        if (email !== undefined) fieldsToUpdate.email = email;
-        if (telefono !== undefined) fieldsToUpdate.telefono = telefono;
-
-        if (Object.keys(fieldsToUpdate).length === 0) {
-            return res.status(400).json({
-                success: false,
-                message: "No se recibieron campos para actualizar"
-            });
-        }
-
-        const result = await User.updateById(userId, fieldsToUpdate, 'usuarios');
-
-        if (result.affectedRows === 0) {
-            return res.status(404).json({
-                success: false,
-                message: "Usuario no encontrado o datos iguales"
-            });
-        }
-
-        const updatedUser = await User.findById(userId, 'usuarios');
-        if (updatedUser) delete updatedUser.contrasena;
-
-        res.json({
-            success: true,
-            message: "Perfil actualizado correctamente",
-            data: updatedUser
-        });
-
-    } catch (error) {
-        console.error("Error actualizando perfil:", error);
-        res.status(500).json({
-            success: false,
-            message: "Error interno del servidor"
-        });
     }
 }
-}
+
 module.exports = AuthController;
