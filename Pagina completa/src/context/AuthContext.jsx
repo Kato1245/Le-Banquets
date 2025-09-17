@@ -26,7 +26,6 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  // SOLO LOGIN - elimina o comenta la función register
   const login = async (email, password) => {
     try {
       const response = await fetch(`${API_URL}/login`, {
@@ -47,13 +46,26 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify({ ...user, userType }));
         
-        return { success: true };
+        return { 
+          success: true,
+          data: data.data 
+        };
       } else {
-        return { success: false, message: data.message };
+        // Devuelve todos los campos de error para manejar bloqueos e intentos
+        return { 
+          success: false, 
+          message: data.message,
+          attemptsLeft: data.attemptsLeft,
+          locked: data.locked,
+          remainingTime: data.remainingTime
+        };
       }
     } catch (error) {
       console.error('Login error:', error);
-      return { success: false, message: 'Error de conexión' };
+      return { 
+        success: false, 
+        message: 'Error de conexión con el servidor' 
+      };
     }
   };
 
@@ -64,7 +76,6 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('user');
   };
 
-  // VALUE SIN REGISTER - solo las funciones que necesitas
   const value = {
     user,
     token,
