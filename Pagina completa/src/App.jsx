@@ -1,15 +1,19 @@
-// App.jsx - Añadimos protección de rutas y mejoras de navegación
+// src/App.jsx
 import { Route, Routes, Navigate } from "react-router-dom";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Registro from "./pages/Registro";
+import RegistroPropietario from "./pages/RegistroPropietario";
 import Perfil from "./pages/Perfil";
 import Eventos from "./pages/Eventos";
 import Salones from "./pages/Salones";
 import Catering from "./pages/Catering";
 import MisEventos from "./pages/MisEventos";
 import Configuracion from "./pages/Configuracion";
-import Navbar from "./Components/Navbar/navbar";
+import Admin from "./pages/Admin";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+import Navbar from "./Components/Navbar/Navbar";
 import { useAuth } from "./context/AuthContext";
 import ProtectedRoute from "./Components/ProtectedRoute/ProtectedRoute";
 
@@ -39,6 +43,10 @@ function App() {
           element={!user ? <Registro/> : <Navigate to="/" replace />} 
         />
         <Route 
+          path="/registro-propietario" 
+          element={!user ? <RegistroPropietario/> : <Navigate to="/" replace />} 
+        />
+        <Route 
           path="/perfil" 
           element={
             <ProtectedRoute>
@@ -65,6 +73,16 @@ function App() {
             </ProtectedRoute>
           } 
         />
+        <Route 
+          path="/admin" 
+          element={
+            <ProtectedRoute>
+              <Admin/>
+            </ProtectedRoute>
+          } 
+        />
+        <Route path="/forgot-password" element={<ForgotPassword/>} />
+        <Route path="/reset-password" element={<ResetPassword/>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>

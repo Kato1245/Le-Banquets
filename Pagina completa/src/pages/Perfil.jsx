@@ -1,51 +1,93 @@
 // src/pages/Perfil.jsx
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useAuth } from "../context/AuthContext"
 
 const Perfil = () => {
   const { user } = useAuth()
   const [isEditing, setIsEditing] = useState(false)
   const [userData, setUserData] = useState({
-    username: user?.username || "",
-    email: user?.email || "",
+    username: "",
+    email: "",
     telefono: "",
     direccion: "",
     preferencias: []
   })
+  const [loading, setLoading] = useState(true)
+  const [message, setMessage] = useState("")
 
- const handleSave = async () => {
-  try {
-    const token = localStorage.getItem("token"); // tu JWT
-
-    const response = await fetch("http://localhost:3000/api/auth/profile", {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify({
-        username: userData.username, // frontend manda username
-        email: userData.email,
-        telefono: userData.telefono
-      })
-    });
-
-    const data = await response.json();
-    console.log("Respuesta del backend:", data);
-
-    if (data.success) {
-      alert("Perfil actualizado correctamente");
-      setIsEditing(false);
-    } else {
-      alert("Error: " + data.message);
+  useEffect(() => {
+    if (user) {
+      loadUserData();
     }
+  }, [user]);
 
-  } catch (error) {
-    console.error("Error actualizando perfil:", error);
-    alert("Ocurrió un error al actualizar el perfil");
-  }
-};
+  const loadUserData = async () => {
+    try {
+      setLoading(true);
+      
+      // Obtener datos del usuario desde la tabla usuarios
+      const { data, error } = await supabase
+        .from('usuarios')
+        .select('*')
+        .eq('email', user.email)
+        .single();
 
+      if (!error && data) {
+        setUserData({
+          username: data.nombre || user.user_metadata?.username || user.email.split('@')[0],
+          email: data.email || user.email,
+          telefono: data.telefono || "",
+          direccion: data.direccion || "",
+          preferencias: data.preferencias || []
+        });
+      } else {
+        // Si no existe, usar datos básicos de auth
+        setUserData({
+          username: user.user_metadata?.username || user.email.split('@')[0],
+          email: user.email,
+          telefono: "",
+          direccion: "",
+          preferencias: []
+        });
+      }
+    } catch (error) {
+      console.error("Error cargando datos:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    try {
+      setMessage("Guardando cambios...");
+      
+      // Actualizar en la tabla usuarios
+      const { error } = await supabase
+        .from('usuarios')
+        .upsert({
+          email: user.email,
+          nombre: userData.username,
+          telefono: userData.telefono,
+          direccion: userData.direccion,
+          preferencias: userData.preferencias,
+          esta_verificado: true,
+          esta_activo: true
+        }, {
+          onConflict: 'email'
+        });
+
+      if (error) throw error;
+      
+      setMessage("✅ Perfil actualizado correctamente");
+      setIsEditing(false);
+      
+      // Ocultar mensaje después de 3 segundos
+      setTimeout(() => setMessage(""), 3000);
+    } catch (error) {
+      console.error("Error actualizando perfil:", error);
+      setMessage("❌ Error al actualizar el perfil");
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
@@ -69,10 +111,24 @@ const Perfil = () => {
     }
   }
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-base-100 py-8 flex items-center justify-center">
+        <span className="loading loading-spinner loading-lg"></span>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-base-100 py-8">
       <div className="max-w-4xl mx-auto px-4">
         <h1 className="text-3xl font-bold text-center mb-8">Mi Perfil</h1>
+        
+        {message && (
+          <div className={`alert ${message.includes('✅') ? 'alert-success' : 'alert-error'} mb-6`}>
+            <span>{message}</span>
+          </div>
+        )}
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Información del usuario */}
@@ -110,6 +166,7 @@ const Perfil = () => {
                         value={userData.email}
                         onChange={handleChange}
                         className="input input-bordered"
+                        disabled
                       />
                     ) : (
                       <p className="text-lg">{userData.email}</p>
@@ -204,7 +261,7 @@ const Perfil = () => {
                   </div>
                   <div className="flex justify-between">
                     <span>Miembro desde</span>
-                    <span className="font-bold">{new Date().toLocaleDateString()}</span>
+                    <span className="font-bold">{new Date(user.created_at).toLocaleDateString()}</span>
                   </div>
                 </div>
               </div>

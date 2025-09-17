@@ -6,7 +6,7 @@ import { useAuth } from "../context/AuthContext"
 // Componente Carrusel (para sección separada)
 const CarruselBanquetes = () => {
     const [currentSlide, setCurrentSlide] = useState(0);
-    
+
     const slides = [
         {
             id: 1,
@@ -39,8 +39,8 @@ const CarruselBanquetes = () => {
     return (
         <div className="carousel w-full h-72 md:h-96 relative rounded-box overflow-hidden mt-8">
             {slides.map((slide, index) => (
-                <div 
-                    key={slide.id} 
+                <div
+                    key={slide.id}
                     id={`slide-${index}`}
                     className={`carousel-item relative w-full ${index === currentSlide ? 'block' : 'hidden'}`}
                 >
@@ -52,16 +52,16 @@ const CarruselBanquetes = () => {
                         </div>
                     </div>
                     <div className="absolute flex justify-between transform -translate-y-1/2 left-5 right-5 top-1/2">
-                        <a 
+                        <a
                             onClick={prevSlide}
                             className="btn btn-circle bg-base-100 bg-opacity-50 border-none hover:bg-opacity-80"
-                        >❮</a> 
-                        <a 
+                        >❮</a>
+                        <a
                             onClick={nextSlide}
                             className="btn btn-circle bg-base-100 bg-opacity-50 border-none hover:bg-opacity-80"
                         >❯</a>
                     </div>
-                </div> 
+                </div>
             ))}
         </div>
     );
@@ -70,11 +70,11 @@ const CarruselBanquetes = () => {
 // Componente Principal Home
 const Home = () => {
     const { user } = useAuth();
-    
+
     return (
         <div className="min-h-screen bg-base-100">
             {/* Hero Section (original) */}
-            <section className="hero min-h-screen bg-base-200" style={{backgroundImage: 'url(https://images.unsplash.com/photo-1519225421980-715cb0215aed?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80)'}}>
+            <section className="hero min-h-screen bg-base-200" style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1519225421980-715cb0215aed?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80)' }}>
                 <div className="hero-overlay bg-opacity-60"></div>
                 <div className="hero-content text-center text-neutral-content">
                     <div className="max-w-md">
@@ -95,7 +95,7 @@ const Home = () => {
                     <h2 className="text-3xl font-bold mb-4">Nuestros Servicios</h2>
                     <p className="text-lg opacity-70 max-w-2xl mx-auto">Ofrecemos una amplia gama de servicios para hacer de tu evento una experiencia inolvidable</p>
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
                     <div className="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow duration-300">
                         <figure className="px-10 pt-10">
@@ -113,7 +113,7 @@ const Home = () => {
                             </div>
                         </div>
                     </div>
-                    
+
                     <div className="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow duration-300">
                         <figure className="px-10 pt-10">
                             <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
@@ -130,7 +130,7 @@ const Home = () => {
                             </div>
                         </div>
                     </div>
-                    
+
                     <div className="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow duration-300">
                         <figure className="px-10 pt-10">
                             <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
@@ -171,7 +171,7 @@ const Home = () => {
                         <h2 className="text-3xl font-bold mb-4">Lo que dicen nuestros clientes</h2>
                         <p className="text-lg opacity-70 max-w-2xl mx-auto">Experiencias reales de quienes han confiado en nosotros</p>
                     </div>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         <div className="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow duration-300">
                             <div className="card-body">
@@ -196,7 +196,7 @@ const Home = () => {
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div className="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow duration-300">
                             <div className="card-body">
                                 <div className="flex items-center mb-4">
@@ -220,7 +220,7 @@ const Home = () => {
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div className="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow duration-300">
                             <div className="card-body">
                                 <div className="flex items-center mb-4">
@@ -258,8 +258,8 @@ const Home = () => {
                             <Link to="/mis-eventos" className="btn btn-secondary btn-lg">Mis Eventos</Link>
                         ) : (
                             <>
-                                <Link to="/registro" className="btn btn-secondary btn-lg">Crear cuenta</Link>
-                                <Link to="/login" className="btn btn-outline btn-lg btn-secondary">Iniciar sesión</Link>
+                                <Link to="/registro" className="btn btn-secondary btn-lg">Usuario Individual</Link>
+                                <Link to="/registro-propietario" className="btn btn-outline btn-lg btn-secondary">Soy Propietario</Link>
                             </>
                         )}
                     </div>
