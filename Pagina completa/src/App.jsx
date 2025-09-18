@@ -9,11 +9,12 @@ import Eventos from "./pages/Eventos";
 import Salones from "./pages/Salones";
 import Catering from "./pages/Catering";
 import MisEventos from "./pages/MisEventos";
+import MisBanquetes from "./pages/MisBanquetes";
 import Configuracion from "./pages/Configuracion";
-import Admin from "./pages/Admin";
+import AdminDashboard from "./pages/AdminDashboard";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
-import Navbar from "./Components/Navbar/Navbar";
+import Navbar from "./Components/Navbar/navbar";
 import { useAuth } from "./context/AuthContext";
 import ProtectedRoute from "./Components/ProtectedRoute/ProtectedRoute";
 
@@ -66,6 +67,14 @@ function App() {
           } 
         />
         <Route 
+          path="/mis-banquetes" 
+          element={
+            <ProtectedRoute>
+              <MisBanquetes/>
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
           path="/configuracion" 
           element={
             <ProtectedRoute>
@@ -77,7 +86,7 @@ function App() {
           path="/admin" 
           element={
             <ProtectedRoute>
-              <Admin/>
+              <AdminDashboard/>
             </ProtectedRoute>
           } 
         />
