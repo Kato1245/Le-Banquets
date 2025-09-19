@@ -2,7 +2,6 @@ const bcrypt = require('bcryptjs');
 const User = require('../models/userModel');
 const jwt = require('jsonwebtoken');
 const { JWT_SECRET } = require('../middleware/auth');
-const db = require('../config/database');
 
 // Almacena intentos por IP (en memoria)
 const loginAttempts = new Map();

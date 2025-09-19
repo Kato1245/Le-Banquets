@@ -1,3 +1,4 @@
+// middleware/auth.js
 const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
 
@@ -6,7 +7,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'cad8e6396223f3bd0bf9ebcd1d66b983';
 const authenticateToken = async (req, res, next) => {
     try {
         const authHeader = req.headers['authorization'];
-        const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+        const token = authHeader && authHeader.split(' ')[1];
 
         if (!token) {
             return res.status(401).json({
@@ -15,9 +16,19 @@ const authenticateToken = async (req, res, next) => {
             });
         }
 
+        // Verificar firma del token
         const decoded = jwt.verify(token, JWT_SECRET);
         
-        // Determinar la tabla según el tipo de usuario del token
+        // Verificar expiración manualmente
+        const now = Date.now().valueOf() / 1000;
+        if (typeof decoded.exp !== 'undefined' && decoded.exp < now) {
+            return res.status(401).json({
+                success: false,
+                message: 'Token expirado'
+            });
+        }
+
+        // Verificar que el usuario aún existe en BD
         const table = decoded.userType === 'propietario' ? 'propietarios' : 'usuarios';
         const user = await User.findById(decoded.userId, table);
 
