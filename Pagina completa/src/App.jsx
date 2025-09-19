@@ -1,5 +1,6 @@
 // src/App.jsx
 import { Route, Routes, Navigate } from "react-router-dom";
+import { Toaster } from 'react-hot-toast'; // ← Añade esta importación
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Registro from "./pages/Registro";
@@ -17,6 +18,7 @@ import ResetPassword from "./pages/ResetPassword";
 import Navbar from "./Components/Navbar/navbar";
 import { useAuth } from "./context/AuthContext";
 import ProtectedRoute from "./Components/ProtectedRoute/ProtectedRoute";
+import TokenValidator from "./Components/TokenValidator/TokenValidator";
 
 function App() {
   const { loading, user } = useAuth();
@@ -31,6 +33,31 @@ function App() {
 
   return ( 
     <>
+      <Toaster 
+        position="top-right"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#363636',
+            color: '#fff',
+          },
+          success: {
+            duration: 3000,
+            iconTheme: {
+              primary: '#4ade80',
+              secondary: '#fff',
+            },
+          },
+          error: {
+            duration: 5000,
+            iconTheme: {
+              primary: '#ef4444',
+              secondary: '#fff',
+            },
+          },
+        }}
+      />
+      <TokenValidator />
       <Navbar />
       <Routes>
         <Route path="/" element={<Home/>} />
