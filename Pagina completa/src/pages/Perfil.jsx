@@ -1,78 +1,154 @@
 // src/pages/Perfil.jsx
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useAuth } from "../context/AuthContext"
 
 const Perfil = () => {
   const { user } = useAuth()
   const [isEditing, setIsEditing] = useState(false)
   const [userData, setUserData] = useState({
-    username: user?.username || "",
-    email: user?.email || "",
+    nombre: "",
+    email: "",
     telefono: "",
-    direccion: "",
-    preferencias: []
+    fecha_nacimiento: "",
+    documento: ""
   })
+  const [loading, setLoading] = useState(true)
+  const [message, setMessage] = useState("")
 
- const handleSave = async () => {
-  try {
-    const token = localStorage.getItem("token"); // tu JWT
-
-    const response = await fetch("http://localhost:3000/api/auth/profile", {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify({
-        username: userData.username, // frontend manda username
-        email: userData.email,
-        telefono: userData.telefono
-      })
-    });
-
-    const data = await response.json();
-    console.log("Respuesta del backend:", data);
-
-    if (data.success) {
-      alert("Perfil actualizado correctamente");
-      setIsEditing(false);
-    } else {
-      alert("Error: " + data.message);
+  useEffect(() => {
+    if (user) {
+      loadUserData();
     }
+  }, [user]);
 
-  } catch (error) {
-    console.error("Error actualizando perfil:", error);
-    alert("Ocurrió un error al actualizar el perfil");
-  }
-};
+  const loadUserData = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("token");
+      
+      const endpoint = user.userType === 'propietario' 
+        ? 'http://localhost:3000/api/auth/profile/propietario'
+        : 'http://localhost:3000/api/auth/profile/usuario';
 
+      const response = await fetch(endpoint, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUserData({
+          nombre: data.nombre || "",
+          email: data.email || user.email,
+          telefono: data.telefono || "",
+          fecha_nacimiento: data.fecha_nacimiento || "",
+          documento: data.documento || ""
+        });
+      } else {
+        // Si falla, usar datos básicos del user
+        setUserData({
+          nombre: user.userData?.nombre || user.email.split('@')[0],
+          email: user.email,
+          telefono: user.userData?.telefono || "",
+          fecha_nacimiento: user.userData?.fecha_nacimiento || "",
+          documento: user.userData?.documento || ""
+        });
+      }
+    } catch (error) {
+      console.error("Error cargando datos:", error);
+      setUserData({
+        nombre: user.userData?.nombre || user.email.split('@')[0],
+        email: user.email,
+        telefono: user.userData?.telefono || "",
+        fecha_nacimiento: user.userData?.fecha_nacimiento || "",
+        documento: user.userData?.documento || ""
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    try {
+      setMessage("Guardando cambios...");
+      const token = localStorage.getItem("token");
+      
+      const endpoint = user.userType === 'propietario' 
+        ? 'http://localhost:3000/api/auth/profile/propietario'
+        : 'http://localhost:3000/api/auth/profile/usuario';
+
+      const response = await fetch(endpoint, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          nombre: userData.nombre,
+          email: userData.email,
+          telefono: userData.telefono,
+          fecha_nacimiento: userData.fecha_nacimiento,
+          documento: userData.documento
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setMessage("✅ Perfil actualizado correctamente");
+        setIsEditing(false);
+        
+        // Actualizar localStorage
+        const updatedUser = {
+          ...user,
+          userData: {
+            ...user.userData,
+            nombre: userData.nombre,
+            email: userData.email,
+            telefono: userData.telefono,
+            fecha_nacimiento: userData.fecha_nacimiento,
+            documento: userData.documento
+          }
+        };
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        
+        setTimeout(() => setMessage(""), 3000);
+      } else {
+        setMessage("❌ Error al actualizar el perfil");
+      }
+    } catch (error) {
+      console.error("Error actualizando perfil:", error);
+      setMessage("❌ Error de conexión");
+    }
+  };
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target
-    if (type === "checkbox") {
-      if (checked) {
-        setUserData(prev => ({
-          ...prev,
-          preferencias: [...prev.preferencias, value]
-        }))
-      } else {
-        setUserData(prev => ({
-          ...prev,
-          preferencias: prev.preferencias.filter(item => item !== value)
-        }))
-      }
-    } else {
-      setUserData(prev => ({
-        ...prev,
-        [name]: value
-      }))
-    }
+    const { name, value } = e.target;
+    setUserData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-base-100 py-8 flex items-center justify-center">
+        <span className="loading loading-spinner loading-lg"></span>
+      </div>
+    );
   }
 
   return (
     <div className="min-h-screen bg-base-100 py-8">
       <div className="max-w-4xl mx-auto px-4">
         <h1 className="text-3xl font-bold text-center mb-8">Mi Perfil</h1>
+        
+        {message && (
+          <div className={`alert ${message.includes('✅') ? 'alert-success' : 'alert-error'} mb-6`}>
+            <span>{message}</span>
+          </div>
+        )}
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Información del usuario */}
@@ -89,13 +165,13 @@ const Perfil = () => {
                     {isEditing ? (
                       <input
                         type="text"
-                        name="username"
-                        value={userData.username}
+                        name="nombre"
+                        value={userData.nombre}
                         onChange={handleChange}
                         className="input input-bordered"
                       />
                     ) : (
-                      <p className="text-lg">{userData.username}</p>
+                      <p className="text-lg">{userData.nombre}</p>
                     )}
                   </div>
                   
@@ -135,43 +211,39 @@ const Perfil = () => {
                   
                   <div className="form-control">
                     <label className="label">
-                      <span className="label-text">Dirección</span>
+                      <span className="label-text">Fecha de Nacimiento</span>
                     </label>
                     {isEditing ? (
                       <input
-                        type="text"
-                        name="direccion"
-                        value={userData.direccion}
+                        type="date"
+                        name="fecha_nacimiento"
+                        value={userData.fecha_nacimiento}
                         onChange={handleChange}
                         className="input input-bordered"
                       />
                     ) : (
-                      <p className="text-lg">{userData.direccion || "No especificada"}</p>
+                      <p className="text-lg">{userData.fecha_nacimiento || "No especificada"}</p>
+                    )}
+                  </div>
+
+                  <div className="form-control">
+                    <label className="label">
+                      <span className="label-text">Documento</span>
+                    </label>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        name="documento"
+                        value={userData.documento}
+                        onChange={handleChange}
+                        className="input input-bordered"
+                      />
+                    ) : (
+                      <p className="text-lg">{userData.documento || "No especificado"}</p>
                     )}
                   </div>
                 </div>
-                
-                {isEditing && (
-                  <div className="form-control mt-4">
-                    <label className="label">
-                      <span className="label-text">Preferencias de evento</span>
-                    </label>
-                    <div className="flex flex-wrap gap-2">
-                      {["Bodas", "Corporativos", "Fiestas", "Celebraciones"].map(pref => (
-                        <label key={pref} className="cursor-pointer label">
-                          <input
-                            type="checkbox"
-                            value={pref}
-                            checked={userData.preferencias.includes(pref)}
-                            onChange={handleChange}
-                            className="checkbox checkbox-primary checkbox-sm"
-                          />
-                          <span className="label-text ml-2">{pref}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                )}
+              
                 
                 <div className="card-actions justify-end mt-6">
                   {isEditing ? (
@@ -200,7 +272,7 @@ const Perfil = () => {
                 <h3 className="card-title">Mi Avatar</h3>
                 <div className="flex flex-col items-center">
                   <div className="w-24 h-24 rounded-full bg-primary text-primary-content flex items-center justify-center text-3xl font-bold mb-4">
-                    {userData.username ? userData.username.charAt(0).toUpperCase() : 'U'}
+                    {userData.nombre ? userData.nombre.charAt(0).toUpperCase() : 'U'}
                   </div>
                   {isEditing && (
                     <button className="btn btn-sm btn-outline">
@@ -225,8 +297,14 @@ const Perfil = () => {
                   </div>
                   <div className="flex justify-between">
                     <span>Miembro desde</span>
-                    <span className="font-bold">{new Date().toLocaleDateString()}</span>
+                    <span className="font-bold">{new Date(user.userData?.created_at || Date.now()).toLocaleDateString()}</span>
                   </div>
+                  {user.userType === 'propietario' && (
+                    <div className="flex justify-between">
+                      <span>Banquetes registrados</span>
+                      <span className="font-bold">0</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

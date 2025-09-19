@@ -10,17 +10,13 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [token, setToken] = useState(null);
-
-  const API_URL = 'http://localhost:3000/api/auth';
 
   useEffect(() => {
-    // Verificar si hay token y usuario en localStorage al cargar
-    const storedToken = localStorage.getItem('token');
+    // Verificar si hay usuario en localStorage al cargar
     const storedUser = localStorage.getItem('user');
+    const storedToken = localStorage.getItem('token');
     
-    if (storedToken && storedUser) {
-      setToken(storedToken);
+    if (storedUser && storedToken) {
       setUser(JSON.parse(storedUser));
     }
     setLoading(false);
@@ -28,7 +24,8 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const response = await fetch(`${API_URL}/login`, {
+      // Simular llamada a API
+      const response = await fetch('http://localhost:3000/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -40,47 +37,112 @@ export const AuthProvider = ({ children }) => {
 
       if (data.success) {
         const { user, token, userType } = data.data;
-        setUser({ ...user, userType });
-        setToken(token);
+        const userData = { ...user, userType };
         
+        setUser(userData);
         localStorage.setItem('token', token);
-        localStorage.setItem('user', JSON.stringify({ ...user, userType }));
+        localStorage.setItem('user', JSON.stringify(userData));
         
-        return { 
-          success: true,
-          data: data.data 
-        };
+        return { success: true, user: userData };
       } else {
-        // Devuelve todos los campos de error para manejar bloqueos e intentos
-        return { 
-          success: false, 
-          message: data.message,
-          attemptsLeft: data.attemptsLeft,
-          locked: data.locked,
-          remainingTime: data.remainingTime
-        };
+        return { success: false, message: data.message };
       }
     } catch (error) {
       console.error('Login error:', error);
-      return { 
-        success: false, 
-        message: 'Error de conexión con el servidor' 
-      };
+      return { success: false, message: 'Error de conexión' };
+    }
+  };
+
+  const signUp = async (email, password, userData, tipo = 'usuario') => {
+    try {
+      const endpoint = tipo === 'propietario' 
+        ? 'http://localhost:3000/api/auth/register/propietario' 
+        : 'http://localhost:3000/api/auth/register/usuario';
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          contrasena: password,
+          ...userData
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        return { success: true, message: 'Registro exitoso. Por favor verifica tu email.' };
+      } else {
+        return { success: false, message: data.message };
+      }
+    } catch (error) {
+      console.error('Sign up error:', error);
+      return { success: false, message: 'Error de conexión' };
+    }
+  };
+
+  const resetPassword = async (email) => {
+    try {
+      const response = await fetch('http://localhost:3000/api/auth/forgot-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        return { success: true, message: data.message };
+      } else {
+        return { success: false, message: data.message };
+      }
+    } catch (error) {
+      console.error('Reset password error:', error);
+      return { success: false, message: 'Error de conexión' };
+    }
+  };
+
+  const updatePassword = async (token, newPassword) => {
+    try {
+      const response = await fetch('http://localhost:3000/api/auth/reset-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ token, newPassword }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        return { success: true, message: data.message };
+      } else {
+        return { success: false, message: data.message };
+      }
+    } catch (error) {
+      console.error('Update password error:', error);
+      return { success: false, message: 'Error de conexión' };
     }
   };
 
   const logout = () => {
     setUser(null);
-    setToken(null);
     localStorage.removeItem('token');
     localStorage.removeItem('user');
   };
 
   const value = {
     user,
-    token,
     login,
+    signUp,
     logout,
+    resetPassword,
+    updatePassword,
     loading
   };
 
