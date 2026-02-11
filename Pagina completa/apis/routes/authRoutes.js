@@ -4,7 +4,7 @@ const AuthController = require('../controllers/authController');
 const { validateRegistration } = require('../middleware/validation');
 const { authenticateToken } = require('../middleware/auth');
 
-// Registro de usuario normal
+// Registro de usuario normala
 router.post('/register/usuario', 
     validateRegistration('usuario'),
     AuthController.register
@@ -21,6 +21,8 @@ router.post('/login', AuthController.login);
 
 // Obtener perfil (requiere autenticación)
 router.get('/profile', authenticateToken, AuthController.getProfile);
+
+router.put('/profile', authenticateToken, AuthController.updateProfile);
 
 // Verificar token
 router.get('/verify', authenticateToken, (req, res) => {

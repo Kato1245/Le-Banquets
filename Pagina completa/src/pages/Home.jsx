@@ -1,4 +1,4 @@
-// Home.jsx - Versión mejorada con funcionalidades dinámicas
+// Home.jsx - Versión mejorada sin barra de búsqueda
 import { Link } from "react-router-dom"
 import { useState } from "react"
 import { useAuth } from "../context/AuthContext"
@@ -6,7 +6,7 @@ import { useAuth } from "../context/AuthContext"
 // Componente Carrusel (para sección separada)
 const CarruselBanquetes = () => {
     const [currentSlide, setCurrentSlide] = useState(0);
-    
+
     const slides = [
         {
             id: 1,
@@ -39,8 +39,8 @@ const CarruselBanquetes = () => {
     return (
         <div className="carousel w-full h-72 md:h-96 relative rounded-box overflow-hidden mt-8">
             {slides.map((slide, index) => (
-                <div 
-                    key={slide.id} 
+                <div
+                    key={slide.id}
                     id={`slide-${index}`}
                     className={`carousel-item relative w-full ${index === currentSlide ? 'block' : 'hidden'}`}
                 >
@@ -52,71 +52,17 @@ const CarruselBanquetes = () => {
                         </div>
                     </div>
                     <div className="absolute flex justify-between transform -translate-y-1/2 left-5 right-5 top-1/2">
-                        <a 
+                        <a
                             onClick={prevSlide}
                             className="btn btn-circle bg-base-100 bg-opacity-50 border-none hover:bg-opacity-80"
-                        >❮</a> 
-                        <a 
+                        >❮</a>
+                        <a
                             onClick={nextSlide}
                             className="btn btn-circle bg-base-100 bg-opacity-50 border-none hover:bg-opacity-80"
                         >❯</a>
                     </div>
-                </div> 
+                </div>
             ))}
-        </div>
-    );
-};
-
-// Componente Barra de Búsqueda y Filtros (mejorado)
-const BusquedaFiltros = () => {
-    const [searchTerm, setSearchTerm] = useState("");
-    const [selectedFilter, setSelectedFilter] = useState("todos");
-    
-    const filters = [
-        { id: "todos", label: "Todos" },
-        { id: "bodas", label: "Bodas" },
-        { id: "corporativos", label: "Corporativos" },
-        { id: "fiestas", label: "Fiestas" },
-        { id: "celebraciones", label: "Celebraciones" }
-    ];
-
-    const handleSearch = (e) => {
-        e.preventDefault();
-        console.log("Buscando:", searchTerm, "Filtro:", selectedFilter);
-    };
-
-    return (
-        <div className="bg-base-200 p-6 rounded-lg shadow-md">
-            <div className="flex flex-col md:flex-row items-center gap-4">
-                <div className="flex-grow w-full md:w-auto">
-                    <input
-                        type="text"
-                        placeholder="Buscar banquetes, salones, servicios..."
-                        className="input input-bordered w-full focus:input-primary"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                </div>
-                
-                <div className="flex flex-wrap gap-2 justify-center">
-                    {filters.map(filter => (
-                        <button
-                            key={filter.id}
-                            className={`btn btn-sm ${selectedFilter === filter.id ? 'btn-primary' : 'btn-ghost'}`}
-                            onClick={() => setSelectedFilter(filter.id)}
-                        >
-                            {filter.label}
-                        </button>
-                    ))}
-                </div>
-                
-                <button 
-                    className="btn btn-primary"
-                    onClick={handleSearch}
-                >
-                    Buscar
-                </button>
-            </div>
         </div>
     );
 };
@@ -124,11 +70,11 @@ const BusquedaFiltros = () => {
 // Componente Principal Home
 const Home = () => {
     const { user } = useAuth();
-    
+
     return (
         <div className="min-h-screen bg-base-100">
             {/* Hero Section (original) */}
-            <section className="hero min-h-screen bg-base-200" style={{backgroundImage: 'url(https://images.unsplash.com/photo-1519225421980-715cb0215aed?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80)'}}>
+            <section className="hero min-h-screen bg-base-200" style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1519225421980-715cb0215aed?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80)' }}>
                 <div className="hero-overlay bg-opacity-60"></div>
                 <div className="hero-content text-center text-neutral-content">
                     <div className="max-w-md">
@@ -143,20 +89,13 @@ const Home = () => {
                 </div>
             </section>
 
-            {/* Barra de búsqueda y filtros */}
-            <section className="py-12 px-4 md:px-8 bg-base-100">
-                <div className="max-w-6xl mx-auto">
-                    <BusquedaFiltros />
-                </div>
-            </section>
-
             {/* Features Section */}
             <section className="py-16 px-4 bg-base-100">
                 <div className="text-center mb-12">
                     <h2 className="text-3xl font-bold mb-4">Nuestros Servicios</h2>
                     <p className="text-lg opacity-70 max-w-2xl mx-auto">Ofrecemos una amplia gama de servicios para hacer de tu evento una experiencia inolvidable</p>
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
                     <div className="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow duration-300">
                         <figure className="px-10 pt-10">
@@ -169,9 +108,12 @@ const Home = () => {
                         <div className="card-body items-center text-center">
                             <h3 className="card-title">Catering Premium</h3>
                             <p>Menús personalizados creados por chefs expertos con ingredientes de la más alta calidad.</p>
+                            <div className="card-actions justify-end mt-4">
+                                <Link to="/catering" className="btn btn-primary btn-sm">Ver más</Link>
+                            </div>
                         </div>
                     </div>
-                    
+
                     <div className="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow duration-300">
                         <figure className="px-10 pt-10">
                             <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
@@ -183,9 +125,12 @@ const Home = () => {
                         <div className="card-body items-center text-center">
                             <h3 className="card-title">Planificación de Eventos</h3>
                             <p>Coordinación completa de tu evento para que te concentres en disfrutar cada momento.</p>
+                            <div className="card-actions justify-end mt-4">
+                                <Link to="/eventos" className="btn btn-primary btn-sm">Ver más</Link>
+                            </div>
                         </div>
                     </div>
-                    
+
                     <div className="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow duration-300">
                         <figure className="px-10 pt-10">
                             <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
@@ -197,6 +142,9 @@ const Home = () => {
                         <div className="card-body items-center text-center">
                             <h3 className="card-title">Locaciones Exclusivas</h3>
                             <p>Espacios elegantes y únicos que se adaptan a las necesidades específicas de tu evento.</p>
+                            <div className="card-actions justify-end mt-4">
+                                <Link to="/salones" className="btn btn-primary btn-sm">Ver más</Link>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -210,6 +158,9 @@ const Home = () => {
                         <p className="text-lg opacity-70 max-w-2xl mx-auto">Descubre los lugares exclusivos donde puedes realizar tus eventos</p>
                     </div>
                     <CarruselBanquetes />
+                    <div className="text-center mt-8">
+                        <Link to="/salones" className="btn btn-primary btn-lg">Ver todos los salones</Link>
+                    </div>
                 </div>
             </section>
 
@@ -220,7 +171,7 @@ const Home = () => {
                         <h2 className="text-3xl font-bold mb-4">Lo que dicen nuestros clientes</h2>
                         <p className="text-lg opacity-70 max-w-2xl mx-auto">Experiencias reales de quienes han confiado en nosotros</p>
                     </div>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         <div className="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow duration-300">
                             <div className="card-body">
@@ -245,7 +196,7 @@ const Home = () => {
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div className="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow duration-300">
                             <div className="card-body">
                                 <div className="flex items-center mb-4">
@@ -269,7 +220,7 @@ const Home = () => {
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div className="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow duration-300">
                             <div className="card-body">
                                 <div className="flex items-center mb-4">
@@ -307,8 +258,8 @@ const Home = () => {
                             <Link to="/mis-eventos" className="btn btn-secondary btn-lg">Mis Eventos</Link>
                         ) : (
                             <>
-                                <Link to="/registro" className="btn btn-secondary btn-lg">Crear cuenta</Link>
-                                <Link to="/login" className="btn btn-outline btn-lg btn-secondary">Iniciar sesión</Link>
+                                <Link to="/registro" className="btn btn-secondary btn-lg">Usuario Individual</Link>
+                                <Link to="/registro-propietario" className="btn btn-outline btn-lg btn-secondary">Soy Propietario</Link>
                             </>
                         )}
                     </div>

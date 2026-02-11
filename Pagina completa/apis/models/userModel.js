@@ -30,6 +30,21 @@ class User {
             });
         });
     }
-}
 
+    // 🔹 Nuevo método para actualizar datos por ID
+    static async updateById(id, updateData, table) {
+    // Filtrar solo los campos que tienen valor definido
+    const filteredData = Object.fromEntries(
+        Object.entries(updateData).filter(([_, v]) => v !== undefined)
+    );
+
+    const query = `UPDATE ${table} SET ? WHERE id = ?`;
+    return new Promise((resolve, reject) => {
+        db.query(query, [filteredData, id], (err, result) => {
+            if (err) reject(err);
+            resolve(result);
+        });
+    });
+}
+}
 module.exports = User;
