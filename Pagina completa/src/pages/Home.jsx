@@ -79,11 +79,11 @@ const Home = () => {
                 <div className="hero-content text-center text-neutral-content">
                     <div className="max-w-md">
                         <h1 className="mb-5 text-5xl font-bold">Le Banquets</h1>
-                        <p className="mb-5">Organiza el evento de tus sueños con nuestro servicio de banquetes de clase mundial. Desde bodas hasta eventos corporativos, hacemos realidad tu visión.</p>
+                        <p className="mb-5 text-lg">Organiza el evento de tus sueños con nuestro servicio de banquetes de clase mundial. Desde bodas y quinces hasta eventos corporativos, hacemos realidad tu visión.</p>
                         {user ? (
                             <Link to="/eventos" className="btn btn-primary">Explorar Eventos</Link>
                         ) : (
-                            <Link to="/registro" className="btn btn-primary">Comenzar ahora</Link>
+                            <Link to="/registro" className="btn btn-primary btn-lg">Comenzar ahora</Link>
                         )}
                     </div>
                 </div>
@@ -93,7 +93,7 @@ const Home = () => {
             <section className="py-16 px-4 bg-base-100">
                 <div className="text-center mb-12">
                     <h2 className="text-3xl font-bold mb-4">Nuestros Servicios</h2>
-                    <p className="text-lg opacity-70 max-w-2xl mx-auto">Ofrecemos una amplia gama de servicios para hacer de tu evento una experiencia inolvidable</p>
+                    <p className="text-xl opacity-70 max-w-2xl mx-auto">Ofrecemos una amplia gama de servicios para hacer de tu evento una experiencia inolvidable</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
@@ -106,10 +106,10 @@ const Home = () => {
                             </div>
                         </figure>
                         <div className="card-body items-center text-center">
-                            <h3 className="card-title">Catering Premium</h3>
-                            <p>Menús personalizados creados por chefs expertos con ingredientes de la más alta calidad.</p>
+                            <h3 className=" text-xl card-title">Catering Premium</h3>
+                            <p className="text-lg">Menús personalizados creados por chefs expertos con ingredientes de la más alta calidad.</p>
                             <div className="card-actions justify-end mt-4">
-                                <Link to="/catering" className="btn btn-primary btn-sm">Ver más</Link>
+                                <Link to="/catering" className=" text-lg btn btn-primary btn-sm">Ver más</Link>
                             </div>
                         </div>
                     </div>
@@ -123,10 +123,10 @@ const Home = () => {
                             </div>
                         </figure>
                         <div className="card-body items-center text-center">
-                            <h3 className="card-title">Planificación de Eventos</h3>
-                            <p>Coordinación completa de tu evento para que te concentres en disfrutar cada momento.</p>
+                            <h3 className=" text-xl card-title">Planificación de Eventos</h3>
+                            <p className="text-lg">Coordinación completa de tu evento para que te concentres en disfrutar cada momento.</p>
                             <div className="card-actions justify-end mt-4">
-                                <Link to="/eventos" className="btn btn-primary btn-sm">Ver más</Link>
+                                <Link to="/eventos" className=" text-lg btn btn-primary btn-sm">Ver más</Link>
                             </div>
                         </div>
                     </div>
@@ -140,10 +140,10 @@ const Home = () => {
                             </div>
                         </figure>
                         <div className="card-body items-center text-center">
-                            <h3 className="card-title">Locaciones Exclusivas</h3>
-                            <p>Espacios elegantes y únicos que se adaptan a las necesidades específicas de tu evento.</p>
+                            <h3 className=" text-xl card-title">Locaciones Exclusivas</h3>
+                            <p className="text-lg">Espacios elegantes y únicos que se adaptan a las necesidades específicas de tu evento.</p>
                             <div className="card-actions justify-end mt-4">
-                                <Link to="/salones" className="btn btn-primary btn-sm">Ver más</Link>
+                                <Link to="/salones" className=" text-lg btn btn-primary btn-sm">Ver más</Link>
                             </div>
                         </div>
                     </div>
@@ -154,12 +154,12 @@ const Home = () => {
             <section className="py-16 px-4 bg-base-200">
                 <div className="max-w-6xl mx-auto">
                     <div className="text-center mb-12">
-                        <h2 className="text-3xl font-bold mb-4">Nuestros Espacios</h2>
-                        <p className="text-lg opacity-70 max-w-2xl mx-auto">Descubre los lugares exclusivos donde puedes realizar tus eventos</p>
+                        <h2 className=" text-xl text-3xl font-bold mb-3">Nuestros Espacios</h2>
+                        <p className="text-xl opacity-70 max-w-2xl mx-auto">Descubre los lugares exclusivos donde puedes realizar tus eventos</p>
                     </div>
                     <CarruselBanquetes />
                     <div className="text-center mt-8">
-                        <Link to="/salones" className="btn btn-primary btn-lg">Ver todos los salones</Link>
+                        <Link to="/salones" className=" text-lg btn btn-primary btn-lg">Ver todos los salones</Link>
                     </div>
                 </div>
             </section>
