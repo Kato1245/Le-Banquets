@@ -21,33 +21,33 @@ const Navbar = () => {
       </div>
 
       {/* Elementos centrados */}
-      <div className="flex-none hidden md:flex justify-center">
-        <ul className="menu menu-horizontal px-1 gap-2">
+      <div className="flex-none hidden md:flex justify-center items-center">
+        <ul className="menu menu-horizontal px-1 gap-2 items-center">
           <li>
-            <Link to="/eventos" className="font-medium">
+            <Link to="/eventos" className="font-medium text-lg">
               Eventos
             </Link>
           </li>
           <li>
-            <Link to="/salones" className="font-medium">
+            <Link to="/salones" className="font-medium text-lg">
               Salones
             </Link>
           </li>
           <li>
-            <Link to="/catering" className="font-medium">
+            <Link to="/catering" className="font-medium text-lg">
               Catering
             </Link>
           </li>
           {isAdmin && (
             <li>
-              <Link to="/admin" className="font-medium text-warning">
+              <Link to="/admin" className="font-medium text-lg text-warning">
                 Admin
               </Link>
             </li>
           )}
           {isPropietario && (
             <li>
-              <Link to="/admin" className="font-medium text-info">
+              <Link to="/admin" className="font-medium text-lg text-info">
                 Mi Empresa
               </Link>
             </li>
@@ -118,15 +118,15 @@ const Navbar = () => {
       ) : (
         // Navbar cuando el usuario no está autenticado
         <div className="flex-none">
-          <ul className="menu menu-horizontal px-1 gap-2">
+          <ul className="menu menu-horizontal px-1 gap-2 items-center">
             <li>
-              <Link to="/login" className="btn btn-ghost">
+              <Link to="/login" className="btn btn-ghost text-lg">
                 Iniciar Sesión
               </Link>
             </li>
             <li>
               <div className="dropdown dropdown-end">
-                <label tabIndex={0} className="btn btn-primary">
+                <label tabIndex={0} className="btn btn-primary text-lg">
                   Registro
                 </label>
                 <ul
