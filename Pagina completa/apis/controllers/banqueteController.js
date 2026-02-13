@@ -1,4 +1,6 @@
 const Banquete = require("../models/Banquete");
+const fs = require("fs");
+const path = require("path");
 
 class BanqueteController {
   // Crear un nuevo banquete
@@ -18,6 +20,14 @@ class BanqueteController {
         });
       }
 
+      // Procesar imágenes subidas
+      const imagenes = [];
+      if (req.files && req.files.length > 0) {
+        req.files.forEach((file) => {
+          imagenes.push(`/uploads/banquetes/${file.filename}`);
+        });
+      }
+
       const nuevoBanquete = new Banquete({
         nombre,
         direccion,
@@ -25,6 +35,7 @@ class BanqueteController {
         descripcion,
         precio_base,
         propietario_id,
+        imagenes,
       });
 
       await nuevoBanquete.save();
@@ -87,7 +98,14 @@ class BanqueteController {
     try {
       const { id } = req.params;
       const propietario_id = req.user.id;
-      const updates = req.body;
+      const {
+        nombre,
+        direccion,
+        capacidad,
+        descripcion,
+        precio_base,
+        imagenes_existentes,
+      } = req.body;
 
       const banquete = await Banquete.findOne({ _id: id, propietario_id });
 
@@ -98,7 +116,51 @@ class BanqueteController {
         });
       }
 
-      Object.assign(banquete, updates);
+      // Actualizar campos de texto
+      if (nombre) banquete.nombre = nombre;
+      if (direccion) banquete.direccion = direccion;
+      if (capacidad) banquete.capacidad = capacidad;
+      if (descripcion) banquete.descripcion = descripcion;
+      if (precio_base) banquete.precio_base = precio_base;
+
+      // Manejar imágenes: conservar las existentes que el usuario no eliminó
+      let imagenesFinales = [];
+
+      // Parsear imágenes existentes que se mantienen
+      if (imagenes_existentes) {
+        try {
+          const parsed =
+            typeof imagenes_existentes === "string"
+              ? JSON.parse(imagenes_existentes)
+              : imagenes_existentes;
+          if (Array.isArray(parsed)) {
+            imagenesFinales = parsed;
+          }
+        } catch (e) {
+          // Si es un solo string (no array), lo envolvemos
+          imagenesFinales = [imagenes_existentes];
+        }
+      }
+
+      // Eliminar del disco las imágenes que fueron removidas por el usuario
+      const imagenesEliminadas = banquete.imagenes.filter(
+        (img) => !imagenesFinales.includes(img),
+      );
+      imagenesEliminadas.forEach((img) => {
+        const filePath = path.join(__dirname, "..", img);
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+      });
+
+      // Agregar nuevas imágenes subidas
+      if (req.files && req.files.length > 0) {
+        req.files.forEach((file) => {
+          imagenesFinales.push(`/uploads/banquetes/${file.filename}`);
+        });
+      }
+
+      banquete.imagenes = imagenesFinales;
       await banquete.save();
 
       res.json({
@@ -121,17 +183,26 @@ class BanqueteController {
       const { id } = req.params;
       const propietario_id = req.user.id;
 
-      const result = await Banquete.findOneAndDelete({
-        _id: id,
-        propietario_id,
-      });
+      const banquete = await Banquete.findOne({ _id: id, propietario_id });
 
-      if (!result) {
+      if (!banquete) {
         return res.status(404).json({
           success: false,
           message: "Banquete no encontrado o no tienes permiso para eliminarlo",
         });
       }
+
+      // Eliminar archivos de imágenes del disco
+      if (banquete.imagenes && banquete.imagenes.length > 0) {
+        banquete.imagenes.forEach((img) => {
+          const filePath = path.join(__dirname, "..", img);
+          if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+          }
+        });
+      }
+
+      await Banquete.findByIdAndDelete(id);
 
       res.json({
         success: true,
