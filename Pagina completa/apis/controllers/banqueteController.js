@@ -18,6 +18,16 @@ class BanqueteController {
         });
       }
 
+      // Convertir imágenes de Buffer a Base64 data URI
+      const imagenes = [];
+      if (req.files && req.files.length > 0) {
+        req.files.forEach((file) => {
+          const base64 = file.buffer.toString("base64");
+          const dataUri = `data:${file.mimetype};base64,${base64}`;
+          imagenes.push(dataUri);
+        });
+      }
+
       const nuevoBanquete = new Banquete({
         nombre,
         direccion,
@@ -25,6 +35,7 @@ class BanqueteController {
         descripcion,
         precio_base,
         propietario_id,
+        imagenes,
       });
 
       await nuevoBanquete.save();
@@ -87,7 +98,14 @@ class BanqueteController {
     try {
       const { id } = req.params;
       const propietario_id = req.user.id;
-      const updates = req.body;
+      const {
+        nombre,
+        direccion,
+        capacidad,
+        descripcion,
+        precio_base,
+        imagenes_existentes,
+      } = req.body;
 
       const banquete = await Banquete.findOne({ _id: id, propietario_id });
 
@@ -98,7 +116,42 @@ class BanqueteController {
         });
       }
 
-      Object.assign(banquete, updates);
+      // Actualizar campos de texto
+      if (nombre) banquete.nombre = nombre;
+      if (direccion) banquete.direccion = direccion;
+      if (capacidad) banquete.capacidad = capacidad;
+      if (descripcion) banquete.descripcion = descripcion;
+      if (precio_base) banquete.precio_base = precio_base;
+
+      // Manejar imágenes: conservar las existentes que el usuario no eliminó
+      let imagenesFinales = [];
+
+      // Parsear imágenes existentes que se mantienen (ahora son data URIs)
+      if (imagenes_existentes) {
+        try {
+          const parsed =
+            typeof imagenes_existentes === "string"
+              ? JSON.parse(imagenes_existentes)
+              : imagenes_existentes;
+          if (Array.isArray(parsed)) {
+            imagenesFinales = parsed;
+          }
+        } catch (e) {
+          // Si es un solo string (no array), lo envolvemos
+          imagenesFinales = [imagenes_existentes];
+        }
+      }
+
+      // Convertir nuevas imágenes de Buffer a Base64 data URI
+      if (req.files && req.files.length > 0) {
+        req.files.forEach((file) => {
+          const base64 = file.buffer.toString("base64");
+          const dataUri = `data:${file.mimetype};base64,${base64}`;
+          imagenesFinales.push(dataUri);
+        });
+      }
+
+      banquete.imagenes = imagenesFinales;
       await banquete.save();
 
       res.json({
@@ -121,17 +174,17 @@ class BanqueteController {
       const { id } = req.params;
       const propietario_id = req.user.id;
 
-      const result = await Banquete.findOneAndDelete({
-        _id: id,
-        propietario_id,
-      });
+      const banquete = await Banquete.findOne({ _id: id, propietario_id });
 
-      if (!result) {
+      if (!banquete) {
         return res.status(404).json({
           success: false,
           message: "Banquete no encontrado o no tienes permiso para eliminarlo",
         });
       }
+
+      // Ya no hay archivos en disco que borrar, las imágenes se eliminan con el documento
+      await Banquete.findByIdAndDelete(id);
 
       res.json({
         success: true,

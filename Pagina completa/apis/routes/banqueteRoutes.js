@@ -2,15 +2,26 @@ const express = require("express");
 const router = express.Router();
 const BanqueteController = require("../controllers/banqueteController");
 const { authenticateToken } = require("../middleware/auth");
+const upload = require("../middleware/upload");
 
-// Rutas protegidas
-router.post("/", authenticateToken, BanqueteController.create);
+// Rutas protegidas (con upload de imágenes en POST y PUT)
+router.post(
+  "/",
+  authenticateToken,
+  upload.array("imagenes", 5),
+  BanqueteController.create,
+);
 router.get(
   "/mis-banquetes",
   authenticateToken,
   BanqueteController.getMisBanquetes,
 );
-router.put("/:id", authenticateToken, BanqueteController.update);
+router.put(
+  "/:id",
+  authenticateToken,
+  upload.array("imagenes", 5),
+  BanqueteController.update,
+);
 router.delete("/:id", authenticateToken, BanqueteController.delete);
 
 // Rutas públicas
