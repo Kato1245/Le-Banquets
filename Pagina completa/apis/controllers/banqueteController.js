@@ -1,6 +1,4 @@
 const Banquete = require("../models/Banquete");
-const fs = require("fs");
-const path = require("path");
 
 class BanqueteController {
   // Crear un nuevo banquete
@@ -20,11 +18,13 @@ class BanqueteController {
         });
       }
 
-      // Procesar imágenes subidas
+      // Convertir imágenes de Buffer a Base64 data URI
       const imagenes = [];
       if (req.files && req.files.length > 0) {
         req.files.forEach((file) => {
-          imagenes.push(`/uploads/banquetes/${file.filename}`);
+          const base64 = file.buffer.toString("base64");
+          const dataUri = `data:${file.mimetype};base64,${base64}`;
+          imagenes.push(dataUri);
         });
       }
 
@@ -126,7 +126,7 @@ class BanqueteController {
       // Manejar imágenes: conservar las existentes que el usuario no eliminó
       let imagenesFinales = [];
 
-      // Parsear imágenes existentes que se mantienen
+      // Parsear imágenes existentes que se mantienen (ahora son data URIs)
       if (imagenes_existentes) {
         try {
           const parsed =
@@ -142,21 +142,12 @@ class BanqueteController {
         }
       }
 
-      // Eliminar del disco las imágenes que fueron removidas por el usuario
-      const imagenesEliminadas = banquete.imagenes.filter(
-        (img) => !imagenesFinales.includes(img),
-      );
-      imagenesEliminadas.forEach((img) => {
-        const filePath = path.join(__dirname, "..", img);
-        if (fs.existsSync(filePath)) {
-          fs.unlinkSync(filePath);
-        }
-      });
-
-      // Agregar nuevas imágenes subidas
+      // Convertir nuevas imágenes de Buffer a Base64 data URI
       if (req.files && req.files.length > 0) {
         req.files.forEach((file) => {
-          imagenesFinales.push(`/uploads/banquetes/${file.filename}`);
+          const base64 = file.buffer.toString("base64");
+          const dataUri = `data:${file.mimetype};base64,${base64}`;
+          imagenesFinales.push(dataUri);
         });
       }
 
@@ -192,16 +183,7 @@ class BanqueteController {
         });
       }
 
-      // Eliminar archivos de imágenes del disco
-      if (banquete.imagenes && banquete.imagenes.length > 0) {
-        banquete.imagenes.forEach((img) => {
-          const filePath = path.join(__dirname, "..", img);
-          if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
-          }
-        });
-      }
-
+      // Ya no hay archivos en disco que borrar, las imágenes se eliminan con el documento
       await Banquete.findByIdAndDelete(id);
 
       res.json({

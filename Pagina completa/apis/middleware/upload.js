@@ -1,24 +1,8 @@
 const multer = require("multer");
-const path = require("path");
-const fs = require("fs");
 
-// Crear directorio de uploads si no existe
-const uploadDir = path.join(__dirname, "..", "uploads", "banquetes");
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-// Configuración de almacenamiento
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    const ext = path.extname(file.originalname);
-    cb(null, `banquete-${uniqueSuffix}${ext}`);
-  },
-});
+// Usar memoryStorage: los archivos se mantienen en RAM como Buffer
+// Luego se convierten a Base64 en el controller.
+const storage = multer.memoryStorage();
 
 // Filtro de archivos: solo imágenes
 const fileFilter = (req, file, cb) => {

@@ -301,7 +301,7 @@ const MisBanquetes = () => {
                 <figure className="h-48 relative">
                   {banquete.imagenes && banquete.imagenes.length > 0 ? (
                     <img
-                      src={`http://localhost:3000${banquete.imagenes[0]}`}
+                      src={banquete.imagenes[0]}
                       alt={banquete.nombre}
                       className="w-full h-full object-cover"
                     />
@@ -505,7 +505,7 @@ const MisBanquetes = () => {
                             className="relative group rounded-lg overflow-hidden aspect-square"
                           >
                             <img
-                              src={`http://localhost:3000${img}`}
+                              src={img}
                               alt={`Imagen ${index + 1}`}
                               className="w-full h-full object-cover"
                             />
