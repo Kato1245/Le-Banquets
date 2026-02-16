@@ -28,9 +28,9 @@ const banqueteSchema = new mongoose.Schema({
     required: true,
     index: true,
   },
-  imagen_url: {
-    type: String,
-    default: null,
+  imagenes: {
+    type: [String],
+    default: [],
   },
   fecha_creacion: {
     type: Date,
