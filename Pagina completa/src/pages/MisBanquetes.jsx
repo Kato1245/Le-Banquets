@@ -12,9 +12,14 @@ const MisBanquetes = () => {
   const [formData, setFormData] = useState({
     nombre: "",
     direccion: "",
+    ubicacion: "",
+    dimensiones: "",
+    tipo: "",
     capacidad: "",
-    descripcion: "",
     precio_base: "",
+    descripcion: "",
+    equipamento: "",
+    servicios: "",
   });
 
   // Estados para imágenes
@@ -151,9 +156,14 @@ const MisBanquetes = () => {
       const data = new FormData();
       data.append("nombre", formData.nombre);
       data.append("direccion", formData.direccion);
+      data.append("ubicacion", formData.ubicacion);
+      data.append("dimensiones", formData.dimensiones);
+      data.append("tipo", formData.tipo);
       data.append("capacidad", formData.capacidad);
-      data.append("descripcion", formData.descripcion);
       data.append("precio_base", formData.precio_base);
+      data.append("descripcion", formData.descripcion);
+      data.append("equipamento", formData.equipamento);
+      data.append("servicios", formData.servicios);
 
       // Agregar imágenes existentes que se conservan (solo en edición)
       if (editingBanquete) {
@@ -180,9 +190,14 @@ const MisBanquetes = () => {
         setFormData({
           nombre: "",
           direccion: "",
+          ubicacion: "",
+          dimensiones: "",
+          tipo: "",
           capacidad: "",
-          descripcion: "",
           precio_base: "",
+          descripcion: "",
+          equipamento: "",
+          servicios: "",
         });
         resetImageState();
         fetchBanquetes();
@@ -195,11 +210,16 @@ const MisBanquetes = () => {
   const handleEdit = (banquete) => {
     setEditingBanquete(banquete);
     setFormData({
-      nombre: banquete.nombre,
-      direccion: banquete.direccion,
-      capacidad: banquete.capacidad,
-      descripcion: banquete.descripcion,
-      precio_base: banquete.precio_base,
+      nombre: banquete.nombre || "",
+      direccion: banquete.direccion || "",
+      ubicacion: banquete.ubicacion || "",
+      dimensiones: banquete.dimensiones || "",
+      tipo: banquete.tipo || "",
+      capacidad: banquete.capacidad || "",
+      precio_base: banquete.precio_base || "",
+      descripcion: banquete.descripcion || "",
+      equipamento: banquete.equipamento || "",
+      servicios: banquete.servicios || "",
     });
     // Cargar imágenes existentes
     setExistingImages(banquete.imagenes || []);
@@ -240,9 +260,14 @@ const MisBanquetes = () => {
     setFormData({
       nombre: "",
       direccion: "",
+      ubicacion: "",
+      dimensiones: "",
+      tipo: "",
       capacidad: "",
-      descripcion: "",
       precio_base: "",
+      descripcion: "",
+      equipamento: "",
+      servicios: "",
     });
     resetImageState();
     setShowModal(true);
@@ -369,20 +394,68 @@ const MisBanquetes = () => {
                     required
                   />
                 </div>
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text">Dirección</span>
-                  </label>
-                  <input
-                    type="text"
-                    className="input input-bordered"
-                    value={formData.direccion}
-                    onChange={(e) =>
-                      setFormData({ ...formData, direccion: e.target.value })
-                    }
-                    required
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="form-control">
+                    <label className="label">
+                      <span className="label-text">Dirección</span>
+                    </label>
+                    <input
+                      type="text"
+                      className="input input-bordered"
+                      value={formData.direccion}
+                      onChange={(e) =>
+                        setFormData({ ...formData, direccion: e.target.value })
+                      }
+                      required
+                    />
+                  </div>
+                  <div className="form-control">
+                    <label className="label">
+                      <span className="label-text">Ubicación (Ciudad/Zona)</span>
+                    </label>
+                    <input
+                      type="text"
+                      className="input input-bordered"
+                      value={formData.ubicacion}
+                      onChange={(e) =>
+                        setFormData({ ...formData, ubicacion: e.target.value })
+                      }
+                      required
+                    />
+                  </div>
                 </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="form-control">
+                    <label className="label">
+                      <span className="label-text">Dimensiones (m²)</span>
+                    </label>
+                    <input
+                      type="text"
+                      className="input input-bordered"
+                      value={formData.dimensiones}
+                      onChange={(e) =>
+                        setFormData({ ...formData, dimensiones: e.target.value })
+                      }
+                      placeholder="Ej. 200m²"
+                    />
+                  </div>
+                  <div className="form-control">
+                    <label className="label">
+                      <span className="label-text">Tipo de Evento</span>
+                    </label>
+                    <input
+                      type="text"
+                      className="input input-bordered"
+                      value={formData.tipo}
+                      onChange={(e) =>
+                        setFormData({ ...formData, tipo: e.target.value })
+                      }
+                      placeholder="Ej. Bodas, XV años, Empresarial"
+                    />
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="form-control">
                     <label className="label">
@@ -416,6 +489,7 @@ const MisBanquetes = () => {
                     />
                   </div>
                 </div>
+
                 <div className="form-control">
                   <label className="label">
                     <span className="label-text">Descripción</span>
@@ -427,6 +501,34 @@ const MisBanquetes = () => {
                       setFormData({ ...formData, descripcion: e.target.value })
                     }
                     required
+                  />
+                </div>
+
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text">Equipamiento (separado por comas)</span>
+                  </label>
+                  <textarea
+                    className="textarea textarea-bordered"
+                    value={formData.equipamento}
+                    onChange={(e) =>
+                      setFormData({ ...formData, equipamento: e.target.value })
+                    }
+                    placeholder="Ej. Sillas, Mesas, Pista de baile, Sonido"
+                  />
+                </div>
+
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text">Servicios (separado por comas)</span>
+                  </label>
+                  <textarea
+                    className="textarea textarea-bordered"
+                    value={formData.servicios}
+                    onChange={(e) =>
+                      setFormData({ ...formData, servicios: e.target.value })
+                    }
+                    placeholder="Ej. Banquete, Decoración, Seguridad, Valet Parking"
                   />
                 </div>
 
@@ -444,11 +546,10 @@ const MisBanquetes = () => {
                   {/* Zona de arrastrar y soltar */}
                   {canAddMore && (
                     <div
-                      className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all duration-200 ${
-                        isDragging
-                          ? "border-primary bg-primary/10 scale-[1.02]"
-                          : "border-base-300 hover:border-primary hover:bg-base-200"
-                      }`}
+                      className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all duration-200 ${isDragging
+                        ? "border-primary bg-primary/10 scale-[1.02]"
+                        : "border-base-300 hover:border-primary hover:bg-base-200"
+                        }`}
                       onDragOver={handleDragOver}
                       onDragLeave={handleDragLeave}
                       onDrop={handleDrop}
