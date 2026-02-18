@@ -24,18 +24,8 @@ const Navbar = () => {
       <div className="flex-none hidden md:flex justify-center items-center">
         <ul className="menu menu-horizontal px-1 gap-2 items-center">
           <li>
-            <Link to="/eventos" className="font-medium text-lg">
-              Eventos
-            </Link>
-          </li>
-          <li>
             <Link to="/salones" className="font-medium text-lg">
-              Salones
-            </Link>
-          </li>
-          <li>
-            <Link to="/catering" className="font-medium text-lg">
-              Catering
+              Banquetes
             </Link>
           </li>
           {isAdmin && (
