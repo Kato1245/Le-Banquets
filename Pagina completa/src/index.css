@@ -1,10 +1,10 @@
-/* index.css - Agrega estas mejoras */
 @import "tailwindcss";
 
 @plugin "daisyui" {
   themes: "luxury";
 }
 
+/* Navbar */
 .navbar {
   transition: all 0.3s ease;
 }
@@ -15,7 +15,7 @@
   flex: 1;
 }
 
-/* Animaciones para las cards */
+/* Cards */
 .card {
   transition: all 0.3s ease;
 }
@@ -25,7 +25,7 @@
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
 }
 
-/* Mejora para los formularios */
+/* Forms */
 .form-control {
   transition: all 0.3s ease;
 }
@@ -34,7 +34,7 @@
   transform: scale(1.02);
 }
 
-/* Efectos de hover mejorados */
+/* Buttons */
 .btn {
   transition: all 0.3s ease;
 }

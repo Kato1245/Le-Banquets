@@ -4,18 +4,8 @@ class BanqueteController {
   // Crear un nuevo banquete
   static async create(req, res) {
     try {
-      const {
-        nombre,
-        direccion,
-        ubicacion,
-        dimensiones,
-        tipo,
-        capacidad,
-        descripcion,
-        precio_base,
-        equipamento,
-        servicios,
-      } = req.body;
+      const { nombre, direccion, capacidad, descripcion, precio_base } =
+        req.body;
 
       // req.user viene del middleware authenticateToken y contiene el ID del usuario de MySQL
       const propietario_id = req.user.id;
@@ -41,14 +31,9 @@ class BanqueteController {
       const nuevoBanquete = new Banquete({
         nombre,
         direccion,
-        ubicacion,
-        dimensiones,
-        tipo,
         capacidad,
         descripcion,
         precio_base,
-        equipamento,
-        servicios,
         propietario_id,
         imagenes,
       });
@@ -116,14 +101,9 @@ class BanqueteController {
       const {
         nombre,
         direccion,
-        ubicacion,
-        dimensiones,
-        tipo,
         capacidad,
         descripcion,
         precio_base,
-        equipamento,
-        servicios,
         imagenes_existentes,
       } = req.body;
 
@@ -139,14 +119,9 @@ class BanqueteController {
       // Actualizar campos de texto
       if (nombre) banquete.nombre = nombre;
       if (direccion) banquete.direccion = direccion;
-      if (ubicacion) banquete.ubicacion = ubicacion;
-      if (dimensiones) banquete.dimensiones = dimensiones;
-      if (tipo) banquete.tipo = tipo;
       if (capacidad) banquete.capacidad = capacidad;
       if (descripcion) banquete.descripcion = descripcion;
       if (precio_base) banquete.precio_base = precio_base;
-      if (equipamento) banquete.equipamento = equipamento;
-      if (servicios) banquete.servicios = servicios;
 
       // Manejar imágenes: conservar las existentes que el usuario no eliminó
       let imagenesFinales = [];

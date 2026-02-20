@@ -1,127 +1,39 @@
-// src/App.jsx
-import { Route, Routes, Navigate } from "react-router-dom";
-import { Toaster } from 'react-hot-toast'; // ← Añade esta importación
-import Home from "./pages/Home";
-import Login from "./pages/Login";
-import Registro from "./pages/Registro";
-import RegistroPropietario from "./pages/RegistroPropietario";
-import Perfil from "./pages/Perfil";
-import Eventos from "./pages/Eventos";
-import Salones from "./pages/Salones";
-import Catering from "./pages/Catering";
-import MisEventos from "./pages/MisEventos";
-import MisBanquetes from "./pages/MisBanquetes";
-import Configuracion from "./pages/Configuracion";
-import AdminDashboard from "./pages/AdminDashboard";
-import ForgotPassword from "./pages/ForgotPassword";
-import ResetPassword from "./pages/ResetPassword";
-import Navbar from "./Components/Navbar/navbar";
-import { useAuth } from "./context/AuthContext";
-import ProtectedRoute from "./Components/ProtectedRoute/ProtectedRoute";
-import TokenValidator from "./Components/TokenValidator/TokenValidator";
+import { Routes, Route } from 'react-router-dom';
+
+import MainLayout from '@/shared/layouts/MainLayout';
+import Home from '@/features/home/pages/Home';
+import Login from '@/features/auth/pages/Login';
+import BanquetesList from '@/features/banquetes/pages/BanquetesList';
+import BanqueteDetail from '@/features/banquetes/pages/BanqueteDetail';
+import ProtectedRoute from '@/shared/components/ProtectedRoute';
 
 function App() {
-  const { loading, user } = useAuth();
-  
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <span className="loading loading-spinner loading-lg text-primary"></span>
-      </div>
-    );
-  }
+  return (
+    <Routes>
+      <Route element={<MainLayout />}>
+        <Route path="/" element={<Home />} />
 
-  return ( 
-    <>
-      <Toaster 
-        position="top-right"
-        toastOptions={{
-          duration: 4000,
-          style: {
-            background: '#363636',
-            color: '#fff',
-          },
-          success: {
-            duration: 3000,
-            iconTheme: {
-              primary: '#4ade80',
-              secondary: '#fff',
-            },
-          },
-          error: {
-            duration: 5000,
-            iconTheme: {
-              primary: '#ef4444',
-              secondary: '#fff',
-            },
-          },
-        }}
-      />
-      <TokenValidator />
-      <Navbar />
-      <Routes>
-        <Route path="/" element={<Home/>} />
-        <Route path="/home" element={<Home/>} />
-        <Route 
-          path="/login" 
-          element={!user ? <Login/> : <Navigate to="/" replace />} 
-        />
-        <Route 
-          path="/registro" 
-          element={!user ? <Registro/> : <Navigate to="/" replace />} 
-        />
-        <Route 
-          path="/registro-propietario" 
-          element={!user ? <RegistroPropietario/> : <Navigate to="/" replace />} 
-        />
-        <Route 
-          path="/perfil" 
+        <Route
+          path="/banquetes"
           element={
             <ProtectedRoute>
-              <Perfil/>
+              <BanquetesList />
             </ProtectedRoute>
-          } 
+          }
         />
-        <Route path="/eventos" element={<Eventos/>} />
-        <Route path="/salones" element={<Salones/>} />
-        <Route path="/catering" element={<Catering/>} />
-        <Route 
-          path="/mis-eventos" 
+
+        <Route
+          path="/banquetes/:id"
           element={
             <ProtectedRoute>
-              <MisEventos/>
+              <BanqueteDetail />
             </ProtectedRoute>
-          } 
+          }
         />
-        <Route 
-          path="/mis-banquetes" 
-          element={
-            <ProtectedRoute>
-              <MisBanquetes/>
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/configuracion" 
-          element={
-            <ProtectedRoute>
-              <Configuracion/>
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/admin" 
-          element={
-            <ProtectedRoute>
-              <AdminDashboard/>
-            </ProtectedRoute>
-          } 
-        />
-        <Route path="/forgot-password" element={<ForgotPassword/>} />
-        <Route path="/reset-password" element={<ResetPassword/>} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </>
+      </Route>
+
+      <Route path="/login" element={<Login />} />
+    </Routes>
   );
 }
 
