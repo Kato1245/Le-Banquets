@@ -1,48 +1,49 @@
 // src/shared/components/TokenValidator.jsx
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 
+const INTERVAL_MS = 5 * 60 * 1000; // 5 minutos (antes 30s — innecesariamente agresivo)
+
 const TokenValidator = () => {
     const { checkTokenValidity, user, logout } = useAuth();
+    const isMounted = useRef(true);
 
     useEffect(() => {
-        if (user) {
-            // Verificar token inmediatamente al montar
-            const verifyOnMount = async () => {
-                try {
-                    const isValid = await checkTokenValidity();
-                    if (!isValid) {
-                        console.log('Token invalidado al cargar. Cerrando sesión...');
-                        toast.error('Tu sesión ha expirado. Por favor inicia sesión nuevamente.');
-                        setTimeout(() => logout(), 2000);
-                    }
-                } catch (error) {
-                    console.log('Error verificando token. Cerrando sesión por seguridad...');
-                    toast.error('Error de autenticación. Cerrando sesión...');
-                    setTimeout(() => logout(), 2000);
-                }
-            };
-            verifyOnMount();
+        isMounted.current = true;
 
-            // Verificar token periódicamente cada 30 segundos
-            const interval = setInterval(async () => {
-                try {
-                    const isValid = await checkTokenValidity();
-                    if (!isValid) {
-                        console.log('Token invalidado durante sesión. Cerrando sesión...');
-                        toast.error('Tu sesión ha expirado. Por favor inicia sesión nuevamente.');
-                        setTimeout(() => logout(), 2000);
-                    }
-                } catch (error) {
-                    console.log('Error periódico verificando token. Cerrando sesión...');
-                    toast.error('Error de autenticación. Cerrando sesión...');
-                    setTimeout(() => logout(), 2000);
-                }
-            }, 30000);
+        if (!user) return;
 
-            return () => clearInterval(interval);
-        }
+        const handleInvalidToken = () => {
+            if (!isMounted.current) return; // Evitar race condition post-desmonte
+            toast.error('Tu sesión ha expirado. Por favor inicia sesión nuevamente.');
+            setTimeout(() => {
+                if (isMounted.current) logout();
+            }, 1500);
+        };
+
+        // Verificar token al montar
+        checkTokenValidity().then(isValid => {
+            if (!isValid && isMounted.current) handleInvalidToken();
+        }).catch(() => {
+            // Si el servidor no responde no cerramos sesión automáticamente
+            // (puede ser un error de red temporal)
+        });
+
+        // Verificar cada 5 minutos
+        const interval = setInterval(async () => {
+            try {
+                const isValid = await checkTokenValidity();
+                if (!isValid) handleInvalidToken();
+            } catch {
+                // Error de red temporal — no deslogear
+            }
+        }, INTERVAL_MS);
+
+        return () => {
+            isMounted.current = false;
+            clearInterval(interval);
+        };
     }, [user, checkTokenValidity, logout]);
 
     return null;

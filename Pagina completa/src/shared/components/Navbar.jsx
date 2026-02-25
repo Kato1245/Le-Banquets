@@ -5,12 +5,12 @@ import { useAuth } from "../../context/AuthContext";
 const Navbar = () => {
     const { user, logout } = useAuth();
 
-    const handleLogout = () => {
-        logout();
-    };
-
-    const isAdmin = user?.userData?.es_admin;
-    const isPropietario = user?.userType === "propietario";
+    // Unificamos la lectura de datos del usuario
+    // La estructura del user viene del login: { id, nombre, email, userType, isAdmin, ... }
+    const userName = user?.nombre || user?.email || 'Usuario';
+    const userInitial = userName.charAt(0).toUpperCase();
+    const isAdmin = !!user?.isAdmin;
+    const isPropietario = user?.userType === 'propietario';
 
     return (
         <div className="navbar bg-base-100 shadow-sm sticky top-0 z-50 px-4 md:px-8">
@@ -20,11 +20,11 @@ const Navbar = () => {
                 </Link>
             </div>
 
-            {/* Elementos centrados */}
+            {/* Navegación central */}
             <div className="flex-none hidden md:flex justify-center items-center">
                 <ul className="menu menu-horizontal px-1 gap-2 items-center">
                     <li>
-                        <Link to="/salones" className="font-medium text-lg">
+                        <Link to="/banquetes" className="font-medium text-lg">
                             Banquetes
                         </Link>
                     </li>
@@ -35,9 +35,9 @@ const Navbar = () => {
                             </Link>
                         </li>
                     )}
-                    {isPropietario && (
+                    {isPropietario && !isAdmin && (
                         <li>
-                            <Link to="/admin" className="font-medium text-lg text-info">
+                            <Link to="/mis-banquetes" className="font-medium text-lg text-info">
                                 Mi Empresa
                             </Link>
                         </li>
@@ -46,46 +46,44 @@ const Navbar = () => {
             </div>
 
             {user ? (
-                // Navbar cuando el usuario está autenticado
                 <div className="flex-none gap-2">
                     <div className="dropdown dropdown-end">
                         <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar">
                             <div className="w-10 rounded-full bg-primary text-primary-content flex items-center justify-center font-bold">
-                                {user.userData?.nombre
-                                    ? user.userData.nombre.charAt(0).toUpperCase()
-                                    : user.email?.charAt(0).toUpperCase() || "U"}
+                                {userInitial}
                             </div>
                         </div>
                         <ul tabIndex={0} className="mt-3 z-[1] p-2 shadow menu menu-sm dropdown-content bg-base-100 rounded-box w-52 border border-base-300">
                             <li className="menu-title">
-                                <span>Hola, {user.userData?.nombre || user.email}</span>
-                                {user.isAdmin && (
+                                <span>Hola, {userName}</span>
+                                {isAdmin && (
                                     <span className="badge badge-warning badge-sm">Admin</span>
                                 )}
-                                {user.userType === "propietario" && (
+                                {isPropietario && !isAdmin && (
                                     <span className="badge badge-info badge-sm">Propietario</span>
                                 )}
                             </li>
                             <li><Link to="/perfil">Mi Perfil</Link></li>
                             <li><Link to="/mis-eventos">Mis Eventos</Link></li>
-                            {user.userType === "propietario" && (
+                            {isPropietario && (
                                 <li><Link to="/mis-banquetes">Mis Banquetes</Link></li>
                             )}
                             <li><Link to="/configuracion">Configuración</Link></li>
-                            {user.isAdmin && (
+                            {isAdmin && (
                                 <li>
                                     <Link to="/admin" className="text-warning">Panel Admin</Link>
                                 </li>
                             )}
                             <li><hr className="my-1" /></li>
                             <li>
-                                <button onClick={handleLogout} className="text-error">Cerrar Sesión</button>
+                                <button onClick={logout} className="text-error">
+                                    Cerrar Sesión
+                                </button>
                             </li>
                         </ul>
                     </div>
                 </div>
             ) : (
-                // Navbar cuando el usuario no está autenticado
                 <div className="flex-none">
                     <ul className="menu menu-horizontal px-1 gap-2 items-center">
                         <li>

@@ -3,23 +3,28 @@ const User = require('../models/userModel');
 const jwt = require('jsonwebtoken');
 const { JWT_SECRET } = require('../middleware/auth');
 
-// Almacena intentos por IP (en memoria)
+// Registro de intentos fallidos por IP (en memoria)
+// Nota: En producción con múltiples instancias usar Redis
 const loginAttempts = new Map();
-const MAX_ATTEMPTS = 3;
-const LOCK_TIME = 5 * 60 * 1000; // 5 minutos en milisegundos
+const MAX_ATTEMPTS = 5;
+const LOCK_TIME = 5 * 60 * 1000; // 5 minutos
 
-// Función para generar auth_id
-const generateAuthId = () => {
-    return 'auth_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-};
+// Generación de auth_id único
+const generateAuthId = () =>
+    'auth_' + Date.now() + '_' + Math.random().toString(36).slice(2, 11);
 
-// Función para obtener IP del cliente
-const getClientIP = (req) => {
-    return req.ip || 
-           req.connection.remoteAddress || 
-           req.socket.remoteAddress ||
-           (req.connection.socket ? req.connection.socket.remoteAddress : null) ||
-           'unknown-ip';
+// Obtener IP del cliente de forma segura
+const getClientIP = (req) =>
+    (req.headers['x-forwarded-for'] || '').split(',')[0].trim() ||
+    req.socket?.remoteAddress ||
+    'unknown';
+
+// Registrar un intento fallido de login para una IP
+const recordFailedAttempt = (key, current) => {
+    const newCount = current.count + 1;
+    const lockUntil = newCount >= MAX_ATTEMPTS ? Date.now() + LOCK_TIME : null;
+    loginAttempts.set(key, { count: newCount, lockUntil });
+    return { newCount, locked: newCount >= MAX_ATTEMPTS };
 };
 
 class AuthController {
@@ -27,33 +32,29 @@ class AuthController {
         try {
             const isPropietario = req.originalUrl.includes('/register/propietario');
             const userType = isPropietario ? 'propietario' : 'usuario';
+            const table = isPropietario ? 'propietarios' : 'usuarios';
+
             const { nombre, email, contrasena, documento, telefono, fecha_nacimiento, rut } = req.body;
 
-            // Verificar si el usuario ya existe
-            const table = userType === 'propietario' ? 'propietarios' : 'usuarios';
+            // Verificar si el email ya existe
             const existingUser = await User.findByEmail(email, table);
-            
             if (existingUser) {
-                console.log('Usuario ya existe:', email);
                 return res.status(409).json({
                     success: false,
-                    message: 'El usuario ya existe con este email'
+                    message: 'Ya existe una cuenta con este email'
                 });
             }
 
-            // Hash de la contraseña
-            const saltRounds = 10;
-            const hashedPassword = await bcrypt.hash(contrasena, saltRounds);
+            const hashedPassword = await bcrypt.hash(contrasena, 12);
 
-            // Crear usuario
             const userData = {
-                nombre,
-                email,
+                nombre: nombre.trim(),
+                email,                         // ya normalizado por express-validator
                 contrasena: hashedPassword,
                 documento: documento || null,
                 telefono: telefono || null,
                 fecha_nacimiento: fecha_nacimiento || null,
-                auth_id: generateAuthId(), 
+                auth_id: generateAuthId(),
                 esta_activo: true,
                 esta_verificado: false
             };
@@ -64,22 +65,15 @@ class AuthController {
 
             const result = await User.createUser(userData, table);
 
-            res.status(201).json({
+            return res.status(201).json({
                 success: true,
-                message: `${userType === 'propietario' ? 'Propietario' : 'Usuario'} registrado exitosamente`,
-                data: {
-                    id: result.insertId,
-                    nombre,
-                    email
-                }
+                message: `${isPropietario ? 'Propietario' : 'Usuario'} registrado exitosamente`,
+                data: { id: result.insertId, nombre: userData.nombre, email }
             });
 
         } catch (error) {
-            console.error('Error en registro:', error);
-            res.status(500).json({
-                success: false,
-                message: 'Error interno del servidor'
-            });
+            console.error('Error en registro:', error.message);
+            return res.status(500).json({ success: false, message: 'Error interno del servidor' });
         }
     }
 
@@ -87,79 +81,40 @@ class AuthController {
         try {
             const { email, contrasena } = req.body;
             const clientIP = getClientIP(req);
-            const attemptKey = `login_attempts_${clientIP}`;
+            const attemptKey = `login_${clientIP}`;
+            const current = loginAttempts.get(attemptKey) || { count: 0, lockUntil: null };
 
-            console.log('Intento de login desde IP:', clientIP, 'Email:', email);
-
-            // Verificar intentos previos
-            const currentAttempts = loginAttempts.get(attemptKey) || { count: 0, lockUntil: null };
-
-            // Si está bloqueado por IP
-            if (currentAttempts.lockUntil && Date.now() < currentAttempts.lockUntil) {
-                const remainingTime = Math.ceil((currentAttempts.lockUntil - Date.now()) / 1000 / 60);
-                console.log('IP bloqueada:', clientIP, 'Tiempo restante:', remainingTime, 'minutos');
-                
+            // Verificar bloqueo por IP
+            if (current.lockUntil && Date.now() < current.lockUntil) {
+                const remainingMin = Math.ceil((current.lockUntil - Date.now()) / 60000);
                 return res.status(429).json({
                     success: false,
-                    message: `Demasiados intentos fallidos. Espere ${remainingTime} minutos antes de intentar nuevamente.`,
+                    message: `Demasiados intentos fallidos. Espere ${remainingMin} minuto(s) antes de intentar nuevamente.`,
                     locked: true,
-                    remainingTime: remainingTime
+                    remainingTime: remainingMin
                 });
             }
 
-            // Validar campos requeridos
-            if (!email || !contrasena) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Email y contraseña son requeridos'
-                });
-            }
+            // Buscar usuario en ambas tablas
+            let user = await User.findByEmail(email, 'usuarios');
+            let userType = 'usuario';
 
-            let user = null;
-            let userType = null;
-            let table = null;
-
-            // Buscar primero en usuarios
-            user = await User.findByEmail(email, 'usuarios');
-            if (user) {
-                userType = 'usuario';
-                table = 'usuarios';
-            } else {
-                // Si no está en usuarios, buscar en propietarios
-                user = await User.findByEmail(email, 'propietarios');
-                if (user) {
-                    userType = 'propietario';
-                    table = 'propietarios';
-                }
-            }
-
-            // Si no se encuentra en ninguna tabla
             if (!user) {
-                console.log('Usuario no encontrado:', email);
-                
-                // Incrementar intentos fallidos por IP
-                const newCount = currentAttempts.count + 1;
-                let lockUntil = null;
-                
-                if (newCount >= MAX_ATTEMPTS) {
-                    lockUntil = Date.now() + LOCK_TIME;
-                    console.log('IP bloqueada por máximo intentos:', clientIP);
-                }
-                
-                loginAttempts.set(attemptKey, { 
-                    count: newCount, 
-                    lockUntil: lockUntil 
-                });
+                user = await User.findByEmail(email, 'propietarios');
+                userType = 'propietario';
+            }
 
+            if (!user) {
+                const { newCount, locked } = recordFailedAttempt(attemptKey, current);
                 return res.status(401).json({
                     success: false,
                     message: 'Credenciales inválidas',
-                    attemptsLeft: MAX_ATTEMPTS - newCount,
-                    locked: newCount >= MAX_ATTEMPTS
+                    attemptsLeft: Math.max(0, MAX_ATTEMPTS - newCount),
+                    locked
                 });
             }
 
-            // Verificar si está activo
+            // Verificar estado de la cuenta
             if (!user.esta_activo) {
                 return res.status(401).json({
                     success: false,
@@ -169,153 +124,101 @@ class AuthController {
 
             // Verificar contraseña
             const isPasswordValid = await bcrypt.compare(contrasena, user.contrasena);
-            
             if (!isPasswordValid) {
-                console.log('Contraseña incorrecta para:', email);
-                
-                // Incrementar intentos fallidos por IP
-                const newCount = currentAttempts.count + 1;
-                let lockUntil = null;
-                
-                if (newCount >= MAX_ATTEMPTS) {
-                    lockUntil = Date.now() + LOCK_TIME;
-                    console.log('IP bloqueada por máximo intentos:', clientIP);
-                }
-                
-                loginAttempts.set(attemptKey, { 
-                    count: newCount, 
-                    lockUntil: lockUntil 
-                });
-
+                const { newCount, locked } = recordFailedAttempt(attemptKey, current);
                 return res.status(401).json({
                     success: false,
                     message: 'Credenciales inválidas',
-                    attemptsLeft: MAX_ATTEMPTS - newCount,
-                    locked: newCount >= MAX_ATTEMPTS
+                    attemptsLeft: Math.max(0, MAX_ATTEMPTS - newCount),
+                    locked
                 });
             }
 
-            // Login exitoso - resetear intentos para esta IP
-            if (loginAttempts.has(attemptKey)) {
-                loginAttempts.delete(attemptKey);
-                console.log('Intentos reseteados para IP:', clientIP);
-            }
+            // Login exitoso — resetear intentos
+            loginAttempts.delete(attemptKey);
 
-            // Crear token JWT
+            // Crear JWT
             const token = jwt.sign(
-                {
-                    userId: user.id,
-                    email: user.email,
-                    userType: userType
-                },
+                { userId: user.id, email: user.email, userType },
                 JWT_SECRET,
                 { expiresIn: '24h' }
             );
 
-            // Eliminar contraseña de la respuesta
-            const userWithoutPassword = { ...user };
-            delete userWithoutPassword.contrasena;
+            const { contrasena: _, ...userWithoutPassword } = user;
 
-            console.log('Login exitoso para:', email, 'Tipo:', userType, 'Desde IP:', clientIP);
-
-            res.json({
+            return res.json({
                 success: true,
                 message: 'Login exitoso',
                 data: {
                     user: userWithoutPassword,
-                    userType: userType,
-                    token: token,
+                    userType,
+                    token,
                     expiresIn: '24h'
                 }
             });
 
         } catch (error) {
-            console.error('Error en login:', error);
-            res.status(500).json({
-                success: false,
-                message: 'Error interno del servidor'
-            });
+            console.error('Error en login:', error.message);
+            return res.status(500).json({ success: false, message: 'Error interno del servidor' });
         }
     }
 
     static async getProfile(req, res) {
         try {
-            // El usuario ya está autenticado por el middleware
-            const user = req.user;
-            const userType = req.userType;
-
-            // Eliminar contraseña de la respuesta
-            const userWithoutPassword = { ...user };
-            delete userWithoutPassword.contrasena;
-
-            res.json({
+            const { contrasena: _, ...userWithoutPassword } = req.user;
+            return res.json({
                 success: true,
                 message: 'Perfil obtenido exitosamente',
                 data: {
                     user: userWithoutPassword,
-                    userType: userType
+                    userType: req.userType
                 }
             });
-
         } catch (error) {
-            console.error('Error obteniendo perfil:', error);
-            res.status(500).json({
-                success: false,
-                message: 'Error interno del servidor'
-            });
+            console.error('Error obteniendo perfil:', error.message);
+            return res.status(500).json({ success: false, message: 'Error interno del servidor' });
         }
     }
 
     static async updateProfile(req, res) {
         try {
             const userId = req.user?.id;
+            const userType = req.userType;
+
             if (!userId) {
-                return res.status(400).json({
-                    success: false,
-                    message: "Usuario no encontrado en el token"
-                });
+                return res.status(400).json({ success: false, message: 'Usuario no identificado' });
             }
 
-            // Mapeo frontend → backend
-            const { username, email, telefono } = req.body;
+            const table = userType === 'propietario' ? 'propietarios' : 'usuarios';
+            const { nombre, email, telefono } = req.body;
 
-            // Crear objeto con los campos a actualizar
             const fieldsToUpdate = {};
-            if (username !== undefined) fieldsToUpdate.nombre = username;
+            if (nombre !== undefined) fieldsToUpdate.nombre = nombre.trim();
             if (email !== undefined) fieldsToUpdate.email = email;
             if (telefono !== undefined) fieldsToUpdate.telefono = telefono;
 
             if (Object.keys(fieldsToUpdate).length === 0) {
-                return res.status(400).json({
-                    success: false,
-                    message: "No se recibieron campos para actualizar"
-                });
+                return res.status(400).json({ success: false, message: 'No se recibieron campos para actualizar' });
             }
 
-            const result = await User.updateById(userId, fieldsToUpdate, 'usuarios');
+            const result = await User.updateById(userId, fieldsToUpdate, table);
 
             if (result.affectedRows === 0) {
-                return res.status(404).json({
-                    success: false,
-                    message: "Usuario no encontrado o datos iguales"
-                });
+                return res.status(404).json({ success: false, message: 'Usuario no encontrado o datos sin cambios' });
             }
 
-            const updatedUser = await User.findById(userId, 'usuarios');
-            if (updatedUser) delete updatedUser.contrasena;
+            const updatedUser = await User.findById(userId, table);
+            const { contrasena: _, ...safeUser } = updatedUser;
 
-            res.json({
+            return res.json({
                 success: true,
-                message: "Perfil actualizado correctamente",
-                data: updatedUser
+                message: 'Perfil actualizado correctamente',
+                data: safeUser
             });
 
         } catch (error) {
-            console.error("Error actualizando perfil:", error);
-            res.status(500).json({
-                success: false,
-                message: "Error interno del servidor"
-            });
+            console.error('Error actualizando perfil:', error.message);
+            return res.status(500).json({ success: false, message: 'Error interno del servidor' });
         }
     }
 }

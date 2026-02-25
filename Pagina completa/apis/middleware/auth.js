@@ -2,12 +2,19 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'cad8e6396223f3bd0bf9ebcd1d66b983';
+// Lanzar error al inicio si el secreto no está definido
+if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET no está definido en las variables de entorno. El servidor no puede iniciar.');
+}
+
+const JWT_SECRET = process.env.JWT_SECRET;
 
 const authenticateToken = async (req, res, next) => {
     try {
         const authHeader = req.headers['authorization'];
-        const token = authHeader && authHeader.split(' ')[1];
+        const token = authHeader && authHeader.startsWith('Bearer ')
+            ? authHeader.slice(7)
+            : null;
 
         if (!token) {
             return res.status(401).json({
@@ -16,19 +23,10 @@ const authenticateToken = async (req, res, next) => {
             });
         }
 
-        // Verificar firma del token
+        // jwt.verify lanza excepción si el token expiró o es inválido
         const decoded = jwt.verify(token, JWT_SECRET);
-        
-        // Verificar expiración manualmente
-        const now = Date.now().valueOf() / 1000;
-        if (typeof decoded.exp !== 'undefined' && decoded.exp < now) {
-            return res.status(401).json({
-                success: false,
-                message: 'Token expirado'
-            });
-        }
 
-        // Verificar que el usuario aún existe en BD
+        // Verificar que el usuario aún existe y está activo en la BD
         const table = decoded.userType === 'propietario' ? 'propietarios' : 'usuarios';
         const user = await User.findById(decoded.userId, table);
 
@@ -42,33 +40,33 @@ const authenticateToken = async (req, res, next) => {
         if (!user.esta_activo) {
             return res.status(401).json({
                 success: false,
-                message: 'Cuenta desactivada'
+                message: 'Cuenta desactivada. Contacte al administrador'
             });
         }
 
         req.user = user;
         req.userType = decoded.userType;
         next();
+
     } catch (error) {
-        console.error('Error en autenticación:', error);
-        
         if (error.name === 'TokenExpiredError') {
-            return res.status(403).json({
+            return res.status(401).json({
                 success: false,
-                message: 'Token expirado'
+                message: 'Sesión expirada. Por favor inicia sesión nuevamente'
             });
         }
-        
+
         if (error.name === 'JsonWebTokenError') {
-            return res.status(403).json({
+            return res.status(401).json({
                 success: false,
                 message: 'Token inválido'
             });
         }
 
+        console.error('Error inesperado en autenticación:', error.message);
         return res.status(500).json({
             success: false,
-            message: 'Error en autenticación'
+            message: 'Error interno de autenticación'
         });
     }
 };

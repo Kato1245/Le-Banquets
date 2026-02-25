@@ -1,9 +1,11 @@
 // src/features/perfil/pages/Perfil.jsx
 import { useState, useEffect } from "react"
 import { useAuth } from "../../../context/AuthContext"
+import toast from "react-hot-toast"
+import API_BASE_URL from "../../../config/api"
 
 const Perfil = () => {
-    const { user } = useAuth()
+    const { user, token, setUser } = useAuth()
     const [isEditing, setIsEditing] = useState(false)
     const [userData, setUserData] = useState({
         nombre: "",
@@ -13,55 +15,47 @@ const Perfil = () => {
         documento: ""
     })
     const [loading, setLoading] = useState(true)
-    const [message, setMessage] = useState("")
+    const [saving, setSaving] = useState(false)
 
     useEffect(() => {
-        if (user) {
-            loadUserData();
-        }
-    }, [user]);
+        if (user) loadUserData();
+    }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
+    // Carga los datos del perfil desde el servidor
     const loadUserData = async () => {
         try {
             setLoading(true);
-            const token = localStorage.getItem("token");
-
-            const endpoint = user.userType === 'propietario'
-                ? 'http://localhost:3000/api/auth/profile/propietario'
-                : 'http://localhost:3000/api/auth/profile/usuario';
-
-            const response = await fetch(endpoint, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
+            const res = await fetch(`${API_BASE_URL}/auth/profile`, {
+                headers: { Authorization: `Bearer ${token}` }
             });
 
-            if (response.ok) {
-                const data = await response.json();
+            if (res.ok) {
+                const data = await res.json();
+                const u = data.data?.user || data.data || {};
                 setUserData({
-                    nombre: data.nombre || "",
-                    email: data.email || user.email,
-                    telefono: data.telefono || "",
-                    fecha_nacimiento: data.fecha_nacimiento || "",
-                    documento: data.documento || ""
+                    nombre: u.nombre || "",
+                    email: u.email || user.email,
+                    telefono: u.telefono || "",
+                    fecha_nacimiento: u.fecha_nacimiento || "",
+                    documento: u.documento || ""
                 });
             } else {
+                // Fallback: usar datos del contexto
                 setUserData({
-                    nombre: user.userData?.nombre || user.email.split('@')[0],
-                    email: user.email,
-                    telefono: user.userData?.telefono || "",
-                    fecha_nacimiento: user.userData?.fecha_nacimiento || "",
-                    documento: user.userData?.documento || ""
+                    nombre: user.nombre || "",
+                    email: user.email || "",
+                    telefono: user.telefono || "",
+                    fecha_nacimiento: user.fecha_nacimiento || "",
+                    documento: user.documento || ""
                 });
             }
-        } catch (error) {
-            console.error("Error cargando datos:", error);
+        } catch {
             setUserData({
-                nombre: user.userData?.nombre || user.email.split('@')[0],
-                email: user.email,
-                telefono: user.userData?.telefono || "",
-                fecha_nacimiento: user.userData?.fecha_nacimiento || "",
-                documento: user.userData?.documento || ""
+                nombre: user.nombre || "",
+                email: user.email || "",
+                telefono: user.telefono || "",
+                fecha_nacimiento: user.fecha_nacimiento || "",
+                documento: user.documento || ""
             });
         } finally {
             setLoading(false);
@@ -69,15 +63,9 @@ const Perfil = () => {
     };
 
     const handleSave = async () => {
+        setSaving(true);
         try {
-            setMessage("Guardando cambios...");
-            const token = localStorage.getItem("token");
-
-            const endpoint = user.userType === 'propietario'
-                ? 'http://localhost:3000/api/auth/profile/propietario'
-                : 'http://localhost:3000/api/auth/profile/usuario';
-
-            const response = await fetch(endpoint, {
+            const res = await fetch(`${API_BASE_URL}/auth/profile`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -86,36 +74,25 @@ const Perfil = () => {
                 body: JSON.stringify({
                     nombre: userData.nombre,
                     email: userData.email,
-                    telefono: userData.telefono,
-                    fecha_nacimiento: userData.fecha_nacimiento,
-                    documento: userData.documento
+                    telefono: userData.telefono
                 })
             });
 
-            const data = await response.json();
+            const data = await res.json();
 
             if (data.success) {
-                setMessage("✅ Perfil actualizado correctamente");
+                toast.success("Perfil actualizado correctamente");
                 setIsEditing(false);
-                const updatedUser = {
-                    ...user,
-                    userData: {
-                        ...user.userData,
-                        nombre: userData.nombre,
-                        email: userData.email,
-                        telefono: userData.telefono,
-                        fecha_nacimiento: userData.fecha_nacimiento,
-                        documento: userData.documento
-                    }
-                };
-                localStorage.setItem('user', JSON.stringify(updatedUser));
-                setTimeout(() => setMessage(""), 3000);
+                // Actualizar estado global del usuario
+                setUser(prev => ({ ...prev, nombre: userData.nombre, email: userData.email }));
+                localStorage.setItem('user', JSON.stringify({ ...user, nombre: userData.nombre, email: userData.email }));
             } else {
-                setMessage("❌ Error al actualizar el perfil");
+                toast.error(data.message || "Error al actualizar el perfil");
             }
-        } catch (error) {
-            console.error("Error actualizando perfil:", error);
-            setMessage("❌ Error de conexión");
+        } catch {
+            toast.error("Error de conexión al guardar el perfil");
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -136,11 +113,7 @@ const Perfil = () => {
         <div className="min-h-screen bg-base-100 py-8">
             <div className="max-w-4xl mx-auto px-4">
                 <h1 className="text-3xl font-bold text-center mb-8">Mi Perfil</h1>
-                {message && (
-                    <div className={`alert ${message.includes('✅') ? 'alert-success' : 'alert-error'} mb-6`}>
-                        <span>{message}</span>
-                    </div>
-                )}
+
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     <div className="md:col-span-2">
                         <div className="card bg-base-200 shadow-xl">
@@ -152,7 +125,7 @@ const Perfil = () => {
                                         {isEditing ? (
                                             <input type="text" name="nombre" value={userData.nombre} onChange={handleChange} className="input input-bordered" />
                                         ) : (
-                                            <p className="text-lg">{userData.nombre}</p>
+                                            <p className="text-lg">{userData.nombre || "No especificado"}</p>
                                         )}
                                     </div>
                                     <div className="form-control">
@@ -191,16 +164,23 @@ const Perfil = () => {
                                 <div className="card-actions justify-end mt-6">
                                     {isEditing ? (
                                         <>
-                                            <button onClick={() => setIsEditing(false)} className="btn btn-ghost">Cancelar</button>
-                                            <button onClick={handleSave} className="btn btn-primary">Guardar Cambios</button>
+                                            <button onClick={() => setIsEditing(false)} className="btn btn-ghost" disabled={saving}>
+                                                Cancelar
+                                            </button>
+                                            <button onClick={handleSave} className="btn btn-primary" disabled={saving}>
+                                                {saving ? <span className="loading loading-spinner loading-sm"></span> : "Guardar Cambios"}
+                                            </button>
                                         </>
                                     ) : (
-                                        <button onClick={() => setIsEditing(true)} className="btn btn-primary">Editar Perfil</button>
+                                        <button onClick={() => setIsEditing(true)} className="btn btn-primary">
+                                            Editar Perfil
+                                        </button>
                                     )}
                                 </div>
                             </div>
                         </div>
                     </div>
+
                     <div className="space-y-6">
                         <div className="card bg-base-200 shadow-xl">
                             <div className="card-body">
@@ -209,6 +189,9 @@ const Perfil = () => {
                                     <div className="w-24 h-24 rounded-full bg-primary text-primary-content flex items-center justify-center text-3xl font-bold mb-4">
                                         {userData.nombre ? userData.nombre.charAt(0).toUpperCase() : 'U'}
                                     </div>
+                                    <p className="text-sm text-base-content/60 text-center">
+                                        {user?.userType === 'propietario' ? 'Propietario' : 'Usuario'}
+                                    </p>
                                 </div>
                             </div>
                         </div>

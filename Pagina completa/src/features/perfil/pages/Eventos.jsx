@@ -290,9 +290,9 @@ const Eventos = () => {
     return (
         <div className="min-h-screen bg-base-100 py-8">
             <div className="max-w-7xl mx-auto px-4">
-                <h1 className="text-4xl font-bold text-center mb-8">Tipos de Eventos</h1>
-                <p className="text-lg text-center mb-8 max-w-3xl mx-auto">
-                    Ofrecemos paquetes especializados para cada tipo de celebración, con servicios personalizados que se adaptan a tus necesidades
+                <h1 className="text-4xl font-bold text-center mb-2">Tipos de Eventos</h1>
+                <p className="text-lg text-center mb-8 max-w-3xl mx-auto text-base-content/70">
+                    Explorá los tipos de eventos para los que podés buscar un espacio en nuestra plataforma
                 </p>
 
                 <div className="bg-base-200 p-6 rounded-lg shadow-md mb-8">
@@ -332,14 +332,10 @@ const Eventos = () => {
                                 <p className="line-clamp-2">{evento.descripcion}</p>
                                 <div className="flex justify-between items-center mt-4">
                                     <div className="badge badge-primary">{evento.capacidad} personas</div>
-                                    <div className="text-xl font-bold">${evento.precio.toLocaleString('es-CO')}</div>
-                                </div>
-                                <div className="mt-2">
-                                    <p className="text-sm"><strong>Duración:</strong> {evento.duracion}</p>
+                                    <div className="badge badge-outline">{evento.duracion}</div>
                                 </div>
                                 <div className="card-actions justify-end mt-4">
-                                    <button className="btn btn-primary" onClick={() => openModal(evento)}>Contratar</button>
-                                    <button className="btn btn-outline" onClick={() => openModal(evento)}>Ver detalles</button>
+                                    <button className="btn btn-primary" onClick={() => openModal(evento)}>Ver detalles</button>
                                 </div>
                             </div>
                         </div>
@@ -357,23 +353,28 @@ const Eventos = () => {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
                                         <img src={selectedEvento.imagen} alt={selectedEvento.nombre} className="w-full h-64 object-cover rounded-lg" />
-                                        <div className="mt-4">
-                                            <h4 className="font-bold text-lg">Paquete desde: ${selectedEvento.precio.toLocaleString('es-CO')}</h4>
-                                            <p className="text-sm text-gray-600">* Precio base para {selectedEvento.duracion}. Sujeto a personalización.</p>
+                                        <div className="mt-4 space-y-1">
+                                            <p className="text-sm"><strong>Capacidad típica:</strong> {selectedEvento.capacidad} personas</p>
+                                            <p className="text-sm"><strong>Duración estimada:</strong> {selectedEvento.duracion}</p>
+                                            <p className="text-sm text-base-content/60">
+                                                Los precios y condiciones los define cada propietario de espacio.
+                                            </p>
                                         </div>
                                     </div>
                                     <div>
-                                        <div className="space-y-4">
-                                            <div>
-                                                <h4 className="font-bold mb-2">Servicios incluidos</h4>
-                                                <ul className="list-disc list-inside space-y-1">
-                                                    {selectedEvento.serviciosIncluidos.map((servicio, index) => (
-                                                        <li key={index}>{servicio}</li>
-                                                    ))}
-                                                </ul>
-                                            </div>
-                                        </div>
+                                        <h4 className="font-bold mb-2">Lo que suelen necesitar estos eventos</h4>
+                                        <ul className="list-disc list-inside space-y-1">
+                                            {selectedEvento.serviciosIncluidos.map((servicio, index) => (
+                                                <li key={index} className="text-sm">{servicio}</li>
+                                            ))}
+                                        </ul>
                                     </div>
+                                </div>
+                                <div className="modal-action">
+                                    <a href="/salones" className="btn btn-primary">Buscar salones para este evento</a>
+                                    <form method="dialog">
+                                        <button className="btn btn-ghost" onClick={closeModal}>Cerrar</button>
+                                    </form>
                                 </div>
                             </div>
                         )}
