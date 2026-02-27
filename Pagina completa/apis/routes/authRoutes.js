@@ -5,6 +5,7 @@ const { validateRegistration, validateLogin } = require('../middleware/validatio
 const { authenticateToken } = require('../middleware/auth');
 
 // Registro de usuario normal
+// Registro de usuario
 router.post('/register/usuario',
     validateRegistration('usuario'),
     AuthController.register
@@ -18,13 +19,19 @@ router.post('/register/propietario',
 
 // Login (solo email y contraseña)
 router.post('/login', validateLogin, AuthController.login);
+// Login
+router.post('/login',
+    validateLogin,
+    AuthController.login
+);
 
-// Obtener perfil (requiere autenticación)
+// Obtener perfil autenticado
 router.get('/profile', authenticateToken, AuthController.getProfile);
 
+// Actualizar perfil autenticado
 router.put('/profile', authenticateToken, AuthController.updateProfile);
 
-// Verificar token
+// Verificar validez del token
 router.get('/verify', authenticateToken, (req, res) => {
     res.json({
         success: true,
