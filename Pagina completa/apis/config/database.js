@@ -1,19 +1,25 @@
-const mysql = require('mysql2');
+const mysql = require('mysql2/promise');
 require('dotenv').config();
 
-const connection = mysql.createConnection({
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
+const pool = mysql.createPool({
+    host:     process.env.DB_HOST     || 'localhost',
+    user:     process.env.DB_USER     || 'root',
     password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'le_banquets_1'
+    database: process.env.DB_NAME     || 'le_banquets_1',
+    waitForConnections: true,
+    connectionLimit:    10,
+    queueLimit:         0,
 });
 
-connection.connect((err) => {
-    if (err) {
-        console.error('Error conectando a la base de datos:', err);
-        return;
-    }
-    console.log('Conectado a la base de datos MySQL');
-});
+// Verificar conexión al iniciar
+pool.getConnection()
+    .then(conn => {
+        console.log('Conectado a la base de datos MySQL (pool)');
+        conn.release();
+    })
+    .catch(err => {
+        console.error('Error conectando a MySQL:', err.message);
+        process.exit(1);
+    });
 
-module.exports = connection;
+module.exports = pool;

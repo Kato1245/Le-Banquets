@@ -5,24 +5,20 @@ const { JWT_SECRET } = require('../middleware/auth');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 
-// Almacena intentos por IP (en memoria)
+// Registro de intentos fallidos por IP (en memoria)
 const loginAttempts = new Map();
-const MAX_ATTEMPTS = 3;
-const LOCK_TIME = 5 * 60 * 1000; // 5 minutos en milisegundos
+const MAX_ATTEMPTS = 5;
+const LOCK_TIME = 5 * 60 * 1000; // 5 minutos
 
-// Función para generar auth_id
-const generateAuthId = () => {
-    return 'auth_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-};
+// Función para generar auth_id único
+const generateAuthId = () =>
+    'auth_' + Date.now() + '_' + Math.random().toString(36).slice(2, 11);
 
-// Función para obtener IP del cliente
-const getClientIP = (req) => {
-    return req.ip ||
-        req.connection.remoteAddress ||
-        req.socket.remoteAddress ||
-        (req.connection.socket ? req.connection.socket.remoteAddress : null) ||
-        'unknown-ip';
-};
+// Obtener IP del cliente de forma segura
+const getClientIP = (req) =>
+    (req.headers['x-forwarded-for'] || '').split(',')[0].trim() ||
+    req.socket?.remoteAddress ||
+    'unknown';
 
 class AuthController {
     static register = catchAsync(async (req, res, next) => {
@@ -32,18 +28,16 @@ class AuthController {
 
         // Verificar si el usuario ya existe
         const existingData = await UserService.findByEmail(email);
-
         if (existingData) {
-            return next(new AppError('El usuario ya existe con este email', 409));
+            return next(new AppError('Ya existe una cuenta con este email', 409));
         }
 
         // Hash de la contraseña
-        const saltRounds = 10;
-        const hashedPassword = await bcrypt.hash(contrasena, saltRounds);
+        const hashedPassword = await bcrypt.hash(contrasena, 12);
 
-        // Crear usuario
+        // Preparar datos del usuario
         const userData = {
-            nombre,
+            nombre: nombre.trim(),
             email,
             contrasena: hashedPassword,
             documento: documento || null,
@@ -58,28 +52,28 @@ class AuthController {
             userData.rut = rut || null;
         }
 
+        // Crear usuario en la base de datos
         const result = await UserService.createUser(userData, userType);
         const userId = result.insertId;
 
-        // Generar token para login automático tras registro
+        // Generar token para login automático
         const token = jwt.sign(
-            { userId: userId, email: email, userType: userType },
+            { userId, email, userType },
             JWT_SECRET,
             { expiresIn: '24h' }
         );
 
         res.status(201).json({
             success: true,
-            message: `${userType === 'propietario' ? 'Propietario' : 'Usuario'} registrado exitosamente`,
+            message: `${isPropietario ? 'Propietario' : 'Usuario'} registrado exitosamente`,
             data: {
                 user: {
                     id: userId,
-                    nombre,
+                    nombre: userData.nombre,
                     email,
-                    role: userType,
-                    userType: userType
+                    userType
                 },
-                token: token
+                token
             }
         });
     });
@@ -87,100 +81,77 @@ class AuthController {
     static login = catchAsync(async (req, res, next) => {
         const { email, contrasena } = req.body;
         const clientIP = getClientIP(req);
-        const attemptKey = `login_attempts_${clientIP}`;
+        const attemptKey = `login_${clientIP}`;
 
-        // Verificar intentos previos
-        const currentAttempts = loginAttempts.get(attemptKey) || { count: 0, lockUntil: null };
+        const current = loginAttempts.get(attemptKey) || { count: 0, lockUntil: null };
 
-        // Si está bloqueado por IP
-        if (currentAttempts.lockUntil && Date.now() < currentAttempts.lockUntil) {
-            const remainingTime = Math.ceil((currentAttempts.lockUntil - Date.now()) / 1000 / 60);
-            return next(new AppError(`Demasiados intentos fallidos. Espere ${remainingTime} minutos antes de intentar nuevamente.`, 429));
+        // Verificar bloqueo por IP
+        if (current.lockUntil && Date.now() < current.lockUntil) {
+            const remainingMin = Math.ceil((current.lockUntil - Date.now()) / 60000);
+            return next(new AppError(`Demasiados intentos fallidos. Espere ${remainingMin} minuto(s) antes de intentar nuevamente.`, 429));
         }
 
-        // Validar campos requeridos
-        if (!email || !contrasena) {
-            return next(new AppError('Email y contraseña son requeridos', 400));
-        }
-
+        // Buscar usuario
         const authData = await UserService.findByEmail(email);
-
-        // Si no se encuentra usuario
         if (!authData) {
-            return this.handleFailedAttempt(attemptKey, currentAttempts, next);
+            return this.handleFailedAttempt(attemptKey, current, next);
         }
 
         const { user, userType } = authData;
 
-        // Verificar si está activo
+        // Verificar estado de la cuenta
         if (!user.esta_activo) {
             return next(new AppError('Cuenta desactivada. Contacte al administrador', 401));
         }
 
         // Verificar contraseña
         const isPasswordValid = await bcrypt.compare(contrasena, user.contrasena);
-
         if (!isPasswordValid) {
-            return this.handleFailedAttempt(attemptKey, currentAttempts, next);
+            return this.handleFailedAttempt(attemptKey, current, next);
         }
 
-        // Login exitoso - resetear intentos para esta IP
-        if (loginAttempts.has(attemptKey)) {
-            loginAttempts.delete(attemptKey);
-        }
+        // Login exitoso — resetear intentos
+        loginAttempts.delete(attemptKey);
 
-        // Crear token JWT
+        // Crear JWT
         const token = jwt.sign(
-            { userId: user.id, email: user.email, userType: userType },
+            { userId: user.id, email: user.email, userType },
             JWT_SECRET,
             { expiresIn: '24h' }
         );
 
-        // Eliminar contraseña de la respuesta
-        const userWithoutPassword = { ...user };
-        delete userWithoutPassword.contrasena;
+        const { contrasena: _, ...safeUser } = user;
 
         res.json({
             success: true,
             message: 'Login exitoso',
             data: {
-                user: {
-                    ...userWithoutPassword,
-                    role: userType, // Para ProtectedRoute
-                    userType: userType // Para compatibilidad
-                },
-                userType: userType,
-                token: token,
+                user: { ...safeUser, userType },
+                userType,
+                token,
                 expiresIn: '24h'
             }
         });
     });
 
-    static handleFailedAttempt(key, currentAttempts, next) {
-        const newCount = currentAttempts.count + 1;
-        let lockUntil = null;
+    static handleFailedAttempt(key, current, next) {
+        const newCount = current.count + 1;
+        const locked = newCount >= MAX_ATTEMPTS;
+        const lockUntil = locked ? Date.now() + LOCK_TIME : null;
 
-        if (newCount >= MAX_ATTEMPTS) {
-            lockUntil = Date.now() + LOCK_TIME;
-        }
+        loginAttempts.set(key, { count: newCount, lockUntil });
 
-        loginAttempts.set(key, { count: newCount, lockUntil: lockUntil });
         return next(new AppError('Credenciales inválidas', 401));
     }
 
     static getProfile = catchAsync(async (req, res, next) => {
-        const user = req.user;
-        const userType = req.userType;
-
-        const userWithoutPassword = { ...user };
-        delete userWithoutPassword.contrasena;
-
+        const { contrasena: _, ...safeUser } = req.user;
         res.json({
             success: true,
             message: 'Perfil obtenido exitosamente',
             data: {
-                user: userWithoutPassword,
-                userType: userType
+                user: { ...safeUser, userType: req.userType },
+                userType: req.userType
             }
         });
     });
@@ -188,43 +159,37 @@ class AuthController {
     static updateProfile = catchAsync(async (req, res, next) => {
         const userId = req.user?.id;
         const userType = req.userType;
-        if (!userId) {
-            return next(new AppError("Usuario no encontrado en el token", 400));
-        }
+        const { nombre, email, telefono } = req.body;
 
-        const { username, email, telefono } = req.body;
-        const currentEmail = req.user.email;
-
-        // Si intenta cambiar el email, verificar que no exista ya
-        if (email && email !== currentEmail) {
-            const existingUser = await UserService.findByEmail(email);
-            if (existingUser) {
-                return next(new AppError("El email ya está en uso por otra cuenta", 409));
-            }
-        }
+        if (!userId) return next(new AppError('Usuario no identificado', 400));
 
         const fieldsToUpdate = {};
-        if (username !== undefined) fieldsToUpdate.nombre = username;
+        if (nombre !== undefined) fieldsToUpdate.nombre = nombre.trim();
         if (email !== undefined) fieldsToUpdate.email = email;
         if (telefono !== undefined) fieldsToUpdate.telefono = telefono;
 
         if (Object.keys(fieldsToUpdate).length === 0) {
-            return next(new AppError("No se recibieron campos para actualizar", 400));
+            return next(new AppError('No se recibieron campos para actualizar', 400));
+        }
+
+        // Si cambia el email, verificar duplicados
+        if (email && email !== req.user.email) {
+            const existing = await UserService.findByEmail(email);
+            if (existing) return next(new AppError('El email ya está en uso', 409));
         }
 
         const result = await UserService.updateUser(userId, fieldsToUpdate, userType);
-
         if (result.affectedRows === 0) {
-            return next(new AppError("No se realizaron cambios o el usuario no existe", 400));
+            return next(new AppError('No se realizaron cambios', 400));
         }
 
         const updatedUser = await UserService.findById(userId, userType);
-        if (updatedUser) delete updatedUser.contrasena;
+        const { contrasena: _, ...safeUser } = updatedUser;
 
         res.json({
             success: true,
-            message: "Perfil actualizado correctamente",
-            data: updatedUser
+            message: 'Perfil actualizado correctamente',
+            data: { ...safeUser, userType }
         });
     });
 
@@ -234,6 +199,7 @@ class AuthController {
 
         const authData = await UserService.findByEmail(email);
         if (!authData) {
+            // Por seguridad, no revelar si el email existe
             return res.json({
                 success: true,
                 message: 'Si el correo existe, se ha enviado un enlace de recuperación'
@@ -241,37 +207,36 @@ class AuthController {
         }
 
         const { user, userType } = authData;
-
         const resetToken = jwt.sign(
-            { userId: user.id, email: user.email, userType: userType, purpose: 'reset-password' },
+            { userId: user.id, email: user.email, userType, purpose: 'reset-password' },
             JWT_SECRET,
             { expiresIn: '15m' }
         );
 
+        // Simulamos envío de email (en producción usar nodemailer)
         console.log(`[RESET PASSWORD] Token para ${email}: ${resetToken}`);
 
         res.json({
             success: true,
             message: 'Si el correo existe, se ha enviado un enlace de recuperación',
-            token: resetToken
+            token: resetToken // Se devuelve para facilitar pruebas en desarrollo
         });
     });
 
     static resetPassword = catchAsync(async (req, res, next) => {
-        const { token, nuevaContrasena } = req.body;
+        const { token, newPassword } = req.body;
 
-        if (!token || !nuevaContrasena) {
+        if (!token || !newPassword) {
             return next(new AppError('Token y nueva contraseña son requeridos', 400));
         }
 
         try {
             const decoded = jwt.verify(token, JWT_SECRET);
-
             if (decoded.purpose !== 'reset-password') {
                 return next(new AppError('Token inválido para esta operación', 400));
             }
 
-            const hashedPassword = await bcrypt.hash(nuevaContrasena, 10);
+            const hashedPassword = await bcrypt.hash(newPassword, 12);
             await UserService.updateUser(decoded.userId, { contrasena: hashedPassword }, decoded.userType);
 
             res.json({

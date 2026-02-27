@@ -1,310 +1,205 @@
-// src/pages/Perfil.jsx
-import { useState, useEffect } from "react"
-import { useAuth } from "@/context/AuthContext"
+import { useState, useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
+import apiClient from "@/shared/services/apiClient";
+import toast from "react-hot-toast";
 
 const Perfil = () => {
-  const { user } = useAuth()
-  const [isEditing, setIsEditing] = useState(false)
-  const [userData, setUserData] = useState({
-    nombre: "",
-    email: "",
-    telefono: "",
-    fecha_nacimiento: "",
-    documento: ""
-  })
-  const [loading, setLoading] = useState(true)
-  const [message, setMessage] = useState("")
+  const { user, setUser } = useAuth();
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({
+    nombre: user?.nombre || "",
+    email: user?.email || "",
+    telefono: user?.telefono || "",
+  });
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (user) {
-      loadUserData();
+      setFormData({
+        nombre: user.nombre || "",
+        email: user.email || "",
+        telefono: user.telefono || "",
+      });
     }
   }, [user]);
 
-  const loadUserData = async () => {
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
     try {
-      setLoading(true);
-      const token = localStorage.getItem("token");
-
-      const endpoint = user.userType === 'propietario'
-        ? 'http://localhost:3000/api/auth/profile/propietario'
-        : 'http://localhost:3000/api/auth/profile/usuario';
-
-      const response = await fetch(endpoint, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      const res = await apiClient.put("/auth/profile", {
+        nombre: formData.nombre,
+        email: formData.email,
+        telefono: formData.telefono,
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        setUserData({
-          nombre: data.nombre || "",
-          email: data.email || user.email,
-          telefono: data.telefono || "",
-          fecha_nacimiento: data.fecha_nacimiento || "",
-          documento: data.documento || ""
-        });
-      } else {
-        // Si falla, usar datos básicos del user
-        setUserData({
-          nombre: user.userData?.nombre || user.email.split('@')[0],
-          email: user.email,
-          telefono: user.userData?.telefono || "",
-          fecha_nacimiento: user.userData?.fecha_nacimiento || "",
-          documento: user.userData?.documento || ""
-        });
+      if (res.data.success) {
+        const updatedUser = { ...user, ...formData };
+        setUser(updatedUser);
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+        setIsEditing(false);
+        toast.success("Perfil actualizado correctamente");
       }
-    } catch (error) {
-      console.error("Error cargando datos:", error);
-      setUserData({
-        nombre: user.userData?.nombre || user.email.split('@')[0],
-        email: user.email,
-        telefono: user.userData?.telefono || "",
-        fecha_nacimiento: user.userData?.fecha_nacimiento || "",
-        documento: user.userData?.documento || ""
-      });
+    } catch (err) {
+      toast.error(err.friendlyMessage || "Error al actualizar el perfil");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSave = async () => {
-    try {
-      setMessage("Guardando cambios...");
-      const token = localStorage.getItem("token");
-
-      const endpoint = user.userType === 'propietario'
-        ? 'http://localhost:3000/api/auth/profile/propietario'
-        : 'http://localhost:3000/api/auth/profile/usuario';
-
-      const response = await fetch(endpoint, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          nombre: userData.nombre,
-          email: userData.email,
-          telefono: userData.telefono,
-          fecha_nacimiento: userData.fecha_nacimiento,
-          documento: userData.documento
-        })
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        setMessage("✅ Perfil actualizado correctamente");
-        setIsEditing(false);
-
-        // Actualizar localStorage
-        const updatedUser = {
-          ...user,
-          userData: {
-            ...user.userData,
-            nombre: userData.nombre,
-            email: userData.email,
-            telefono: userData.telefono,
-            fecha_nacimiento: userData.fecha_nacimiento,
-            documento: userData.documento
-          }
-        };
-        localStorage.setItem('user', JSON.stringify(updatedUser));
-
-        setTimeout(() => setMessage(""), 3000);
-      } else {
-        setMessage("❌ Error al actualizar el perfil");
-      }
-    } catch (error) {
-      console.error("Error actualizando perfil:", error);
-      setMessage("❌ Error de conexión");
-    }
-  };
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setUserData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-base-100 py-8 flex items-center justify-center">
-        <span className="loading loading-spinner loading-lg"></span>
-      </div>
-    );
-  }
+  if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-base-100 py-8">
-      <div className="max-w-4xl mx-auto px-4">
-        <h1 className="text-3xl font-bold text-center mb-8">Mi Perfil</h1>
+    <div className="min-h-screen bg-base-200/30">
+      {/* Header / Portada */}
+      <div className="relative h-64 w-full bg-primary/10 overflow-hidden">
+        <div
+          className="absolute inset-0 bg-cover bg-center opacity-80"
+          style={{
+            backgroundImage: "url('https://images.unsplash.com/photo-1511795409834-ef04bbd61622?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')"
+          }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+        </div>
+      </div>
 
-        {message && (
-          <div className={`alert ${message.includes('✅') ? 'alert-success' : 'alert-error'} mb-6`}>
-            <span>{message}</span>
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Información del usuario */}
-          <div className="md:col-span-2">
-            <div className="card bg-base-200 shadow-xl">
-              <div className="card-body">
-                <h2 className="card-title">Información Personal</h2>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="form-control">
-                    <label className="label">
-                      <span className="label-text">Nombre completo</span>
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        name="nombre"
-                        value={userData.nombre}
-                        onChange={handleChange}
-                        className="input input-bordered"
-                      />
-                    ) : (
-                      <p className="text-lg">{userData.nombre}</p>
-                    )}
-                  </div>
-
-                  <div className="form-control">
-                    <label className="label">
-                      <span className="label-text">Correo electrónico</span>
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="email"
-                        name="email"
-                        value={userData.email}
-                        onChange={handleChange}
-                        className="input input-bordered"
-                      />
-                    ) : (
-                      <p className="text-lg">{userData.email}</p>
-                    )}
-                  </div>
-
-                  <div className="form-control">
-                    <label className="label">
-                      <span className="label-text">Teléfono</span>
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="tel"
-                        name="telefono"
-                        value={userData.telefono}
-                        onChange={handleChange}
-                        className="input input-bordered"
-                      />
-                    ) : (
-                      <p className="text-lg">{userData.telefono || "No especificado"}</p>
-                    )}
-                  </div>
-
-                  <div className="form-control">
-                    <label className="label">
-                      <span className="label-text">Fecha de Nacimiento</span>
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="date"
-                        name="fecha_nacimiento"
-                        value={userData.fecha_nacimiento}
-                        onChange={handleChange}
-                        className="input input-bordered"
-                      />
-                    ) : (
-                      <p className="text-lg">{userData.fecha_nacimiento || "No especificada"}</p>
-                    )}
-                  </div>
-
-                  <div className="form-control">
-                    <label className="label">
-                      <span className="label-text">Documento</span>
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        name="documento"
-                        value={userData.documento}
-                        onChange={handleChange}
-                        className="input input-bordered"
-                      />
-                    ) : (
-                      <p className="text-lg">{userData.documento || "No especificado"}</p>
-                    )}
+      <div className="container mx-auto px-4 -mt-20 relative z-10 max-w-5xl pb-20">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Lado Izquierdo: Tarjeta de Identidad */}
+          <div className="lg:col-span-1">
+            <div className="card bg-base-100 shadow-2xl border border-primary/10 overflow-hidden">
+              <div className="h-2 bg-primary"></div>
+              <div className="card-body items-center text-center pt-8 pb-10">
+                <div className="avatar mb-6">
+                  <div className="bg-base-300 rounded-full w-32 ring-4 ring-base-100 shadow-xl flex items-center justify-center overflow-hidden">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-20 h-20 text-base-content/40 mt-3">
+                      <path fillRule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" clipRule="evenodd" />
+                    </svg>
                   </div>
                 </div>
+                <h2 className="card-title text-3xl font-extrabold">{user.nombre || "Usuario"}</h2>
+                <p className="text-base-content/60 text-sm mb-4">{user.email}</p>
+                <div className="badge badge-primary font-bold uppercase tracking-widest text-[10px] px-4 py-3">
+                  {user.userType || user.role || 'Usuario'}
+                </div>
 
+                <div className="divider opacity-50"></div>
 
-                <div className="card-actions justify-end mt-6">
-                  {isEditing ? (
-                    <>
-                      <button onClick={() => setIsEditing(false)} className="btn btn-ghost">
-                        Cancelar
-                      </button>
-                      <button onClick={handleSave} className="btn btn-primary">
-                        Guardar Cambios
-                      </button>
-                    </>
-                  ) : (
-                    <button onClick={() => setIsEditing(true)} className="btn btn-primary">
+                <div className="w-full space-y-4">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="opacity-50 font-medium">Estado de Cuenta</span>
+                    <span className="badge badge-success badge-sm badge-outline font-bold">ACTIVO</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="opacity-50 font-medium">ID Miembro</span>
+                    <span className="font-mono text-xs opacity-70">#{user.id?.slice(-8) || 'N/A'}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Lado Derecho: Contenido Interactivo */}
+          <div className="lg:col-span-2 space-y-8">
+            <div className="card bg-base-100 shadow-xl border border-primary/5">
+              <div className="card-body p-8">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-xl font-bold">Información Personal</h3>
+                  {!isEditing && (
+                    <button
+                      className="btn btn-primary btn-sm btn-outline"
+                      onClick={() => setIsEditing(true)}
+                    >
                       Editar Perfil
                     </button>
                   )}
                 </div>
-              </div>
-            </div>
-          </div>
 
-          {/* Sidebar con información adicional */}
-          <div className="space-y-6">
-            <div className="card bg-base-200 shadow-xl">
-              <div className="card-body">
-                <h3 className="card-title">Mi Avatar</h3>
-                <div className="flex flex-col items-center">
-                  <div className="w-24 h-24 rounded-full bg-primary text-primary-content flex items-center justify-center text-3xl font-bold mb-4">
-                    {userData.nombre ? userData.nombre.charAt(0).toUpperCase() : 'U'}
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="form-control w-full">
+                      <label className="label">
+                        <span className="label-text font-bold">Nombre Completo</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="nombre"
+                        value={formData.nombre}
+                        onChange={handleChange}
+                        disabled={!isEditing}
+                        className={`input input-bordered w-full ${isEditing ? 'input-primary' : 'bg-base-200'}`}
+                        required
+                      />
+                    </div>
+
+                    <div className="form-control w-full">
+                      <label className="label">
+                        <span className="label-text font-bold">Correo Electrónico</span>
+                      </label>
+                      <input
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        disabled={!isEditing}
+                        className={`input input-bordered w-full ${isEditing ? 'input-primary' : 'bg-base-200'}`}
+                        required
+                      />
+                    </div>
+
+                    <div className="form-control w-full">
+                      <label className="label">
+                        <span className="label-text font-bold">Teléfono de Contacto</span>
+                      </label>
+                      <input
+                        type="tel"
+                        name="telefono"
+                        value={formData.telefono}
+                        onChange={handleChange}
+                        disabled={!isEditing}
+                        className={`input input-bordered w-full ${isEditing ? 'input-primary' : 'bg-base-200'}`}
+                        placeholder="Ej: +57 321 456 7890"
+                      />
+                    </div>
                   </div>
+
                   {isEditing && (
-                    <button className="btn btn-sm btn-outline">
-                      Cambiar Avatar
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className="card bg-base-200 shadow-xl">
-              <div className="card-body">
-                <h3 className="card-title">Estadísticas</h3>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span>Eventos creados</span>
-                    <span className="font-bold">0</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Invitaciones</span>
-                    <span className="font-bold">0</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Miembro desde</span>
-                    <span className="font-bold">{new Date(user.userData?.created_at || Date.now()).toLocaleDateString()}</span>
-                  </div>
-                  {user.userType === 'propietario' && (
-                    <div className="flex justify-between">
-                      <span>Banquetes registrados</span>
-                      <span className="font-bold">0</span>
+                    <div className="flex gap-3 justify-end mt-8 border-t pt-6">
+                      <button
+                        type="button"
+                        className="btn btn-ghost"
+                        onClick={() => setIsEditing(false)}
+                        disabled={loading}
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="submit"
+                        className="btn btn-primary px-8"
+                        disabled={loading}
+                      >
+                        {loading ? <span className="loading loading-spinner loading-sm"></span> : "Guardar Cambios"}
+                      </button>
                     </div>
                   )}
+                </form>
+              </div>
+            </div>
+
+            <div className="card bg-base-100 shadow-sm border border-primary/5">
+              <div className="card-body p-6">
+                <h4 className="font-bold text-sm opacity-50 uppercase tracking-wider mb-4">Seguridad</h4>
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                  <div className="text-center sm:text-left">
+                    <p className="font-bold">Contraseña</p>
+                    <p className="text-sm opacity-70">Actualiza tu contraseña periódicamente</p>
+                  </div>
+                  <button className="btn btn-ghost btn-sm border-base-300">Cambiar Contraseña</button>
                 </div>
               </div>
             </div>
@@ -312,7 +207,7 @@ const Perfil = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Perfil
+export default Perfil;

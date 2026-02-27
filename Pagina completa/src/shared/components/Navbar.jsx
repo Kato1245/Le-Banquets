@@ -4,79 +4,98 @@ import { useAuth } from '@/context/AuthContext';
 const Navbar = () => {
   const { user, logout } = useAuth();
 
+  const isAdmin = user?.userType === 'admin' || user?.role === 'admin' || !!user?.isAdmin;
+  const isPropietario = user?.userType === 'propietario' || user?.role === 'propietario';
+  const userName = user?.nombre || user?.email?.split('@')[0] || 'Usuario';
+  const userInitial = userName.charAt(0).toUpperCase();
+
   return (
     <div className="sticky top-0 z-50 backdrop-blur-md bg-base-100/80 border-b border-primary/10 transition-all duration-300">
+      <div className="navbar max-w-7xl mx-auto px-4 md:px-8">
 
-      <div className="navbar max-w-7xl mx-auto px-8">
-
-        {/* IZQUIERDA — Marca */}
+        {/* Brand */}
         <div className="navbar-start">
-          <Link
-            to="/"
-            className="text-2xl font-bold text-primary tracking-wide hover:opacity-80 transition"
-          >
-            Le-Banquets
+          <Link to="/" className="text-2xl font-bold text-primary tracking-tight hover:opacity-80 transition flex items-center gap-2">
+            <span className="hidden sm:inline">Le-Banquets</span>
+            <span className="sm:hidden text-primary">LB</span>
           </Link>
         </div>
 
-        {/* DERECHA — Navegación */}
-        <div className="navbar-end gap-3">
+        {/* Center - Links */}
+        <div className="navbar-center hidden lg:flex">
+          <ul className="menu menu-horizontal px-1 gap-2">
+            <li>
+              <Link to="/banquetes" className="font-medium hover:text-primary transition-colors">
+                Banquetes
+              </Link>
+            </li>
+            {(isPropietario || isAdmin) && (
+              <li>
+                <Link to="/mis-banquetes" className="font-medium hover:text-primary transition-colors italic">
+                  Gestión
+                </Link>
+              </li>
+            )}
+            {isAdmin && (
+              <li>
+                <Link to="/admin" className="font-medium text-warning hover:text-warning/80 transition-colors">
+                  Admin
+                </Link>
+              </li>
+            )}
+          </ul>
+        </div>
 
-          <Link
-            to="/banquetes"
-            className="btn btn-ghost hover:text-primary"
-          >
-            Banquetes
-          </Link>
-
+        {/* End - User Actions */}
+        <div className="navbar-end gap-2">
           {!user ? (
-            <>
-              <Link
-                to="/login"
-                className="btn btn-ghost hover:text-primary"
-              >
-                Iniciar sesión
+            <div className="flex items-center gap-2">
+              <Link to="/login" className="btn btn-ghost btn-sm md:btn-md hidden sm:flex">
+                Entrar
               </Link>
-
-              <Link
-                to="/registro"
-                className="btn btn-primary shadow-md"
-              >
-                Registrarse
-              </Link>
-            </>
+              <div className="dropdown dropdown-end">
+                <label tabIndex={0} className="btn btn-primary btn-sm md:btn-md shadow-lg shadow-primary/20">
+                  Registrarse
+                </label>
+                <ul tabIndex={0} className="mt-3 z-[1] p-2 shadow-2xl menu menu-sm dropdown-content bg-base-100 rounded-box w-52 border border-primary/10">
+                  <li><Link to="/registro" className="py-3">Usuario</Link></li>
+                  <li><Link to="/registro-propietario" className="py-3">Propietario</Link></li>
+                </ul>
+              </div>
+            </div>
           ) : (
             <div className="dropdown dropdown-end">
-              <label tabIndex={0} className="btn btn-ghost btn-circle avatar bg-base-300 ring ring-primary ring-offset-base-100 ring-offset-2 overflow-hidden">
-                <div className="w-10 rounded-full flex items-center justify-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8 text-base-content/40">
-                    <path fillRule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" clipRule="evenodd" />
-                  </svg>
+              <label tabIndex={0} className="btn btn-ghost btn-circle avatar bg-primary/10 ring-2 ring-primary/20 ring-offset-2 ring-offset-base-100">
+                <div className="w-10 rounded-full flex items-center justify-center font-bold text-primary">
+                  {userInitial}
                 </div>
               </label>
-              <ul tabIndex={0} className="mt-3 z-[1] p-2 shadow-2xl menu menu-sm dropdown-content bg-base-100 rounded-box w-52 border border-primary/10">
-                <li className="menu-title px-4 py-2 border-b border-base-200">
-                  <p className="font-bold text-base-content">{user.nombre}</p>
-                  <p className="text-xs opacity-50 truncate">{user.email}</p>
+              <ul tabIndex={0} className="mt-3 z-[1] p-2 shadow-2xl menu menu-sm dropdown-content bg-base-100 rounded-box w-64 border border-primary/10">
+                <li className="px-4 py-3 border-b border-base-200 mb-2">
+                  <p className="font-extrabold text-base truncate">{userName}</p>
+                  <p className="text-[10px] opacity-50 uppercase tracking-widest">{user.userType || user.role || 'Usuario'}</p>
                 </li>
-                <li><Link to="/perfil" className="py-3 flex justify-between">Mi Perfil <span className="badge badge-xs badge-primary"></span></Link></li>
-                <li><Link to="/mis-reservas" className="py-3 opacity-50 pointer-events-none">Mis Reservas (Próximamente)</Link></li>
-                <div className="divider my-0"></div>
+                <li><Link to="/perfil" className="py-3 font-medium">Mi Perfil</Link></li>
+                <li><Link to="/mis-eventos" className="py-3 font-medium">Mis Eventos</Link></li>
+                {isPropietario && (
+                  <li><Link to="/mis-banquetes" className="py-3 font-medium text-primary">Mis Banquetes</Link></li>
+                )}
+                {isAdmin && (
+                  <li><Link to="/admin" className="py-3 font-medium text-warning">Panel Admin</Link></li>
+                )}
+                <div className="divider my-0 opacity-20"></div>
                 <li>
                   <button onClick={logout} className="text-error font-bold py-3 hover:bg-error/10">
-                    Cerrar sesión
+                    Cerrar Sesión
                   </button>
                 </li>
               </ul>
             </div>
           )}
-
         </div>
       </div>
-
-      {/* Línea elegante inferior */}
-      <div className="h-[1px] bg-primary/20"></div>
-
+      {/* Elegant bottom line */}
+      <div className="h-[1px] bg-gradient-to-r from-transparent via-primary/20 to-transparent"></div>
     </div>
   );
 };

@@ -4,31 +4,29 @@ const AuthController = require('../controllers/authController');
 const { validateRegistration, validateLogin } = require('../middleware/validation');
 const { authenticateToken } = require('../middleware/auth');
 
-// Registro de usuario normal
+// --- Registro ---
 router.post('/register/usuario',
     validateRegistration('usuario'),
     AuthController.register
 );
 
-// Registro de propietario
 router.post('/register/propietario',
     validateRegistration('propietario'),
     AuthController.register
 );
 
-// Login (solo email y contraseña)
+// --- Login ---
 router.post('/login', validateLogin, AuthController.login);
 
-// Obtener perfil (requiere autenticación)
+// --- Perfil ---
 router.get('/profile', authenticateToken, AuthController.getProfile);
-
 router.put('/profile', authenticateToken, AuthController.updateProfile);
 
-// Recuperación de contraseña
+// --- Recuperación de contraseña ---
 router.post('/forgot-password', AuthController.forgotPassword);
 router.post('/reset-password', AuthController.resetPassword);
 
-// Verificar token
+// --- Verificación de token ---
 router.get('/verify', authenticateToken, (req, res) => {
     res.json({
         success: true,

@@ -1,6 +1,6 @@
-// src/pages/AdminDashboard.jsx
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
+import apiClient from "@/shared/services/apiClient";
 
 const AdminDashboard = () => {
   const { user } = useAuth();
@@ -12,24 +12,19 @@ const AdminDashboard = () => {
   });
   const [loading, setLoading] = useState(true);
 
+  const isAdmin = user?.userType === 'admin' || user?.role === 'admin' || !!user?.isAdmin;
+
   useEffect(() => {
-    if (user && user.isAdmin) {
+    if (isAdmin) {
       fetchStats();
     }
-  }, [user]);
+  }, [isAdmin]);
 
   const fetchStats = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch('http://localhost:3000/api/admin/stats', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setStats(data);
+      const response = await apiClient.get('/admin/stats');
+      if (response.data) {
+        setStats(response.data);
       }
     } catch (error) {
       console.error("Error fetching stats:", error);
@@ -38,10 +33,21 @@ const AdminDashboard = () => {
     }
   };
 
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen bg-base-100 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-error mb-2">Acceso Denegado</h1>
+          <p className="text-base-content/60">No tienes permisos para acceder a esta sección.</p>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-base-100 py-8 flex items-center justify-center">
-        <span className="loading loading-spinner loading-lg"></span>
+        <span className="loading loading-spinner loading-lg text-primary"></span>
       </div>
     );
   }
@@ -53,85 +59,85 @@ const AdminDashboard = () => {
 
         {/* Estadísticas */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="stat bg-base-200 rounded-lg">
+          <div className="stat bg-base-200 rounded-lg shadow-sm">
             <div className="stat-figure text-primary">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
               </svg>
             </div>
-            <div className="stat-title">Total Usuarios</div>
-            <div className="stat-value">{stats.totalUsuarios}</div>
+            <div className="stat-title">Usuarios</div>
+            <div className="stat-value text-primary">{stats.totalUsuarios}</div>
           </div>
 
-          <div className="stat bg-base-200 rounded-lg">
+          <div className="stat bg-base-200 rounded-lg shadow-sm">
             <div className="stat-figure text-secondary">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
             </div>
-            <div className="stat-title">Total Propietarios</div>
-            <div className="stat-value">{stats.totalPropietarios}</div>
+            <div className="stat-title">Propietarios</div>
+            <div className="stat-value text-secondary">{stats.totalPropietarios}</div>
           </div>
 
-          <div className="stat bg-base-200 rounded-lg">
+          <div className="stat bg-base-200 rounded-lg shadow-sm">
             <div className="stat-figure text-accent">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
               </svg>
             </div>
-            <div className="stat-title">Total Banquetes</div>
-            <div className="stat-value">{stats.totalBanquetes}</div>
+            <div className="stat-title">Banquetes</div>
+            <div className="stat-value text-accent">{stats.totalBanquetes}</div>
           </div>
 
-          <div className="stat bg-base-200 rounded-lg">
+          <div className="stat bg-base-200 rounded-lg shadow-sm">
             <div className="stat-figure text-info">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </div>
-            <div className="stat-title">Total Eventos</div>
-            <div className="stat-value">{stats.totalEventos}</div>
+            <div className="stat-title">Eventos</div>
+            <div className="stat-value text-info">{stats.totalEventos}</div>
           </div>
         </div>
 
         {/* Acciones rápidas */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="card bg-base-200 shadow-xl">
+          <div className="card bg-base-200 border border-primary/5 hover:border-primary/20 transition-all shadow-xl">
             <div className="card-body">
               <h2 className="card-title">Gestión de Usuarios</h2>
-              <p>Administra los usuarios registrados en el sistema</p>
+              <p className="opacity-70">Administra los usuarios registrados en el sistema</p>
               <div className="card-actions justify-end">
-                <button className="btn btn-primary">Ver Usuarios</button>
+                <button className="btn btn-primary" disabled>Ver Usuarios</button>
               </div>
             </div>
           </div>
 
-          <div className="card bg-base-200 shadow-xl">
+          <div className="card bg-base-200 border border-primary/5 hover:border-primary/20 transition-all shadow-xl">
             <div className="card-body">
               <h2 className="card-title">Gestión de Propietarios</h2>
-              <p>Administra los propietarios y sus banquetes</p>
+              <p className="opacity-70">Administra los propietarios y sus banquetes</p>
               <div className="card-actions justify-end">
-                <button className="btn btn-primary">Ver Propietarios</button>
+                <button className="btn btn-primary" disabled>Ver Propietarios</button>
               </div>
             </div>
           </div>
 
-          <div className="card bg-base-200 shadow-xl">
+          <div className="card bg-base-200 border border-primary/5 hover:border-primary/20 transition-all shadow-xl">
             <div className="card-body">
               <h2 className="card-title">Reportes</h2>
-              <p>Genera reportes de actividad del sistema</p>
+              <p className="opacity-70">Genera reportes de actividad del sistema</p>
               <div className="card-actions justify-end">
-                <button className="btn btn-secondary">Generar Reporte</button>
+                <button className="btn btn-secondary" disabled>Generar Reporte</button>
               </div>
             </div>
           </div>
 
-          <div className="card bg-base-200 shadow-xl">
+          <div className="card bg-base-200 border border-primary/5 hover:border-primary/20 transition-all shadow-xl">
             <div className="card-body">
               <h2 className="card-title">Configuración</h2>
-              <p>Configuración general del sistema</p>
+              <p className="opacity-70">Configuración general del sistema</p>
               <div className="card-actions justify-end">
-                <button className="btn btn-ghost">Configurar</button>
+                <button className="btn btn-ghost" disabled>Configurar</button>
               </div>
             </div>
           </div>
