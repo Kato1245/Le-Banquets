@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import banquetesService from "../services/banquetesService";
 
 export const useBanquetes = () => {
@@ -6,20 +6,22 @@ export const useBanquetes = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const fetchBanquetes = async () => {
-      try {
-        const data = await banquetesService.getAllBanquetes();
-        setBanquetes(data);
-      } catch (err) {
-        setError("Error al cargar los banquetes");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchBanquetes();
+  const fetchBanquetes = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await banquetesService.getAllBanquetes();
+      setBanquetes(data || []);
+    } catch (err) {
+      setError(err.friendlyMessage || "Error al cargar los banquetes");
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  return { banquetes, loading, error };
+  useEffect(() => {
+    fetchBanquetes();
+  }, [fetchBanquetes]);
+
+  return { banquetes, loading, error, refresh: fetchBanquetes };
 };

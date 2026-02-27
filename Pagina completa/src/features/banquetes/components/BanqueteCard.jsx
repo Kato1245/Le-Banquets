@@ -1,10 +1,20 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import BanqueteModal from "./BanqueteModal";
+import { useAuth } from "@/context/AuthContext";
 
 const BanqueteCard = ({ banquete }) => {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [showModal, setShowModal] = useState(false);
+
+  const handleReserve = () => {
+    if (!isAuthenticated) {
+      navigate('/login', { state: { from: `/banquetes/${banquete._id}` } });
+      return;
+    }
+    navigate(`/banquetes/${banquete._id}`);
+  };
 
   return (
     <>
@@ -17,11 +27,17 @@ const BanqueteCard = ({ banquete }) => {
         <p>${banquete.precio}</p>
 
         <div className="buttons">
-          <button onClick={() => setShowModal(true)}>
+          <button
+            className="btn btn-sm btn-ghost"
+            onClick={() => setShowModal(true)}
+          >
             Ver detalles
           </button>
 
-          <button onClick={() => navigate(`/banquetes/${banquete._id}`)}>
+          <button
+            className="btn btn-sm btn-primary"
+            onClick={handleReserve}
+          >
             Reservar
           </button>
         </div>

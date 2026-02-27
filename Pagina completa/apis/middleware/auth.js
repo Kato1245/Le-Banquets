@@ -1,76 +1,46 @@
 // middleware/auth.js
 const jwt = require('jsonwebtoken');
-const User = require('../models/userModel');
+const UserService = require('../services/userService');
+const AppError = require('../utils/appError');
+const catchAsync = require('../utils/catchAsync');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'cad8e6396223f3bd0bf9ebcd1d66b983';
+const JWT_SECRET = process.env.JWT_SECRET;
 
-const authenticateToken = async (req, res, next) => {
-    try {
-        const authHeader = req.headers['authorization'];
-        const token = authHeader && authHeader.split(' ')[1];
+if (!JWT_SECRET) {
+    console.warn('WARNING: JWT_SECRET is not defined in environment variables!');
+}
 
-        if (!token) {
-            return res.status(401).json({
-                success: false,
-                message: 'Token de acceso requerido'
-            });
-        }
+const authenticateToken = catchAsync(async (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
 
-        // Verificar firma del token
-        const decoded = jwt.verify(token, JWT_SECRET);
-        
-        // Verificar expiración manualmente
-        const now = Date.now().valueOf() / 1000;
-        if (typeof decoded.exp !== 'undefined' && decoded.exp < now) {
-            return res.status(401).json({
-                success: false,
-                message: 'Token expirado'
-            });
-        }
-
-        // Verificar que el usuario aún existe en BD
-        const table = decoded.userType === 'propietario' ? 'propietarios' : 'usuarios';
-        const user = await User.findById(decoded.userId, table);
-
-        if (!user) {
-            return res.status(401).json({
-                success: false,
-                message: 'Usuario no encontrado'
-            });
-        }
-
-        if (!user.esta_activo) {
-            return res.status(401).json({
-                success: false,
-                message: 'Cuenta desactivada'
-            });
-        }
-
-        req.user = user;
-        req.userType = decoded.userType;
-        next();
-    } catch (error) {
-        console.error('Error en autenticación:', error);
-        
-        if (error.name === 'TokenExpiredError') {
-            return res.status(403).json({
-                success: false,
-                message: 'Token expirado'
-            });
-        }
-        
-        if (error.name === 'JsonWebTokenError') {
-            return res.status(403).json({
-                success: false,
-                message: 'Token inválido'
-            });
-        }
-
-        return res.status(500).json({
-            success: false,
-            message: 'Error en autenticación'
-        });
+    if (!token) {
+        return next(new AppError('Token de acceso requerido', 401));
     }
-};
+
+    // Verificar firma del token
+    let decoded;
+    try {
+        decoded = jwt.verify(token, JWT_SECRET || 'fallback-secret-for-dev-only');
+    } catch (err) {
+        return next(new AppError('Token inválido o expirado', 401));
+    }
+
+    // Verificar que el usuario aún existe en BD
+    const user = await UserService.findById(decoded.userId, decoded.userType);
+
+    if (!user) {
+        return next(new AppError('El usuario perteneciente a este token ya no existe.', 401));
+    }
+
+    if (!user.esta_activo) {
+        return next(new AppError('Su cuenta ha sido desactivada.', 401));
+    }
+
+    // GRANT ACCESS TO PROTECTED ROUTE
+    req.user = user;
+    req.userType = decoded.userType;
+    next();
+});
 
 module.exports = { authenticateToken, JWT_SECRET };

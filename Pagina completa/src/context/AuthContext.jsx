@@ -1,6 +1,6 @@
 // src/context/AuthContext.jsx
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import apiClient from "../shared/services/apiClient";
 
 const AuthContext = createContext();
@@ -8,47 +8,73 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Cargar usuario si existe token
-  useEffect(() => {
-    const loadUser = async () => {
-      const token = localStorage.getItem("token");
-
-      if (!token) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const res = await apiClient.get("/auth/me");
-        setUser(res.data);
-      } catch (error) {
-        localStorage.removeItem("token");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadUser();
-  }, []);
-
-  const login = async (credentials) => {
-    const res = await apiClient.post("/auth/login", credentials);
-
-    localStorage.setItem("token", res.data.token);
-    setUser(res.data.user);
-  };
-
-  const register = async (data) => {
-    const res = await apiClient.post("/auth/register", data);
-
-    localStorage.setItem("token", res.data.token);
-    setUser(res.data.user);
-  };
-
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem("token");
     setUser(null);
+    setError(null);
+  }, []);
+
+  // Cargar usuario si existe token
+  const loadUser = useCallback(async () => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const res = await apiClient.get("/auth/profile"); // Reverted or kept profile? Let's use profile as in backend
+      setUser(res.data.data.user);
+    } catch (err) {
+      console.error("Error loading user:", err);
+      logout();
+    } finally {
+      setLoading(false);
+    }
+  }, [logout]);
+
+  useEffect(() => {
+    loadUser();
+
+    // Listen for global auth events
+    const handleSessionExpired = () => {
+      logout();
+      window.location.href = "/login";
+    };
+
+    window.addEventListener("auth-session-expired", handleSessionExpired);
+    return () => window.removeEventListener("auth-session-expired", handleSessionExpired);
+  }, [loadUser, logout]);
+
+  const login = async (credentials) => {
+    try {
+      setError(null);
+      const res = await apiClient.post("/auth/login", credentials);
+      localStorage.setItem("token", res.data.data.token);
+      setUser(res.data.data.user);
+      return res.data;
+    } catch (err) {
+      setError(err.friendlyMessage);
+      throw err;
+    }
+  };
+
+  const register = async (type, data) => {
+    try {
+      setError(null);
+      const endpoint = type === 'propietario' ? '/auth/register/propietario' : '/auth/register/usuario';
+      const res = await apiClient.post(endpoint, data);
+      localStorage.setItem("token", res.data.data.token);
+      setUser(res.data.data.user);
+      return res.data;
+    } catch (err) {
+      setError(err.friendlyMessage);
+      throw err;
+    }
   };
 
   return (
@@ -56,10 +82,12 @@ export const AuthProvider = ({ children }) => {
       value={{
         user,
         loading,
+        error,
         login,
         register,
         logout,
         isAuthenticated: !!user,
+        userType: user?.userType, // Add direct access to userType
       }}
     >
       {children}

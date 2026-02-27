@@ -25,10 +25,16 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Manejo de sesión expirada
     if (error.response?.status === 401) {
       localStorage.removeItem("token");
-      window.location.href = "/login";
+      // Despachar evento personalizado para que AuthContext reaccione
+      window.dispatchEvent(new CustomEvent("auth-session-expired"));
     }
+
+    // Normalizar error para el frontend
+    const errorMessage = error.response?.data?.message || error.message || "Ocurrió un error inesperado";
+    error.friendlyMessage = errorMessage;
 
     return Promise.reject(error);
   }

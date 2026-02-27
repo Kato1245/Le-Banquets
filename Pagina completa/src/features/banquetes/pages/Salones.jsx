@@ -108,7 +108,7 @@ const Salones = () => {
       precio: 11000000,
       ubicacion: "Manizales, Chipre",
       equipamiento: ["Lagos artificiales", "Puentes decorativos", "Área de ceremonia", "Pérgolas florales", "Sistema de sonido", "Iluminación ambiental"],
-      serviciosIncluidos: ["Mobiliario rústico", "Personal de servicio", "Coordinador de bodas", "Zona de parqueadero"],
+      serviciosIncluidos: ["Mobiliario de jardín", "Personal de servicio", "Coordinador de evento", "Zona de parqueadero"],
       dimensiones: "1200 m²"
     },
     {
@@ -213,12 +213,12 @@ const Salones = () => {
     { id: "rustico", nombre: "Rústicos" }
   ];
 
-  const salonesFiltrados = selectedFilter === "todos" 
-    ? salones 
+  const salonesFiltrados = selectedFilter === "todos"
+    ? salones
     : salones.filter(salon => salon.tipo === selectedFilter);
 
-  const salonesBuscados = salonesFiltrados.filter(salon => 
-    salon.nombre.toLowerCase().includes(searchTerm.toLowerCase()) || 
+  const salonesBuscados = salonesFiltrados.filter(salon =>
+    salon.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
     salon.descripcion.toLowerCase().includes(searchTerm.toLowerCase()) ||
     salon.ubicacion.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -325,7 +325,7 @@ const Salones = () => {
                       <p><strong>Ubicación:</strong> {selectedSalon.ubicacion}</p>
                       <p><strong>Dimensiones:</strong> {selectedSalon.dimensiones}</p>
                       <p><strong>Tipo:</strong> {selectedSalon.tipo}</p>
-                      
+
                       <div>
                         <strong>Equipamiento:</strong>
                         <div className="flex flex-wrap gap-2 mt-1">
@@ -334,7 +334,7 @@ const Salones = () => {
                           ))}
                         </div>
                       </div>
-                      
+
                       <div>
                         <strong>Servicios incluidos:</strong>
                         <ul className="list-disc list-inside mt-1">
@@ -344,7 +344,7 @@ const Salones = () => {
                         </ul>
                       </div>
                     </div>
-                    
+
                     <div className="mt-6">
                       <button className="btn btn-primary w-full">Solicitar cotización</button>
                     </div>
@@ -366,7 +366,7 @@ const Salones = () => {
               <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0极" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0" />
                 </svg>
               </div>
               <h3 className="font-bold text-lg mb-2">Visita nuestros salones</h3>

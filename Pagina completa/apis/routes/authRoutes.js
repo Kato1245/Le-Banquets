@@ -1,23 +1,23 @@
 const express = require('express');
 const router = express.Router();
 const AuthController = require('../controllers/authController');
-const { validateRegistration } = require('../middleware/validation');
+const { validateRegistration, validateLogin } = require('../middleware/validation');
 const { authenticateToken } = require('../middleware/auth');
 
-// Registro de usuario normala
-router.post('/register/usuario', 
+// Registro de usuario normal
+router.post('/register/usuario',
     validateRegistration('usuario'),
     AuthController.register
 );
 
 // Registro de propietario
-router.post('/register/propietario', 
+router.post('/register/propietario',
     validateRegistration('propietario'),
     AuthController.register
 );
 
 // Login (solo email y contraseña)
-router.post('/login', AuthController.login);
+router.post('/login', validateLogin, AuthController.login);
 
 // Obtener perfil (requiere autenticación)
 router.get('/profile', authenticateToken, AuthController.getProfile);
