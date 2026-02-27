@@ -13,21 +13,23 @@ const connectDB = require("./config/mongo");
 const globalErrorHandler = require("./middleware/errorController");
 const AppError = require("./utils/appError");
 
-// 👇 PRIMERO SE CREA LA APP
+// Initialize App
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// 👇 Conectar a MongoDB
+// Conectar a MongoDB
 connectDB();
 
-// 👇 global Middlewares
+// ── Middlewares Globales ──────────────────────────────────────────────────
 // Set security HTTP headers
 app.use(helmet());
 
 // Implement CORS
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 // Limit requests from same API
@@ -39,21 +41,19 @@ const limiter = rateLimit({
 app.use('/api', limiter);
 
 // Body parser, reading data from body into req.body
-app.use(express.json({ limit: "10kb" })); // Reduced limit for security, 50mb was way too high for typical JSON
-app.use(express.urlencoded({ extended: true, limit: "10kb" }));
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 // Prevent HTTP Parameter Pollution
 app.use(hpp());
 
-// 👇 Rutas
+// ── Rutas ──────────────────────────────────────────────────────────────────
 app.use("/api/auth", authRoutes);
 app.use("/api/banquetes", banqueteRoutes);
 app.use("/api/reservas", reservaRoutes);
 
-// 👇 Ruta de prueba avanzada
-app.get("/api/health", async (req, res) => {
-  const mongooseStatus = mongoose.connection.readyState === 1 ? "conectado" : "desconectado";
-
+// Health check
+app.get("/api/health", (req, res) => {
   res.json({
     success: true,
     message: "API de Le Banquets funcionando correctamente",
@@ -61,64 +61,21 @@ app.get("/api/health", async (req, res) => {
       uptime: process.uptime(),
       timestamp: Date.now(),
       databases: {
-        mongodb: mongooseStatus,
-        mysql: "conectado" // Si llegó aquí, el servidor está arriba y MySQL se conectó al inicio
+        mongodb: mongoose.connection.readyState === 1 ? "conectado" : "desconectado"
       }
     }
   });
 });
 
-// 👇 Manejo de rutas no encontradas
-app.all(/.*/, (req, res, next) => {
+// ── Manejo de errores ──────────────────────────────────────────────────────
+// Manejo de rutas no encontradas
+app.use((req, res, next) => {
   next(new AppError(`No se pudo encontrar ${req.originalUrl} en este servidor!`, 404));
 });
 
-// 👇 Manejo de errores global
-app.use(globalErrorHandler);
-const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
-require('dotenv').config();
-
-const authRoutes = require('./routes/authRoutes');
-const banqueteRoutes = require('./routes/banqueteRoutes');
-const connectDB = require('./config/mongo');
-
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-// Conectar a MongoDB
-connectDB();
-
-// ── Seguridad ──────────────────────────────────────────────────────────────
-app.use(helmet()); // Cabeceras de seguridad HTTP
-
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
-
-// ── Parsing ────────────────────────────────────────────────────────────────
-// Limite reducido a 10mb para JSON (50mb era excesivo para datos normales)
-// Las imágenes se suben con multipart/form-data via multer
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-// ── Rutas ──────────────────────────────────────────────────────────────────
-app.use('/api/auth', authRoutes);
-app.use('/api/banquetes', banqueteRoutes);
-
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({ success: true, message: 'API de Le Banquets funcionando correctamente' });
-});
-
-// ── Manejo de errores ──────────────────────────────────────────────────────
-// Error handler global (debe ir DESPUÉS de las rutas)
+// Manejo de errores de Multer y Globales
 app.use((err, req, res, next) => {
-  // Errores de multer (archivo demasiado grande, tipo inválido, etc.)
+  // Errores específicos de Multer
   if (err.code === 'LIMIT_FILE_SIZE') {
     return res.status(413).json({ success: false, message: 'El archivo supera el tamaño máximo de 5MB' });
   }
@@ -129,16 +86,19 @@ app.use((err, req, res, next) => {
     return res.status(415).json({ success: false, message: err.message });
   }
 
+  // Usar el controlador global si existe, o un fallback
+  if (globalErrorHandler) {
+    return globalErrorHandler(err, req, res, next);
+  }
+
   console.error('Error no controlado:', err.message);
-  res.status(500).json({ success: false, message: 'Error interno del servidor' });
+  res.status(err.statusCode || 500).json({
+    success: false,
+    message: err.message || 'Error interno del servidor'
+  });
 });
 
-// 404 — Ruta no encontrada
-app.use((req, res) => {
-  res.status(404).json({ success: false, message: `Ruta no encontrada: ${req.method} ${req.originalUrl}` });
-});
-
-// 👇 Levantar servidor
+// ── Levantar servidor ─────────────────────────────────────────────────────
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en puerto ${PORT}`);
 });

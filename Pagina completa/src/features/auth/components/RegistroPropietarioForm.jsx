@@ -1,271 +1,167 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
-
-const RegistroPropietarioForm = () => {
-    const { register, error: authError } = useAuth();
-    const navigate = useNavigate();
-
-    const [form, setForm] = useState({
-        nombre: '',
-        email: '',
-        contrasena: '',
-        documento: '',
-        telefono: '',
-        rut: ''
-    });
-
-    const [loading, setLoading] = useState(false);
-    const [localError, setLocalError] = useState(null);
-
-    const handleChange = (e) => {
-        setForm({
-            ...form,
-            [e.target.name]: e.target.value
-        });
-        setLocalError(null);
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        setLocalError(null);
-
-        try {
-            await register('propietario', form);
-            navigate('/banquetes');
-        } catch (err) {
-            console.error("Registration error:", err);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const displayError = localError || authError;
-
-    return (
-        <form onSubmit={handleSubmit} className="space-y-4">
-            {displayError && (
-                <div className="alert alert-error shadow-sm mb-4">
-                    <span>{displayError}</span>
-                </div>
-            )}
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="form-control">
-                    <label className="label"><span className="label-text">Nombre Completo</span></label>
-                    <input
-                        type="text" name="nombre" value={form.nombre} onChange={handleChange}
-                        className="input input-bordered focus:input-primary w-full" required disabled={loading}
-                    />
-                </div>
-                <div className="form-control">
-                    <label className="label"><span className="label-text">Email Corporativo</span></label>
-                    <input
-                        type="email" name="email" value={form.email} onChange={handleChange}
-                        className="input input-bordered focus:input-primary w-full" required disabled={loading}
-                    />
-                </div>
-                <div className="form-control">
-                    <label className="label"><span className="label-text">Documento / ID</span></label>
-                    <input
-                        type="text" name="documento" value={form.documento} onChange={handleChange}
-                        className="input input-bordered focus:input-primary w-full" disabled={loading}
-                    />
-                </div>
-                <div className="form-control">
-                    <label className="label"><span className="label-text">Teléfono de Contacto</span></label>
-                    <input
-                        type="text" name="telefono" value={form.telefono} onChange={handleChange}
-                        className="input input-bordered focus:input-primary w-full" disabled={loading}
-                    />
-                </div>
-                <div className="form-control">
-                    <label className="label"><span className="label-text">RUT Empresa</span></label>
-                    <input
-                        type="text" name="rut" value={form.rut} onChange={handleChange}
-                        className="input input-bordered focus:input-primary w-full" disabled={loading}
-                    />
-                </div>
-                <div className="form-control">
-                    <label className="label"><span className="label-text">Contraseña</span></label>
-                    <input
-                        type="password" name="contrasena" value={form.contrasena} onChange={handleChange}
-                        className="input input-bordered focus:input-primary w-full" required disabled={loading}
-                        minLength={6}
-                    />
-                </div>
-            </div>
-
-            <div className="form-control mt-6">
-                <button
-                    type="submit"
-                    className={`btn btn-primary w-full ${loading ? 'loading' : ''}`}
-                    disabled={loading}
-                >
-                    {loading ? 'Procesando...' : 'Registrar Empresa'}
-                </button>
-            </div>
-        </form>
-    );
-};
-
-export default RegistroPropietarioForm;
 // src/features/auth/components/RegistroPropietarioForm.jsx
 import { useForm } from "react-hook-form"
 import { useRef, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import ReCAPTCHA from "react-google-recaptcha"
 import { useAuth } from "../../../context/AuthContext"
+import toast from "react-hot-toast"
 
 const RegistroPropietarioForm = () => {
     const { register, handleSubmit, formState: { errors }, reset, watch } = useForm({ mode: "onChange" });
-    const { signUp } = useAuth();
+    const { register: signUp } = useAuth(); // Usando el método register del AuthContext unificado
     const navigate = useNavigate();
     const password = useRef({});
     password.current = watch("password", "");
 
     const [captchaValue, setCaptchaValue] = useState(null);
-    const [captchaError, setCaptchaError] = useState("");
     const [isLoading, setIsLoading] = useState(false);
 
+    // Nota: El SITE_KEY debería venir de env variables en producción
     const RECAPTCHA_SITE_KEY = "6LcLn78rAAAAAJvmvgAp8EuDFhKhVlNpnbWA3bHY";
 
     const onSubmit = async (data) => {
         if (!captchaValue) {
-            setCaptchaError("Por favor, verifica que no eres un robot");
+            toast.error("Por favor, verifica que no eres un robot");
             return;
         }
         setIsLoading(true);
-        const result = await signUp(data.email, data.password, {
-            nombre: data.nombre,
-            documento: data.documento,
-            telefono: data.telefono,
-            rut: data.rut
-        }, 'propietario');
-        if (result.success) {
+
+        try {
+            await signUp('propietario', {
+                nombre: data.nombre,
+                email: data.email,
+                contrasena: data.password,
+                documento: data.documento,
+                telefono: data.telefono,
+                rut: data.rut
+            });
+
+            toast.success('✅ Registro exitoso. ¡Bienvenido a la red de propietarios!');
             reset();
             setCaptchaValue(null);
-            setCaptchaError("");
-            alert(result.message || '✅ Registro exitoso. Por favor verifica tu email antes de iniciar sesión.');
-            navigate('/login');
-        } else {
-            alert(result.message || 'Error en el registro');
+            navigate('/banquetes');
+        } catch (error) {
+            console.error("Submit error:", error);
+            toast.error(error.message || 'Error en el registro');
+        } finally {
+            setIsLoading(false);
         }
-        setIsLoading(false);
     };
 
     const handleCaptchaChange = (value) => {
         setCaptchaValue(value);
-        if (captchaError) setCaptchaError("");
     };
 
+    const inputClasses = "input input-bordered focus:input-primary w-full rounded-xl transition-all font-medium transition-all bg-base-100/50 backdrop-blur-sm";
+    const labelClasses = "label-text font-bold opacity-70 mb-1 block pl-1";
+
     return (
-        <form onSubmit={handleSubmit(onSubmit)}
-            className="mt-8 flex flex-col gap-6 max-w-md mx-auto p-8 bg-base-200 rounded-2xl shadow-lg">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Nombre */}
+                <div className="form-control">
+                    <label className="label py-1"><span className={labelClasses}>Nombre Completo *</span></label>
+                    <input
+                        {...register("nombre", { required: "Este campo es requerido" })}
+                        className={inputClasses}
+                        placeholder="Ej. Luis Ramírez" type="text"
+                    />
+                    {errors.nombre && <p className="text-error mt-1 text-xs font-bold">{errors.nombre.message}</p>}
+                </div>
 
-            <h2 className="text-2xl font-bold text-center text-primary">Registro de Propietario</h2>
-            <p className="text-center text-sm text-gray-600">Regístrate como propietario para administrar tu empresa o banquete</p>
+                {/* Email */}
+                <div className="form-control">
+                    <label className="label py-1"><span className={labelClasses}>Correo Corporativo *</span></label>
+                    <input
+                        {...register("email", {
+                            required: "Este campo es requerido",
+                            pattern: { value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i, message: "El correo no es válido" }
+                        })}
+                        placeholder="empresa@ejemplo.com"
+                        className={inputClasses}
+                        type="email"
+                    />
+                    {errors.email && <p className="text-error mt-1 text-xs font-bold">{errors.email.message}</p>}
+                </div>
 
-            <div className="form-control">
-                <label className="label"><span className="label-text font-semibold">Nombre Completo *</span></label>
-                <input
-                    {...register("nombre", { required: "Este campo es requerido" })}
-                    className="input input-bordered focus:input-primary w-full"
-                    placeholder="Tu nombre completo" type="text"
-                />
-                {errors.nombre && <p className="text-error mt-2 text-sm">{errors.nombre.message}</p>}
+                {/* RUT */}
+                <div className="form-control">
+                    <label className="label py-1"><span className={labelClasses}>RUT / NIT Empresa *</span></label>
+                    <input
+                        {...register("rut", { required: "Este campo es requerido" })}
+                        placeholder="Identificación fiscal"
+                        className={inputClasses}
+                    />
+                    {errors.rut && <p className="text-error mt-1 text-xs font-bold">{errors.rut.message}</p>}
+                </div>
+
+                {/* Documento */}
+                <div className="form-control">
+                    <label className="label py-1"><span className={labelClasses}>Documento Representante *</span></label>
+                    <input
+                        {...register("documento", { required: "Este campo es requerido" })}
+                        placeholder="Cédula o pasaporte"
+                        className={inputClasses}
+                    />
+                    {errors.documento && <p className="text-error mt-1 text-xs font-bold">{errors.documento.message}</p>}
+                </div>
+
+                {/* Teléfono */}
+                <div className="form-control">
+                    <label className="label py-1"><span className={labelClasses}>Teléfono de Contacto</span></label>
+                    <input
+                        {...register("telefono")}
+                        placeholder="+57 300 000 0000"
+                        className={inputClasses}
+                    />
+                </div>
+
+                {/* Contraseña */}
+                <div className="form-control">
+                    <label className="label py-1"><span className={labelClasses}>Contraseña Segura *</span></label>
+                    <input
+                        {...register("password", {
+                            required: "Este campo es requerido",
+                            minLength: { value: 6, message: "Mínimo 6 caracteres" }
+                        })}
+                        type="password" placeholder="••••••••"
+                        className={inputClasses}
+                    />
+                    {errors.password && <p className="text-error mt-1 text-xs font-bold">{errors.password.message}</p>}
+                </div>
             </div>
 
+            {/* Confirmar Password (ancho completo) */}
             <div className="form-control">
-                <label className="label"><span className="label-text font-semibold">Correo electrónico *</span></label>
-                <input
-                    {...register("email", {
-                        required: "Este campo es requerido",
-                        pattern: { value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i, message: "El correo no es válido" }
-                    })}
-                    placeholder="propietario@ejemplo.com"
-                    className="input input-bordered focus:input-primary w-full"
-                />
-                {errors.email && <p className="text-error mt-2 text-sm">{errors.email.message}</p>}
-            </div>
-
-            <div className="form-control">
-                <label className="label"><span className="label-text font-semibold">RUT o Identificación Fiscal *</span></label>
-                <input
-                    {...register("rut", { required: "Este campo es requerido" })}
-                    placeholder="RUT o identificación fiscal"
-                    className="input input-bordered focus:input-primary w-full"
-                />
-                {errors.rut && <p className="text-error mt-2 text-sm">{errors.rut.message}</p>}
-            </div>
-
-            <div className="form-control">
-                <label className="label"><span className="label-text font-semibold">Documento de Identidad *</span></label>
-                <input
-                    {...register("documento", { required: "Este campo es requerido" })}
-                    placeholder="Número de documento"
-                    className="input input-bordered focus:input-primary w-full"
-                />
-                {errors.documento && <p className="text-error mt-2 text-sm">{errors.documento.message}</p>}
-            </div>
-
-            <div className="form-control">
-                <label className="label"><span className="label-text font-semibold">Teléfono de Contacto</span></label>
-                <input
-                    {...register("telefono")}
-                    placeholder="Número de teléfono"
-                    className="input input-bordered focus:input-primary w-full"
-                />
-            </div>
-
-            <div className="form-control">
-                <label className="label"><span className="label-text font-semibold">Contraseña *</span></label>
-                <input
-                    {...register("password", {
-                        required: "Este campo es requerido",
-                        minLength: { value: 6, message: "La contraseña debe tener al menos 6 caracteres" }
-                    })}
-                    type="password" placeholder="••••••••"
-                    className="input input-bordered focus:input-primary w-full"
-                />
-                {errors.password && <p className="text-error mt-2 text-sm">{errors.password.message}</p>}
-            </div>
-
-            <div className="form-control">
-                <label className="label"><span className="label-text font-semibold">Confirmar Contraseña *</span></label>
+                <label className="label py-1"><span className={labelClasses}>Confirmar Contraseña *</span></label>
                 <input
                     {...register("confirmPassword", {
-                        required: "Este campo es requerido",
+                        required: "Verifica tu contraseña",
                         validate: (value) => value === password.current || "Las contraseñas no coinciden"
                     })}
                     type="password" placeholder="••••••••"
-                    className="input input-bordered focus:input-primary w-full"
+                    className={inputClasses}
                 />
-                {errors.confirmPassword && <p className="text-error mt-2 text-sm">{errors.confirmPassword.message}</p>}
+                {errors.confirmPassword && <p className="text-error mt-1 text-xs font-bold">{errors.confirmPassword.message}</p>}
             </div>
 
-            <div className="form-control">
-                <div className="flex justify-center">
-                    <ReCAPTCHA sitekey={RECAPTCHA_SITE_KEY} onChange={handleCaptchaChange} />
+            {/* Captcha */}
+            <div className="form-control pt-4">
+                <div className="flex justify-center bg-base-300/30 p-4 rounded-2xl border border-base-content/5">
+                    <ReCAPTCHA sitekey={RECAPTCHA_SITE_KEY} onChange={handleCaptchaChange} theme="light" />
                 </div>
-                {captchaError && <p className="text-error mt-2 text-sm text-center">{captchaError}</p>}
             </div>
 
-            <div className="form-control mt-2">
+            {/* Submit */}
+            <div className="form-control mt-4">
                 <button
-                    className="btn bg-base-100 border-primary text-primary hover:bg-primary hover:text-base-100 hover:border-primary transition-all duration-300 text-lg font-normal normal-case"
+                    className="btn btn-primary w-full rounded-2xl shadow-xl normal-case font-extrabold text-lg py-3 h-auto"
                     type="submit" disabled={isLoading}>
-                    {isLoading ? <span className="loading loading-spinner"></span> : "Registrar como Propietario"}
+                    {isLoading ? <span className="loading loading-spinner"></span> : "Finalizar Registro de Propietario"}
                 </button>
-            </div>
-
-            <div className="text-center mt-2">
-                <p className="text-sm">¿Ya tienes una cuenta? <Link to="/login" className="link link-hover text-primary font-semibold">Inicia sesión</Link></p>
-                <p className="text-sm mt-1">¿Eres usuario individual? <Link to="/registro" className="link link-hover text-secondary font-semibold">Regístrate aquí</Link></p>
             </div>
         </form>
     )
 }
 
-export default RegistroPropietarioForm
+export default RegistroPropietarioForm;

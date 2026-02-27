@@ -1,5 +1,6 @@
-// src/pages/Catering.jsx - Versión completa
+// src/features/banquetes/pages/Catering.jsx
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 const Catering = () => {
   const [selectedCategory, setSelectedCategory] = useState("todos");
@@ -8,73 +9,57 @@ const Catering = () => {
   const menuItems = [
     {
       id: 1,
-      nombre: "Menú Internacional",
-      descripcion: "Una selección de platillos de diversas gastronomías del mundo.",
+      nombre: "Menú Imperial Internacional",
+      descripcion: "Una fusuón majestuosa de platillos mediterráneos y asiáticos. Incluye entrada, plato fuerte y postre.",
       imagen: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
       categoria: "comida",
-      precio: 450,
-      tipo: "buffet"
+      precio_base: 125000,
+      tipo: "Buffet Dirigido"
     },
     {
       id: 2,
-      nombre: "Barra de Bebidas Premium",
-      descripcion: "Bebidas nacionales e importadas, cocktails exclusivos y bartender.",
+      nombre: "Barra de Mixología Premium",
+      descripcion: "Cocktails de autor, licores importados y baristas profesionales para una noche inolvidable.",
       imagen: "https://images.unsplash.com/photo-1470337458703-46ad1756a187?ixlib=rb-4.0.3&auto=format&fit=crop&w=1469&q=80",
       categoria: "bebidas",
-      precio: 250,
-      tipo: "barra libre"
+      precio_base: 85000,
+      tipo: "Barra Libre"
     },
     {
       id: 3,
-      nombre: "Postres Gourmet",
-      descripcion: "Selección de postres finos, pastel personalizado y estación de café.",
+      nombre: "Estación de Repostería Fina",
+      descripcion: "Mini postres gourmet, macarons franceses y cascada de chocolate belga.",
       imagen: "https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1468&q=80",
       categoria: "postres",
-      precio: 180,
-      tipo: "estación"
+      precio_base: 45000,
+      tipo: "Estación"
     },
     {
       id: 4,
-      nombre: "Menú Vegetariano",
-      descripcion: "Opción especial con ingredientes frescos y de temporada.",
+      nombre: "Gala Vegetariana",
+      descripcion: "Ingredientes orgánicos salteados al wok con especias de oriente y reducciones balsámicas.",
       imagen: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
       categoria: "comida",
-      precio: 380,
-      tipo: "plato servido"
-    },
-    {
-      id: 5,
-      nombre: "Coctelería de Autor",
-      descripcion: "Cocteles signature creados especialmente para tu evento.",
-      imagen: "https://images.unsplash.com/photo-1536935338788-846bb9981813?ixlib=rb-4.0.3&auto=format&fit=crop&w=1486&q=80",
-      categoria: "bebidas",
-      precio: 320,
-      tipo: "barra premium"
-    },
-    {
-      id: 6,
-      nombre: "Estación de Sushi",
-      descripcion: "Sushi fresco preparado al momento por chefs especializados.",
-      imagen: "https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
-      categoria: "comida",
-      precio: 550,
-      tipo: "estación interactiva"
+      precio_base: 95000,
+      tipo: "Plato Servido"
     }
   ];
 
   const categorias = [
-    { id: "todos", nombre: "Todo el Menú" },
-    { id: "comida", nombre: "Comida" },
-    { id: "bebidas", nombre: "Bebidas" },
-    { id: "postres", nombre: "Postres" }
+    { id: "todos", nombre: "Explorar Todo" },
+    { id: "comida", nombre: "Platos Fuertes" },
+    { id: "bebidas", nombre: "Licores y Bebidas" },
+    { id: "postres", nombre: "Dulce y Café" }
   ];
 
-  const filteredItems = selectedCategory === "todos" 
-    ? menuItems 
+  const filteredItems = selectedCategory === "todos"
+    ? menuItems
     : menuItems.filter(item => item.categoria === selectedCategory);
 
   const addToSelection = (item) => {
-    setSelectedItems([...selectedItems, item]);
+    if (!selectedItems.find(i => i.id === item.id)) {
+      setSelectedItems([...selectedItems, item]);
+    }
   };
 
   const removeFromSelection = (itemId) => {
@@ -82,53 +67,65 @@ const Catering = () => {
   };
 
   const calculateTotal = () => {
-    return selectedItems.reduce((total, item) => total + item.precio, 0);
+    return selectedItems.reduce((total, item) => total + item.precio_base, 0);
   };
 
   return (
-    <div className="min-h-screen bg-base-100 py-8">
-      <div className="max-w-7xl mx-auto px-4">
-        <h1 className="text-4xl font-bold text-center mb-8">Servicio de Catering</h1>
-        <p className="text-lg text-center mb-8 max-w-3xl mx-auto">
-          Ofrecemos experiencias culinarias excepcionales con menús personalizados para tu evento
-        </p>
+    <div className="min-h-screen bg-base-100 py-16">
+      <div className="max-w-7xl mx-auto px-4 md:px-8">
+        {/* Header Section */}
+        <div className="text-center mb-16">
+          <h1 className="text-5xl font-extrabold tracking-tight mb-4">Experiencias Gastronómicas</h1>
+          <div className="w-24 h-1 bg-primary mx-auto mb-6 rounded-full"></div>
+          <p className="max-w-2xl mx-auto text-lg text-base-content/70">
+            Cada salón ofrece sus propias delicias. Aquí te mostramos una selección premium de lo que puedes coordinar con nuestros propietarios asociados.
+          </p>
+        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Menú de catering */}
-          <div className="lg:col-span-2">
-            <div className="bg-base-200 p-6 rounded-lg shadow-md mb-8">
-              <div className="flex flex-wrap gap-2 justify-center">
-                {categorias.map(categoria => (
-                  <button
-                    key={categoria.id}
-                    className={`btn btn-sm ${selectedCategory === categoria.id ? 'btn-primary' : 'btn-outline'}`}
-                    onClick={() => setSelectedCategory(categoria.id)}
-                  >
-                    {categoria.nombre}
-                  </button>
-                ))}
-              </div>
+        {/* Important Notice */}
+        <div className="alert bg-primary/10 border-primary/20 text-primary mb-12 rounded-2xl shadow-sm">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span className="font-medium italic">
+            Le Banquets es una plataforma de conexión. El servicio de catering es provisto directamente por el propietario del salón o sus aliados comerciales.
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+          {/* Menu Explorer */}
+          <div className="lg:col-span-2 space-y-8">
+            <div className="flex flex-wrap gap-3 justify-start">
+              {categorias.map(cat => (
+                <button
+                  key={cat.id}
+                  className={`btn btn-sm rounded-xl px-6 normal-case ${selectedCategory === cat.id ? 'btn-primary shadow-lg' : 'btn-ghost bg-base-200 hover:bg-base-300'}`}
+                  onClick={() => setSelectedCategory(cat.id)}
+                >
+                  {cat.nombre}
+                </button>
+              ))}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {filteredItems.map(item => (
-                <div key={item.id} className="card bg-base-100 shadow-md">
-                  <figure>
-                    <img src={item.imagen} alt={item.nombre} className="h-48 w-full object-cover" />
-                  </figure>
-                  <div className="card-body p-4">
-                    <h2 className="card-title text-lg">{item.nombre}</h2>
-                    <p className="text-sm">{item.descripcion}</p>
-                    <div className="flex justify-between items-center mt-2">
-                      <div className="badge badge-outline">{item.tipo}</div>
-                      <div className="font-bold">${item.precio} por persona</div>
+                <div key={item.id} className="card bg-base-100 shadow-xl border border-base-200 overflow-hidden group">
+                  <figure className="h-56 relative overflow-hidden">
+                    <img src={item.imagen} alt={item.nombre} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                    <div className="absolute top-4 right-4">
+                      <div className="badge badge-secondary py-3 font-bold">{item.tipo}</div>
                     </div>
-                    <div className="card-actions justify-end mt-2">
-                      <button 
-                        className="btn btn-primary btn-sm"
+                  </figure>
+                  <div className="card-body p-6">
+                    <h2 className="card-title text-xl font-bold">{item.nombre}</h2>
+                    <p className="text-sm opacity-70 mb-4">{item.descripcion}</p>
+                    <div className="flex justify-between items-center mt-auto">
+                      <span className="text-xl font-extrabold text-primary">${item.precio_base.toLocaleString()} <small className="text-xs opacity-50 font-normal">/ pers.</small></span>
+                      <button
+                        className="btn btn-outline btn-primary btn-sm rounded-lg"
                         onClick={() => addToSelection(item)}
                       >
-                        Agregar
+                        Simular
                       </button>
                     </div>
                   </div>
@@ -137,168 +134,68 @@ const Catering = () => {
             </div>
           </div>
 
-          {/* Resumen de selección */}
-          <div className="bg-base-200 p-6 rounded-lg shadow-md h-fit sticky top-4">
-            <h2 className="text-2xl font-bold mb-4">Tu selección</h2>
-            
-            {selectedItems.length === 0 ? (
-              <p className="text-center py-4">Aún no has seleccionado items</p>
-            ) : (
-              <div>
-                <ul className="space-y-3">
-                  {selectedItems.map(item => (
-                    <li key={item.id} className="flex justify-between items-center border-b pb-2">
-                      <div>
-                        <p className="font-medium">{item.nombre}</p>
-                        <p className="text-sm text-gray-600">${item.precio} c/u</p>
-                      </div>
-                      <button 
-                        className="btn btn-xs btn-error"
-                        onClick={() => removeFromSelection(item.id)}
-                      >
-                        Eliminar
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-                
-                <div className="mt-6 pt-4 border-t">
-                  <div className="flex justify-between text-lg font-bold">
-                    <span>Total estimado:</span>
-                    <span>${calculateTotal().toLocaleString()}</span>
-                  </div>
-                  <p className="text-sm mt-2">* Precio por persona. El total final puede variar según el número de invitados.</p>
-                  
-                  <div className="mt-6 space-y-2">
-                    <button className="btn btn-primary w-full">Solicitar cotización</button>
-                    <button className="btn btn-outline w-full">Limpiar selección</button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+          {/* Simulation Panel */}
+          <div className="space-y-6">
+            <div className="card bg-base-200/50 backdrop-blur-md shadow-2xl border border-base-300 rounded-3xl sticky top-8">
+              <div className="card-body p-8">
+                <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                  Tu Simulación
+                </h3>
 
-        {/* Información adicional */}
-        <div className="mt-16 bg-primary text-primary-content rounded-lg p-8">
-          <h2 className="text-3xl font-bold text-center mb-6">¿Necesitas un menú personalizado?</h2>
-          <p className="text-center max-w-3xl mx-auto mb-6">
-            Nuestros chefs pueden crear un menú exclusivo para tu evento, considerando tus preferencias, 
-            restricciones dietéticas y tema de la celebración.
-          </p>
-          <div className="text-center">
-            <button className="btn btn-secondary btn-lg">Contactar a un chef</button>
+                {selectedItems.length === 0 ? (
+                  <div className="text-center py-10 opacity-40">
+                    <div className="text-5xl mb-4">🍽️</div>
+                    <p>Agrega opciones del menú para simular tu presupuesto</p>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    <ul className="space-y-4">
+                      {selectedItems.map(item => (
+                        <li key={item.id} className="flex justify-between items-center bg-base-100 p-4 rounded-xl border border-base-300">
+                          <div>
+                            <p className="font-bold text-sm">{item.nombre}</p>
+                            <p className="text-xs opacity-60">${item.precio_base.toLocaleString()} c/u</p>
+                          </div>
+                          <button
+                            className="btn btn-ghost btn-circle btn-xs text-error"
+                            onClick={() => removeFromSelection(item.id)}
+                          >
+                            ✕
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+
+                    <div className="divider opacity-50"></div>
+
+                    <div className="flex justify-between items-center">
+                      <span className="text-lg font-bold opacity-70">Subtotal p/p</span>
+                      <span className="text-3xl font-extrabold text-primary">${calculateTotal().toLocaleString()}</span>
+                    </div>
+
+                    <div className="card-actions flex-col gap-3 mt-4">
+                      <Link to="/salones" className="btn btn-primary w-full rounded-xl shadow-lg normal-case font-bold">
+                        Encontrar un Salón
+                      </Link>
+                      <button
+                        className="btn btn-ghost w-full rounded-xl opacity-50 hover:opacity-100"
+                        onClick={() => setSelectedItems([])}
+                      >
+                        Limpiar Todo
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
   );
-};
-
-export default Catering;
-// src/features/banquetes/pages/Catering.jsx
-// NOTA: Le Banquets es una plataforma intermediaria — no ofrece catering propio.
-// Esta página explica qué esperar del catering ofrecido por los propietarios de cada espacio.
-
-const Catering = () => {
-    const tiposServicio = [
-        {
-            id: 1,
-            icono: (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 15.546c-.523 0-1.046.151-1.5.454a2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0A1.5 1.5 0 013 15.546V5a2 2 0 012-2h14a2 2 0 012 2v10.546z" />
-                </svg>
-            ),
-            titulo: "Menú personalizado",
-            descripcion: "Muchos propietarios ofrecen menús adaptables a tu tipo de evento, desde banquetes formales hasta cocktails informales."
-        },
-        {
-            id: 2,
-            icono: (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-            ),
-            titulo: "Servicio incluido en el espacio",
-            descripcion: "Algunos salones incluyen el servicio de catering en su paquete. Revisá los detalles de cada espacio al contactar al propietario."
-        },
-        {
-            id: 3,
-            icono: (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-            ),
-            titulo: "Proveedor externo",
-            descripcion: "En otros casos, el propietario permite traer tu propio proveedor de catering. Coordinalo directamente con ellos antes de reservar."
-        },
-        {
-            id: 4,
-            icono: (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
-            ),
-            titulo: "Consultá al propietario",
-            descripcion: "Cada espacio tiene sus propias condiciones. Al contactar al propietario podés preguntar sobre el catering disponible, restricciones y costos."
-        }
-    ];
-
-    return (
-        <div className="min-h-screen bg-base-100 py-8">
-            <div className="max-w-5xl mx-auto px-4">
-                {/* Header */}
-                <div className="text-center mb-12">
-                    <h1 className="text-4xl font-bold mb-4">Catering en los Salones</h1>
-                    <p className="text-lg text-base-content/70 max-w-2xl mx-auto">
-                        Le Banquets no provee catering directamente. Conectamos clientes con propietarios
-                        de salones, y cada espacio puede tener diferentes opciones de catering.
-                    </p>
-                </div>
-
-                {/* Alert informativo */}
-                <div className="alert mb-10">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 shrink-0 stroke-current text-info" fill="none" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span>
-                        <strong>¿Cómo funciona el catering?</strong> Cada propietario define las condiciones de su espacio.
-                        Al ver los detalles de un salón, encontrarás información sobre el catering disponible.
-                    </span>
-                </div>
-
-                {/* Cards informativas */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-                    {tiposServicio.map(servicio => (
-                        <div key={servicio.id} className="card bg-base-200 shadow-md hover:shadow-lg transition-shadow">
-                            <div className="card-body">
-                                <div className="flex items-start gap-4">
-                                    <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                                        {servicio.icono}
-                                    </div>
-                                    <div>
-                                        <h3 className="font-bold text-lg mb-1">{servicio.titulo}</h3>
-                                        <p className="text-base-content/70">{servicio.descripcion}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-
-                {/* CTA */}
-                <div className="card bg-primary text-primary-content shadow-xl">
-                    <div className="card-body text-center">
-                        <h2 className="text-2xl font-bold mb-2">¿Buscás un salón con catering incluido?</h2>
-                        <p className="mb-6 opacity-90">Explorar los salones disponibles y contactá directamente al propietario para coordinar todos los detalles.</p>
-                        <div className="card-actions justify-center">
-                            <a href="/salones" className="btn btn-secondary btn-lg">Ver Salones Disponibles</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
 };
 
 export default Catering;

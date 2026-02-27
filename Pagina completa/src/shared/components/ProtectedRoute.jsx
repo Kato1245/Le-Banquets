@@ -1,27 +1,6 @@
 // src/shared/components/ProtectedRoute.jsx
-
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-
-const ProtectedRoute = ({ children, role }) => {
-  const { isAuthenticated, user, loading } = useAuth();
-
-  if (loading) return <p>Cargando...</p>;
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-
-  if (role && user?.role !== role) {
-    return <Navigate to="/" replace />;
-  }
-
-  return children;
-};
-
-export default ProtectedRoute;
-import { useAuth } from '../../context/AuthContext';
-import { Navigate } from 'react-router-dom';
 
 /**
  * Protege rutas basándose en autenticación y rol.
@@ -32,22 +11,29 @@ import { Navigate } from 'react-router-dom';
  *               Si es undefined, solo requiere estar logueado.
  */
 const ProtectedRoute = ({ children, requiredRole }) => {
-    const { user } = useAuth();
+  const { user, loading } = useAuth();
 
-    // No autenticado → redirige al login
-    if (!user) return <Navigate to="/login" replace />;
+  // Mientras carga la sesión, mostrar algo neutral
+  if (loading) return (
+    <div className="min-h-[50vh] flex items-center justify-center">
+      <span className="loading loading-spinner text-primary"></span>
+    </div>
+  );
 
-    // Requiere admin y el usuario no lo es → redirige al inicio
-    if (requiredRole === 'admin' && !user.isAdmin) {
-        return <Navigate to="/" replace />;
-    }
+  // No autenticado → redirige al login
+  if (!user) return <Navigate to="/login" replace />;
 
-    // Requiere propietario y el usuario no lo es → redirige al inicio
-    if (requiredRole === 'propietario' && user.userType !== 'propietario') {
-        return <Navigate to="/" replace />;
-    }
+  // Requiere admin y el usuario no lo es → redirige al inicio
+  if (requiredRole === 'admin' && user.role !== 'admin' && !user.isAdmin) {
+    return <Navigate to="/" replace />;
+  }
 
-    return children;
+  // Requiere propietario y el usuario no lo es → redirige al inicio
+  if (requiredRole === 'propietario' && user.userType !== 'propietario' && user.role !== 'propietario') {
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
 };
 
 export default ProtectedRoute;

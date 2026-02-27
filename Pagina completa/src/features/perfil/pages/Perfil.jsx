@@ -1,68 +1,65 @@
-// src/pages/Perfil.jsx
+// src/features/perfil/pages/Perfil.jsx
 import { useState, useEffect } from "react"
-import { useAuth } from "../context/AuthContext"
+import { useAuth } from "../../../context/AuthContext"
+import { toast } from "react-hot-toast"
+import API_BASE_URL from "../../../config/api"
 
 const Perfil = () => {
-  const { user } = useAuth()
-  const [isEditing, setIsEditing] = useState(false)
+  const { user, token, setUser } = useAuth();
+  const [isEditing, setIsEditing] = useState(false);
   const [userData, setUserData] = useState({
     nombre: "",
     email: "",
     telefono: "",
     fecha_nacimiento: "",
     documento: ""
-  })
-  const [loading, setLoading] = useState(true)
-  const [message, setMessage] = useState("")
+  });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (user) {
       loadUserData();
     }
-  }, [user]);
+  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadUserData = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
-      
-      const endpoint = user.userType === 'propietario' 
-        ? 'http://localhost:3000/api/auth/profile/propietario'
-        : 'http://localhost:3000/api/auth/profile/usuario';
-
-      const response = await fetch(endpoint, {
+      const res = await fetch(`${API_BASE_URL}/auth/profile`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
 
-      if (response.ok) {
-        const data = await response.json();
+      if (res.ok) {
+        const data = await res.json();
+        const u = data.data?.user || data.data || {};
         setUserData({
-          nombre: data.nombre || "",
-          email: data.email || user.email,
-          telefono: data.telefono || "",
-          fecha_nacimiento: data.fecha_nacimiento || "",
-          documento: data.documento || ""
+          nombre: u.nombre || user.nombre || "",
+          email: u.email || user.email || "",
+          telefono: u.telefono || "",
+          fecha_nacimiento: u.fecha_nacimiento || "",
+          documento: u.documento || ""
         });
       } else {
-        // Si falla, usar datos básicos del user
+        // Fallback: usar datos del contexto
         setUserData({
-          nombre: user.userData?.nombre || user.email.split('@')[0],
-          email: user.email,
-          telefono: user.userData?.telefono || "",
-          fecha_nacimiento: user.userData?.fecha_nacimiento || "",
-          documento: user.userData?.documento || ""
+          nombre: user.nombre || "",
+          email: user.email || "",
+          telefono: user.telefono || "",
+          fecha_nacimiento: user.fecha_nacimiento || "",
+          documento: user.documento || ""
         });
       }
     } catch (error) {
       console.error("Error cargando datos:", error);
       setUserData({
-        nombre: user.userData?.nombre || user.email.split('@')[0],
-        email: user.email,
-        telefono: user.userData?.telefono || "",
-        fecha_nacimiento: user.userData?.fecha_nacimiento || "",
-        documento: user.userData?.documento || ""
+        nombre: user.nombre || "",
+        email: user.email || "",
+        telefono: user.telefono || "",
+        fecha_nacimiento: user.fecha_nacimiento || "",
+        documento: user.documento || ""
       });
     } finally {
       setLoading(false);
@@ -70,15 +67,9 @@ const Perfil = () => {
   };
 
   const handleSave = async () => {
+    setSaving(true);
     try {
-      setMessage("Guardando cambios...");
-      const token = localStorage.getItem("token");
-      
-      const endpoint = user.userType === 'propietario' 
-        ? 'http://localhost:3000/api/auth/profile/propietario'
-        : 'http://localhost:3000/api/auth/profile/usuario';
-
-      const response = await fetch(endpoint, {
+      const res = await fetch(`${API_BASE_URL}/auth/profile`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -93,33 +84,30 @@ const Perfil = () => {
         })
       });
 
-      const data = await response.json();
+      const data = await res.json();
 
       if (data.success) {
-        setMessage("✅ Perfil actualizado correctamente");
+        toast.success("Perfil actualizado correctamente");
         setIsEditing(false);
-        
-        // Actualizar localStorage
+
+        // Actualizar estado global
         const updatedUser = {
           ...user,
-          userData: {
-            ...user.userData,
-            nombre: userData.nombre,
-            email: userData.email,
-            telefono: userData.telefono,
-            fecha_nacimiento: userData.fecha_nacimiento,
-            documento: userData.documento
-          }
+          nombre: userData.nombre,
+          email: userData.email,
+          // Asegurarnos de guardar los datos adicionales si los hay
+          ...userData
         };
+        setUser(updatedUser);
         localStorage.setItem('user', JSON.stringify(updatedUser));
-        
-        setTimeout(() => setMessage(""), 3000);
       } else {
-        setMessage("❌ Error al actualizar el perfil");
+        toast.error(data.message || "Error al actualizar el perfil");
       }
     } catch (error) {
       console.error("Error actualizando perfil:", error);
-      setMessage("❌ Error de conexión");
+      toast.error("Error de conexión al guardar el perfil");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -134,176 +122,146 @@ const Perfil = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-base-100 py-8 flex items-center justify-center">
-        <span className="loading loading-spinner loading-lg"></span>
+        <span className="loading loading-spinner loading-lg text-primary"></span>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-base-100 py-8">
-      <div className="max-w-4xl mx-auto px-4">
-        <h1 className="text-3xl font-bold text-center mb-8">Mi Perfil</h1>
-        
-        {message && (
-          <div className={`alert ${message.includes('✅') ? 'alert-success' : 'alert-error'} mb-6`}>
-            <span>{message}</span>
+      <div className="max-w-5xl mx-auto px-4">
+        <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
+          <h1 className="text-4xl font-extrabold tracking-tight">Configuración de Perfil</h1>
+          {!isEditing && (
+            <button onClick={() => setIsEditing(true)} className="btn btn-primary px-8 rounded-xl shadow-lg hover:scale-105 transition-transform">
+              Editar Perfil
+            </button>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Panel Izquierdo: Avatar y Estado */}
+          <div className="space-y-6">
+            <div className="card bg-base-200 shadow-xl border border-base-300">
+              <div className="card-body items-center text-center p-8">
+                <div className="relative group">
+                  <div className="w-32 h-32 rounded-full bg-primary text-primary-content flex items-center justify-center text-4xl font-bold shadow-2xl transition-transform group-hover:scale-105">
+                    {userData.nombre ? userData.nombre.charAt(0).toUpperCase() : 'U'}
+                  </div>
+                  {isEditing && (
+                    <button className="absolute bottom-0 right-0 btn btn-circle btn-sm btn-secondary shadow-lg">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+                <h2 className="mt-4 text-2xl font-bold">{userData.nombre || "Usuario"}</h2>
+                <p className="text-base-content/60 font-medium">
+                  {user?.role === 'admin' ? 'Administrador' : user?.userType === 'propietario' ? 'Propietario' : 'Cliente'}
+                </p>
+                <div className="divider my-2"></div>
+                <div className="w-full space-y-3">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="opacity-60">ID Usuario</span>
+                    <span className="font-mono text-xs">{user?.id?.substring(0, 8)}...</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="opacity-60">Miembro desde</span>
+                    <span className="font-medium">{new Date(user?.createdAt || Date.now()).toLocaleDateString()}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Tarjeta de Seguridad Rápida */}
+            <div className="card bg-base-100 shadow-md border border-base-200">
+              <div className="card-body p-6">
+                <h3 className="font-bold flex items-center gap-2 mb-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                  Seguridad
+                </h3>
+                <button className="btn btn-outline btn-sm w-full justify-start normal-case">
+                  Cambiar Contraseña
+                </button>
+                <button className="btn btn-outline btn-error btn-sm w-full justify-start normal-case mt-2">
+                  Desactivar Cuenta
+                </button>
+              </div>
+            </div>
           </div>
-        )}
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Información del usuario */}
-          <div className="md:col-span-2">
-            <div className="card bg-base-200 shadow-xl">
-              <div className="card-body">
-                <h2 className="card-title">Información Personal</h2>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+          {/* Panel Derecho: Formulario de Información */}
+          <div className="lg:col-span-2">
+            <div className="card bg-base-100 shadow-2xl border border-base-200">
+              <div className="card-body p-8">
+                <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  Información Personal
+                </h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="form-control">
-                    <label className="label">
-                      <span className="label-text">Nombre completo</span>
-                    </label>
+                    <label className="label"><span className="label-text font-bold opacity-70">Nombre Completo</span></label>
                     {isEditing ? (
-                      <input
-                        type="text"
-                        name="nombre"
-                        value={userData.nombre}
-                        onChange={handleChange}
-                        className="input input-bordered"
-                      />
+                      <input type="text" name="nombre" value={userData.nombre} onChange={handleChange} className="input input-bordered focus:input-primary transition-all rounded-xl" placeholder="Ej. Juan Pérez" />
                     ) : (
-                      <p className="text-lg">{userData.nombre}</p>
-                    )}
-                  </div>
-                  
-                  <div className="form-control">
-                    <label className="label">
-                      <span className="label-text">Correo electrónico</span>
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="email"
-                        name="email"
-                        value={userData.email}
-                        onChange={handleChange}
-                        className="input input-bordered"
-                      />
-                    ) : (
-                      <p className="text-lg">{userData.email}</p>
-                    )}
-                  </div>
-                  
-                  <div className="form-control">
-                    <label className="label">
-                      <span className="label-text">Teléfono</span>
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="tel"
-                        name="telefono"
-                        value={userData.telefono}
-                        onChange={handleChange}
-                        className="input input-bordered"
-                      />
-                    ) : (
-                      <p className="text-lg">{userData.telefono || "No especificado"}</p>
-                    )}
-                  </div>
-                  
-                  <div className="form-control">
-                    <label className="label">
-                      <span className="label-text">Fecha de Nacimiento</span>
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="date"
-                        name="fecha_nacimiento"
-                        value={userData.fecha_nacimiento}
-                        onChange={handleChange}
-                        className="input input-bordered"
-                      />
-                    ) : (
-                      <p className="text-lg">{userData.fecha_nacimiento || "No especificada"}</p>
+                      <div className="p-3 bg-base-200 rounded-xl font-medium">{userData.nombre || "—"}</div>
                     )}
                   </div>
 
                   <div className="form-control">
-                    <label className="label">
-                      <span className="label-text">Documento</span>
-                    </label>
+                    <label className="label"><span className="label-text font-bold opacity-70">Correo Electrónico</span></label>
                     {isEditing ? (
-                      <input
-                        type="text"
-                        name="documento"
-                        value={userData.documento}
-                        onChange={handleChange}
-                        className="input input-bordered"
-                      />
+                      <input type="email" name="email" value={userData.email} onChange={handleChange} className="input input-bordered focus:input-primary transition-all rounded-xl" placeholder="tu@correo.com" />
                     ) : (
-                      <p className="text-lg">{userData.documento || "No especificado"}</p>
+                      <div className="p-3 bg-base-200 rounded-xl font-medium">{userData.email}</div>
+                    )}
+                  </div>
+
+                  <div className="form-control">
+                    <label className="label"><span className="label-text font-bold opacity-70">Teléfono Móvil</span></label>
+                    {isEditing ? (
+                      <input type="tel" name="telefono" value={userData.telefono} onChange={handleChange} className="input input-bordered focus:input-primary transition-all rounded-xl" placeholder="+52 000 000 0000" />
+                    ) : (
+                      <div className="p-3 bg-base-200 rounded-xl font-medium">{userData.telefono || "No registrado"}</div>
+                    )}
+                  </div>
+
+                  <div className="form-control">
+                    <label className="label"><span className="label-text font-bold opacity-70">Fecha de Nacimiento</span></label>
+                    {isEditing ? (
+                      <input type="date" name="fecha_nacimiento" value={userData.fecha_nacimiento} onChange={handleChange} className="input input-bordered focus:input-primary transition-all rounded-xl" />
+                    ) : (
+                      <div className="p-3 bg-base-200 rounded-xl font-medium">{userData.fecha_nacimiento || "No registrada"}</div>
+                    )}
+                  </div>
+
+                  <div className="form-control md:col-span-2">
+                    <label className="label"><span className="label-text font-bold opacity-70">Documento de Identidad (DNI/INE/Cédula)</span></label>
+                    {isEditing ? (
+                      <input type="text" name="documento" value={userData.documento} onChange={handleChange} className="input input-bordered focus:input-primary transition-all rounded-xl w-full" placeholder="Número de documento" />
+                    ) : (
+                      <div className="p-3 bg-base-200 rounded-xl font-medium">{userData.documento || "No especificado"}</div>
                     )}
                   </div>
                 </div>
-              
-                
-                <div className="card-actions justify-end mt-6">
-                  {isEditing ? (
+
+                <div className="card-actions justify-end mt-10 gap-3">
+                  {isEditing && (
                     <>
-                      <button onClick={() => setIsEditing(false)} className="btn btn-ghost">
-                        Cancelar
+                      <button onClick={() => setIsEditing(false)} className="btn btn-ghost rounded-xl px-8" disabled={saving}>
+                        Descartar
                       </button>
-                      <button onClick={handleSave} className="btn btn-primary">
-                        Guardar Cambios
+                      <button onClick={handleSave} className="btn btn-primary rounded-xl px-8 shadow-lg min-w-[160px]" disabled={saving}>
+                        {saving ? <span className="loading loading-spinner loading-sm"></span> : "Guardar Cambios"}
                       </button>
                     </>
-                  ) : (
-                    <button onClick={() => setIsEditing(true)} className="btn btn-primary">
-                      Editar Perfil
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          {/* Sidebar con información adicional */}
-          <div className="space-y-6">
-            <div className="card bg-base-200 shadow-xl">
-              <div className="card-body">
-                <h3 className="card-title">Mi Avatar</h3>
-                <div className="flex flex-col items-center">
-                  <div className="w-24 h-24 rounded-full bg-primary text-primary-content flex items-center justify-center text-3xl font-bold mb-4">
-                    {userData.nombre ? userData.nombre.charAt(0).toUpperCase() : 'U'}
-                  </div>
-                  {isEditing && (
-                    <button className="btn btn-sm btn-outline">
-                      Cambiar Avatar
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-            
-            <div className="card bg-base-200 shadow-xl">
-              <div className="card-body">
-                <h3 className="card-title">Estadísticas</h3>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span>Eventos creados</span>
-                    <span className="font-bold">0</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Invitaciones</span>
-                    <span className="font-bold">0</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Miembro desde</span>
-                    <span className="font-bold">{new Date(user.userData?.created_at || Date.now()).toLocaleDateString()}</span>
-                  </div>
-                  {user.userType === 'propietario' && (
-                    <div className="flex justify-between">
-                      <span>Banquetes registrados</span>
-                      <span className="font-bold">0</span>
-                    </div>
                   )}
                 </div>
               </div>
@@ -312,212 +270,7 @@ const Perfil = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Perfil
-// src/features/perfil/pages/Perfil.jsx
-import { useState, useEffect } from "react"
-import { useAuth } from "../../../context/AuthContext"
-import toast from "react-hot-toast"
-import API_BASE_URL from "../../../config/api"
-
-const Perfil = () => {
-    const { user, token, setUser } = useAuth()
-    const [isEditing, setIsEditing] = useState(false)
-    const [userData, setUserData] = useState({
-        nombre: "",
-        email: "",
-        telefono: "",
-        fecha_nacimiento: "",
-        documento: ""
-    })
-    const [loading, setLoading] = useState(true)
-    const [saving, setSaving] = useState(false)
-
-    useEffect(() => {
-        if (user) loadUserData();
-    }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
-
-    // Carga los datos del perfil desde el servidor
-    const loadUserData = async () => {
-        try {
-            setLoading(true);
-            const res = await fetch(`${API_BASE_URL}/auth/profile`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-
-            if (res.ok) {
-                const data = await res.json();
-                const u = data.data?.user || data.data || {};
-                setUserData({
-                    nombre: u.nombre || "",
-                    email: u.email || user.email,
-                    telefono: u.telefono || "",
-                    fecha_nacimiento: u.fecha_nacimiento || "",
-                    documento: u.documento || ""
-                });
-            } else {
-                // Fallback: usar datos del contexto
-                setUserData({
-                    nombre: user.nombre || "",
-                    email: user.email || "",
-                    telefono: user.telefono || "",
-                    fecha_nacimiento: user.fecha_nacimiento || "",
-                    documento: user.documento || ""
-                });
-            }
-        } catch {
-            setUserData({
-                nombre: user.nombre || "",
-                email: user.email || "",
-                telefono: user.telefono || "",
-                fecha_nacimiento: user.fecha_nacimiento || "",
-                documento: user.documento || ""
-            });
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleSave = async () => {
-        setSaving(true);
-        try {
-            const res = await fetch(`${API_BASE_URL}/auth/profile`, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    nombre: userData.nombre,
-                    email: userData.email,
-                    telefono: userData.telefono
-                })
-            });
-
-            const data = await res.json();
-
-            if (data.success) {
-                toast.success("Perfil actualizado correctamente");
-                setIsEditing(false);
-                // Actualizar estado global del usuario
-                setUser(prev => ({ ...prev, nombre: userData.nombre, email: userData.email }));
-                localStorage.setItem('user', JSON.stringify({ ...user, nombre: userData.nombre, email: userData.email }));
-            } else {
-                toast.error(data.message || "Error al actualizar el perfil");
-            }
-        } catch {
-            toast.error("Error de conexión al guardar el perfil");
-        } finally {
-            setSaving(false);
-        }
-    };
-
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setUserData(prev => ({ ...prev, [name]: value }));
-    };
-
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-base-100 py-8 flex items-center justify-center">
-                <span className="loading loading-spinner loading-lg"></span>
-            </div>
-        );
-    }
-
-    return (
-        <div className="min-h-screen bg-base-100 py-8">
-            <div className="max-w-4xl mx-auto px-4">
-                <h1 className="text-3xl font-bold text-center mb-8">Mi Perfil</h1>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <div className="md:col-span-2">
-                        <div className="card bg-base-200 shadow-xl">
-                            <div className="card-body">
-                                <h2 className="card-title">Información Personal</h2>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="form-control">
-                                        <label className="label"><span className="label-text">Nombre completo</span></label>
-                                        {isEditing ? (
-                                            <input type="text" name="nombre" value={userData.nombre} onChange={handleChange} className="input input-bordered" />
-                                        ) : (
-                                            <p className="text-lg">{userData.nombre || "No especificado"}</p>
-                                        )}
-                                    </div>
-                                    <div className="form-control">
-                                        <label className="label"><span className="label-text">Correo electrónico</span></label>
-                                        {isEditing ? (
-                                            <input type="email" name="email" value={userData.email} onChange={handleChange} className="input input-bordered" />
-                                        ) : (
-                                            <p className="text-lg">{userData.email}</p>
-                                        )}
-                                    </div>
-                                    <div className="form-control">
-                                        <label className="label"><span className="label-text">Teléfono</span></label>
-                                        {isEditing ? (
-                                            <input type="tel" name="telefono" value={userData.telefono} onChange={handleChange} className="input input-bordered" />
-                                        ) : (
-                                            <p className="text-lg">{userData.telefono || "No especificado"}</p>
-                                        )}
-                                    </div>
-                                    <div className="form-control">
-                                        <label className="label"><span className="label-text">Fecha de Nacimiento</span></label>
-                                        {isEditing ? (
-                                            <input type="date" name="fecha_nacimiento" value={userData.fecha_nacimiento} onChange={handleChange} className="input input-bordered" />
-                                        ) : (
-                                            <p className="text-lg">{userData.fecha_nacimiento || "No especificada"}</p>
-                                        )}
-                                    </div>
-                                    <div className="form-control">
-                                        <label className="label"><span className="label-text">Documento</span></label>
-                                        {isEditing ? (
-                                            <input type="text" name="documento" value={userData.documento} onChange={handleChange} className="input input-bordered" />
-                                        ) : (
-                                            <p className="text-lg">{userData.documento || "No especificado"}</p>
-                                        )}
-                                    </div>
-                                </div>
-                                <div className="card-actions justify-end mt-6">
-                                    {isEditing ? (
-                                        <>
-                                            <button onClick={() => setIsEditing(false)} className="btn btn-ghost" disabled={saving}>
-                                                Cancelar
-                                            </button>
-                                            <button onClick={handleSave} className="btn btn-primary" disabled={saving}>
-                                                {saving ? <span className="loading loading-spinner loading-sm"></span> : "Guardar Cambios"}
-                                            </button>
-                                        </>
-                                    ) : (
-                                        <button onClick={() => setIsEditing(true)} className="btn btn-primary">
-                                            Editar Perfil
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="space-y-6">
-                        <div className="card bg-base-200 shadow-xl">
-                            <div className="card-body">
-                                <h3 className="card-title">Mi Avatar</h3>
-                                <div className="flex flex-col items-center">
-                                    <div className="w-24 h-24 rounded-full bg-primary text-primary-content flex items-center justify-center text-3xl font-bold mb-4">
-                                        {userData.nombre ? userData.nombre.charAt(0).toUpperCase() : 'U'}
-                                    </div>
-                                    <p className="text-sm text-base-content/60 text-center">
-                                        {user?.userType === 'propietario' ? 'Propietario' : 'Usuario'}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    )
-}
-
-export default Perfil
+export default Perfil;

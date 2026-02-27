@@ -18,11 +18,8 @@ const validateLogin = [
     body('email')
         .isEmail().withMessage('Debe ser un email válido')
         .normalizeEmail(),
-
     body('contrasena')
-        .notEmpty().withMessage('La contraseña es requerida')
-        .isLength({ min: 6 }).withMessage('La contraseña debe tener al menos 6 caracteres'),
-
+        .notEmpty().withMessage('La contraseña es requerida'),
     handleValidationErrors
 ];
 
@@ -32,19 +29,12 @@ const validateRegistration = (userType) => {
         body('nombre')
             .trim()
             .notEmpty().withMessage('El nombre es requerido')
-            .trim()
-            .isLength({ max: 100 }).withMessage('El nombre no puede exceder 100 caracteres'),
+            .isLength({ min: 2, max: 100 }).withMessage('El nombre debe tener entre 2 y 100 caracteres'),
 
         body('email')
             .isEmail().withMessage('Debe ser un email válido')
             .normalizeEmail()
             .isLength({ max: 100 }).withMessage('El email no puede exceder 100 caracteres'),
-            .isLength({ min: 2, max: 100 }).withMessage('El nombre debe tener entre 2 y 100 caracteres'),
-
-        body('email')
-            .isEmail().withMessage('Debe ser un email válido')
-            .isLength({ max: 100 }).withMessage('El email no puede exceder 100 caracteres')
-            .normalizeEmail(),
 
         body('contrasena')
             .isLength({ min: 6 }).withMessage('La contraseña debe tener al menos 6 caracteres')
@@ -62,7 +52,6 @@ const validateRegistration = (userType) => {
 
         body('fecha_nacimiento')
             .optional()
-            .isISO8601().withMessage('Debe ser una fecha válida (YYYY-MM-DD)')
             .isISO8601().withMessage('La fecha de nacimiento debe ser una fecha válida (YYYY-MM-DD)')
     ];
 
@@ -78,12 +67,7 @@ const validateRegistration = (userType) => {
     return [...validations, handleValidationErrors];
 };
 
-const validateLogin = [
-    body('email').isEmail().withMessage('Debe ser un email válido').normalizeEmail(),
-    body('contrasena').notEmpty().withMessage('La contraseña es requerida'),
-    handleValidationErrors
-];
-
+// Validación para Banquetes
 const validateBanquete = [
     body('nombre').notEmpty().withMessage('El nombre es requerido').trim().isLength({ max: 200 }),
     body('direccion').notEmpty().withMessage('La dirección es requerida').trim(),
@@ -93,10 +77,11 @@ const validateBanquete = [
     handleValidationErrors
 ];
 
+// Validación para Reservas
 const validateReserva = [
     body('usuarioId').notEmpty().withMessage('ID de usuario requerido'),
     body('usuarioTipo').isIn(['usuario', 'propietario']).withMessage('Tipo de usuario inválido'),
-    body('banqueteId').isMongoId().withMessage('ID de banquete inválido'),
+    body('banqueteId').notEmpty().withMessage('ID de banquete requerido'),
     body('fecha').isISO8601().withMessage('Fecha inválida'),
     body('horaInicio').matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).withMessage('Hora de inicio inválida (HH:mm)'),
     body('horaFin').matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).withMessage('Hora de fin inválida (HH:mm)'),
@@ -110,4 +95,3 @@ module.exports = {
     validateBanquete,
     validateReserva
 };
-module.exports = { validateRegistration, validateLogin };

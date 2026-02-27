@@ -1,561 +1,253 @@
-// src/pages/Salones.jsx - Versión completa con 15 salones y barra de búsqueda
-import { useState } from "react";
+// src/features/banquetes/pages/Salones.jsx
+import { useState, useEffect } from "react";
+import API_BASE_URL from "../../../config/api";
+import { Link } from "react-router-dom";
 
 const Salones = () => {
   const [selectedFilter, setSelectedFilter] = useState("todos");
-  const [selectedSalon, setSelectedSalon] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [salones, setSalones] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedDetail, setSelectedDetail] = useState(null);
 
-  const salones = [
-    {
-      id: 1,
-      nombre: "Salón Imperial",
-      descripcion: "Un espacio majestuoso con detalles dorados y candelabros espectaculares. Perfecto para bodas y eventos de gala.",
-      imagen: "https://images.unsplash.com/photo-1519225421980-715cb0215aed?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
-      tipo: "lujo",
-      capacidad: 300,
-      precio: 15000000,
-      ubicacion: "Bogotá, Zona Norte",
-      equipamiento: ["Sonido profesional", "Iluminación LED", "Proyector", "Wi-Fi", "Escenario", "Aire acondicionado"],
-      serviciosIncluidos: ["Mobiliario básico", "Personal de apoyo", "Coordinador de evento", "Estacionamiento"],
-      dimensiones: "500 m²"
-    },
-    {
-      id: 2,
-      nombre: "Jardín Botánico",
-      descripcion: "Un entorno natural perfecto para celebraciones al aire libre. Jardines exuberantes con flores tropicales.",
-      imagen: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&极t=crop&w=1470&q=80",
-      tipo: "exterior",
-      capacidad: 200,
-      precio: 12000000,
-      ubicacion: "Medellín, El Poblado",
-      equipamiento: ["Área verde", "Pérgola", "Sistema de sonido", "Área de catering", "Pista de baile", "Iluminación decorativa"],
-      serviciosIncluidos: ["Mobiliario de jardín", "Personal de servicio", "Coordinador de evento", "Zona de parqueadero"],
-      dimensiones: "800 m²"
-    },
-    {
-      id: 3,
-      nombre: "Salón Ejecutivo",
-      descripcion: "Moderno y funcional, ideal para eventos corporativos. Diseño contemporáneo con tecnología de punta.",
-      imagen: "https://images.unsplash.com/photo-1547658719-da2b51169166?ixlib=rb-4.0.3&auto=format&fit=crop&w=1364&q=80",
-      tipo: "corporativo",
-      capacidad: 150,
-      precio: 8000000,
-      ubicacion: "Cali, Granada",
-      equipamiento: ["Pantallas LCD", "Mesas modulares", "Internet fibra óptica", "Sistema de videoconferencia", "Audio profesional", "Climatización"],
-      serviciosIncluidos: ["Mobiliario ejecutivo", "Personal técnico", "Catering básico", "Servicio de café"],
-      dimensiones: "300 m²"
-    },
-    {
-      id: 4,
-      nombre: "Terraza Panorámica",
-      descripcion: "Vistas espectaculares de la ciudad en un ambiente sofisticado. Ideal para eventos nocturnos y cócteles.",
-      imagen: "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?ixlib=rb-4.0.3&auto=format&fit=crop&w=1469&q=80",
-      tipo: "premium",
-      capacidad: 100,
-      precio: 18000000,
-      ubicacion: "Cartagena, Bocagrande",
-      equipamiento: ["Terraza cubierta", "Bar privado", "Calefacción exterior", "Vista panorámica", "Iluminación ambiental", "Sistema de audio"],
-      serviciosIncluidos: ["Mobiliario premium", "Bartender profesional", "Seguridad privada", "Valet parking"],
-      dimensiones: "350 m²"
-    },
-    {
-      id: 5,
-      nombre: "Hacienda Colonial",
-      descripcion: "Una finca tradicional con arquitectura colonial y amplios jardines. Perfecta para eventos rústicos y campestres.",
-      imagen: "https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
-      tipo: "rustico",
-      capacidad: 250,
-      precio: 10000000,
-      ubicacion: "Pereira, Circunvalar",
-      equipamiento: ["Amplios jardines", "Salón principal", "Zona de parrillas", "Piscina", "Caballerizas", "Zona de camping"],
-      serviciosIncluidos: ["Mobiliario rústico", "Personal de campo", "Seguridad", "Parqueadero amplio"],
-      dimensiones: "5000 m²"
-    },
-    {
-      id: 6,
-      nombre: "Salón Versalles",
-      descripcion: "Elegante salón con estilo francés y detalles clásicos. Techos altos y arañas de cristal impresionantes.",
-      imagen: "https://images.unsplash.com/photo-1527525443983-6e60c75fff46?ixlib=rb-4.0.3&auto=format&fit=crop&w=1452&q=80",
-      tipo: "lujo",
-      capacidad: 180,
-      precio: 16000000,
-      ubicacion: "Barranquilla, Norte",
-      equipamiento: ["Arañas de cristal", "Piso de mármol", "Escenario principal", "Sistema de sonido", "Iluminación teatral", "Cortinas de terciopelo"],
-      serviciosIncluidos: ["Mobiliario clásico", "Personal con uniforme", "Coordinador de lujo", "Valet parking"],
-      dimensiones: "400 m²"
-    },
-    {
-      id: 7,
-      nombre: "Salón Atlántico",
-      descripcion: "Moderno salón con vista al mar y decoración contemporánea. Ideal para eventos empresariales y sociales.",
-      imagen: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
-      tipo: "premium",
-      capacidad: 220,
-      precio: 14000000,
-      ubicacion: "Santa Marta, Rodadero",
-      equipamiento: ["Vista al mar", "Terraza exterior", "Sistema de sonido surround", "Iluminación inteligente", "Aire acondicionado", "Wi-Fi de alta velocidad"],
-      serviciosIncluidos: ["Mobiliario moderno", "Personal bilingüe", "Coordinador de evento", "Estacionamiento vigilado"],
-      dimensiones: "450 m²"
-    },
-    {
-      id: 8,
-      nombre: "Jardín de los Sueños",
-      descripcion: "Espacio al aire libre con lagos artificiales y vegetación exuberante. Perfecto para bodas campestres.",
-      imagen: "https://images.unsplash.com/photo-1519677100203-a0e668c92439?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
-      tipo: "exterior",
-      capacidad: 180,
-      precio: 11000000,
-      ubicacion: "Manizales, Chipre",
-      equipamiento: ["Lagos artificiales", "Puentes decorativos", "Área de ceremonia", "Pérgolas florales", "Sistema de sonido", "Iluminación ambiental"],
-      serviciosIncluidos: ["Mobiliario de jardín", "Personal de servicio", "Coordinador de evento", "Zona de parqueadero"],
-      dimensiones: "1200 m²"
-    },
-    {
-      id: 9,
-      nombre: "Centro de Convenciones Oro",
-      descripcion: "Espacio versátil para grandes eventos corporativos y convenciones. Tecnología de punta y amplia capacidad.",
-      imagen: "https://images.unsplash.com/photo-1497366811353-6870744d04b2?ixlib=rb-4.0.3&auto=format&fit=crop&w=1500&q=80",
-      tipo: "corporativo",
-      capacidad: 500,
-      precio: 25000000,
-      ubicacion: "Bogotá, Salitre",
-      equipamiento: ["Sistema de proyección 4K", "Audio profesional", "Iluminación escénica", "Capacidad para dividir espacios", "Wi-Fi empresarial", "Backup de energía"],
-      serviciosIncluidos: ["Mobiliario ejecutivo", "Personal técnico", "Servicio de café", "Recepción de invitados"],
-      dimensiones: "1200 m²"
-    },
-    {
-      id: 10,
-      nombre: "Palacio de Cristal",
-      descripcion: "Estructura de cristal con vistas panorámicas y diseño arquitectónico impresionante. Ideal para eventos exclusivos.",
-      imagen: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
-      tipo: "lujo",
-      capacidad: 120,
-      precio: 22000000,
-      ubicacion: "Medellín, El Poblado",
-      equipamiento: ["Paredes de cristal", "Terraza panorámica", "Sistema de climatización", "Iluminación LED", "Audio de alta fidelidad", "Cortinas automáticas"],
-      serviciosIncluidos: ["Mobiliario de diseño", "Personal especializado", "Valet parking", "Seguridad privada"],
-      dimensiones: "400 m²"
-    },
-    {
-      id: 11,
-      nombre: "Salón Campestre La Pradera",
-      descripcion: "Amplio espacio campestre con cabañas y áreas verdes. Perfecto para eventos familiares y reuniones.",
-      imagen: "https://images.unsplash.com/photo-1596944943927-92b4c72f09b0?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
-      tipo: "rustico",
-      capacidad: 300,
-      precio: 9000000,
-      ubicacion: "Envigado, Antioquia",
-      equipamiento: ["Cabañas rústicas", "Zona de parrillas", "Piscina natural", "Canchas deportivas", "Área de camping", "Senderos ecológicos"],
-      serviciosIncluidos: ["Mobiliario campestre", "Personal de campo", "Actividades recreativas", "Parqueadero amplio"],
-      dimensiones: "10000 m²"
-    },
-    {
-      id: 12,
-      nombre: "Sky Lounge",
-      descripcion: "Lounge moderno en último piso con vistas espectaculares de la ciudad. Ambiente íntimo y sofisticado.",
-      imagen: "https://images.unsplash.com/photo-1445019980597-93fa8acb246c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
-      tipo: "premium",
-      capacidad: 80,
-      precio: 13000000,
-      ubicacion: "Cali, San Fernando",
-      equipamiento: ["Barra premium", "Terraza con jacuzzi", "Sistema de sonido atmosférico", "Iluminación mood", "Muebles lounge", "Cámaras de seguridad"],
-      serviciosIncluidos: ["Bartender profesional", "Personal de servicio", "Seguridad privada", "Valet parking exclusivo"],
-      dimensiones: "250 m²"
-    },
-    {
-      id: 13,
-      nombre: "Salón Diamante",
-      descripcion: "Espacio versátil con capacidad para adaptarse a diferentes tipos de eventos. Diseño moderno y funcional.",
-      imagen: "https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?ixlib=rb-4.0.3&auto=format&fit=crop&w=1464&q=80",
-      tipo: "corporativo",
-      capacidad: 200,
-      precio: 9500000,
-      ubicacion: "Barranquilla, Norte",
-      equipamiento: ["Divisiones modulares", "Sistema de proyección", "Audio conferencia", "Iluminación adaptable", "Wi-Fi empresarial", "Climatización individual"],
-      serviciosIncluidos: ["Mobiliario versátil", "Personal técnico", "Servicio de café", "Recepción profesional"],
-      dimensiones: "400 m²"
-    },
-    {
-      id: 14,
-      nombre: "Jardín de las Mariposas",
-      descripcion: "Espacio natural con mariposario y jardín botánico. Ideal para eventos al aire libre con toque mágico.",
-      imagen: "https://images.unsplash.com/photo-1516216626526-e4e1526e0e7f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
-      tipo: "exterior",
-      capacidad: 150,
-      precio: 8500000,
-      ubicacion: "Armenia, Quindío",
-      equipamiento: ["Mariposario", "Jardín botánico", "Pérgolas naturales", "Senderos ecológicos", "Sistema de sonido ambiental", "Iluminación suave"],
-      serviciosIncluidos: ["Guía botánico", "Personal de servicio", "Coordinador de evento", "Parqueadero ecológico"],
-      dimensiones: "2000 m²"
-    },
-    {
-      id: 15,
-      nombre: "Salón Royal",
-      descripcion: "Espacio de lujo con detalles dorados y mármol importado. Para eventos exclusivos y de alta gama.",
-      imagen: "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
-      tipo: "lujo",
-      capacidad: 120,
-      precio: 28000000,
-      ubicacion: "Bogotá, Chicó",
-      equipamiento: ["Mármol importado", "Arañas de cristal Swarovski", "Sistema de sonido de alta gama", "Iluminación dorada", "Alfombras persas", "Climatización silenciosa"],
-      serviciosIncluidos: ["Mobiliario de lujo", "Personal con uniforme de gala", "Coordinador ejecutivo", "Valet parking con uniforme"],
-      dimensiones: "350 m²"
+  useEffect(() => {
+    fetchSalones();
+  }, []);
+
+  const fetchSalones = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await fetch(`${API_BASE_URL}/banquetes`);
+      if (!response.ok) throw new Error("Error al conectar con el servidor");
+      const data = await response.json();
+
+      const rawSalones = data.data || data || [];
+      const salonesFormateados = rawSalones.map(salon => ({
+        id: salon._id || salon.id,
+        nombre: salon.nombre,
+        descripcion: salon.descripcion,
+        imagen: salon.imagenes?.length > 0
+          ? (salon.imagenes[0].startsWith('http') ? salon.imagenes[0] : `${API_BASE_URL.replace('/api', '')}${salon.imagenes[0]}`)
+          : "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
+        tipo: salon.tipo || "general",
+        capacidad: salon.capacidad || 0,
+        precio: salon.precio_base || salon.precio || 0,
+        ubicacion: salon.ubicacion || salon.direccion || "Ubicación no especificada",
+        servicios: salon.servicios || []
+      }));
+      setSalones(salonesFormateados);
+    } catch (err) {
+      console.error("Fetch error:", err);
+      setError("No pudimos cargar el catálogo de banquetes. Por favor, intenta de nuevo más tarde.");
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
-  const tiposSalon = [
-    { id: "todos", nombre: "Todos los salones" },
-    { id: "lujo", nombre: "De lujo" },
+  const types = [
+    { id: "todos", nombre: "Ver Todos" },
+    { id: "lujo", nombre: "Lujo" },
     { id: "exterior", nombre: "Exteriores" },
     { id: "corporativo", nombre: "Corporativos" },
-    { id: "premium", nombre: "Premium" },
-    { id: "rustico", nombre: "Rústicos" }
+    { id: "rustico", nombre: "Rústicos" },
+    { id: "general", nombre: "General" }
   ];
 
-  const salonesFiltrados = selectedFilter === "todos"
-    ? salones
-    : salones.filter(salon => salon.tipo === selectedFilter);
-
-  const salonesBuscados = salonesFiltrados.filter(salon =>
-    salon.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    salon.descripcion.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    salon.ubicacion.toLowerCase().includes(searchTerm.toLowerCase())
+  const filtered = salones.filter(s =>
+    (selectedFilter === "todos" || s.tipo?.toLowerCase() === selectedFilter.toLowerCase()) &&
+    (s.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      s.ubicacion.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      s.descripcion.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const openModal = (salon) => {
-    setSelectedSalon(salon);
-    document.getElementById('modal_salon').showModal();
-  };
-
-  const closeModal = () => {
-    setSelectedSalon(null);
+    setSelectedDetail(salon);
+    document.getElementById('modal_salon_details').showModal();
   };
 
   return (
-    <div className="min-h-screen bg-base-100 py-8">
-      <div className="max-w-7xl mx-auto px-4">
-        <h1 className="text-4xl font-bold text-center mb-8">Nuestros Salones</h1>
-        <p className="text-lg text-center mb-8 max-w-3xl mx-auto">
-          Descubre nuestros espacios exclusivos, cada uno diseñado para crear experiencias únicas e inolvidables para tu evento especial
-        </p>
+    <div className="min-h-screen bg-base-100 py-12">
+      <div className="max-w-7xl mx-auto px-4 md:px-8">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h1 className="text-5xl font-extrabold tracking-tight mb-4">Explora Nuestros Banquetes</h1>
+          <div className="w-24 h-1 bg-primary mx-auto mb-6 rounded-full"></div>
+          <p className="max-w-2xl mx-auto text-lg text-base-content/70">
+            Encuentra el escenario perfecto para tu celebración. Desde jardines mágicos hasta salones imperiales.
+          </p>
+        </div>
 
-        {/* Barra de búsqueda */}
-        <div className="bg-base-200 p-6 rounded-lg shadow-md mb-8">
-          <div className="flex flex-col md:flex-row items-center gap-4">
-            <div className="flex-grow w-full">
+        {/* Buscador y Filtros */}
+        <div className="bg-base-200/50 backdrop-blur-md p-6 rounded-3xl shadow-sm border border-base-300 mb-10">
+          <div className="flex flex-col lg:flex-row gap-6 items-center">
+            <div className="relative flex-grow w-full">
+              <span className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </span>
               <input
                 type="text"
-                placeholder="Buscar salones por nombre, descripción o ubicación..."
-                className="input input-bordered w-full"
+                placeholder="Busca por nombre, ubicación o palabras clave..."
+                className="input input-bordered w-full pl-12 rounded-2xl focus:input-primary transition-all border-base-300"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={e => setSearchTerm(e.target.value)}
               />
+            </div>
+            <div className="flex flex-wrap gap-2 justify-center">
+              {types.map(t => (
+                <button
+                  key={t.id}
+                  className={`btn btn-sm rounded-xl px-5 normal-case ${selectedFilter === t.id ? 'btn-primary shadow-lg' : 'btn-ghost bg-base-100 hover:bg-base-300'}`}
+                  onClick={() => setSelectedFilter(t.id)}
+                >
+                  {t.nombre}
+                </button>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Filtros */}
-        <div className="flex flex-wrap gap-2 justify-center mb-8">
-          {tiposSalon.map(tipo => (
-            <button
-              key={tipo.id}
-              className={`btn ${selectedFilter === tipo.id ? 'btn-primary' : 'btn-outline'}`}
-              onClick={() => setSelectedFilter(tipo.id)}
-            >
-              {tipo.nombre}
-            </button>
-          ))}
-        </div>
-
-        {/* Grid de salones */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {salonesBuscados.map(salon => (
-            <div key={salon.id} className="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300">
-              <figure className="h-56">
-                <img src={salon.imagen} alt={salon.nombre} className="w-full h-full object-cover" />
-              </figure>
-              <div className="card-body">
-                <h2 className="card-title">{salon.nombre}</h2>
-                <p className="line-clamp-2">{salon.descripcion}</p>
-                <div className="flex justify-between items-center mt-4">
-                  <div className="badge badge-primary">{salon.capacidad} personas</div>
-                  <div className="text-xl font-bold">${salon.precio.toLocaleString('es-CO')}</div>
-                </div>
-                <div className="mt-2">
-                  <p className="text-sm"><strong>Ubicación:</strong> {salon.ubicacion}</p>
-                </div>
-                <div className="card-actions justify-end mt-4">
-                  <button className="btn btn-primary" onClick={() => openModal(salon)}>Reservar</button>
-                  <button className="btn btn-outline" onClick={() => openModal(salon)}>Ver detalles</button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {salonesBuscados.length === 0 && (
-          <div className="text-center py-12">
-            <div className="text-5xl mb-4">🔍</div>
-            <h3 className="text-2xl font-bold mb-2">No se encontraron salones</h3>
-            <p>Intenta con otros términos de búsqueda o filtros diferentes</p>
+        {/* Estados de Carga / Error */}
+        {loading && (
+          <div className="flex flex-col items-center justify-center py-20 gap-4">
+            <span className="loading loading-spinner loading-lg text-primary"></span>
+            <p className="font-medium opacity-60">Preparando el catálogo...</p>
           </div>
         )}
 
-        {/* Modal de detalles del salón */}
-        <dialog id="modal_salon" className="modal">
-          <div className="modal-box max-w-5xl">
-            <form method="dialog">
-              <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" onClick={closeModal}>✕</button>
-            </form>
-            {selectedSalon && (
-              <div>
-                <h3 className="font-bold text-2xl mb-4">{selectedSalon.nombre}</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <img src={selectedSalon.imagen} alt={selectedSalon.nombre} className="w-full h-64 object-cover rounded-lg" />
-                    <div className="mt-4">
-                      <h4 className="font-bold text-lg">Precio: ${selectedSalon.precio.toLocaleString('es-CO')}</h4>
-                      <p className="text-sm text-gray-600">* Precio base para 4 horas. Sujeto a cambios según personalización.</p>
+        {error && (
+          <div className="alert alert-error shadow-lg rounded-2xl p-6 bg-error/10 border-error/20 text-error">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <div className="flex flex-col md:flex-row items-center gap-4 w-full">
+              <span className="flex-grow font-semibold">{error}</span>
+              <button className="btn btn-sm btn-error text-white hover:scale-105" onClick={fetchSalones}>Intentar de nuevo</button>
+            </div>
+          </div>
+        )}
+
+        {/* Sin Resultados */}
+        {!loading && !error && filtered.length === 0 && (
+          <div className="text-center py-24 bg-base-200/30 rounded-3xl border-2 border-dashed border-base-300">
+            <div className="text-7xl mb-6 grayscale opacity-30">🏰</div>
+            <h2 className="text-2xl font-bold mb-3">No hay coincidencias</h2>
+            <p className="text-base-content/60 max-w-sm mx-auto">
+              No encontramos banquetes con esos términos. Inténtalo con otra búsqueda o filtro.
+            </p>
+          </div>
+        )}
+
+        {/* Grilla Principal */}
+        {!loading && !error && filtered.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+            {filtered.map(s => (
+              <div key={s.id} className="card bg-base-100 shadow-xl border border-base-200 overflow-hidden hover:shadow-2xl transition-all duration-300 group flex flex-col h-full">
+                <figure className="h-64 relative overflow-hidden">
+                  <img
+                    src={s.imagen}
+                    alt={s.nombre}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                  />
+                  <div className="absolute top-4 right-4">
+                    <div className="badge badge-primary font-bold py-3 shadow-md">
+                      {s.tipo.toUpperCase()}
                     </div>
                   </div>
-                  <div>
-                    <div className="space-y-3">
-                      <p><strong>Capacidad:</strong> {selectedSalon.capacidad} personas</p>
-                      <p><strong>Ubicación:</strong> {selectedSalon.ubicacion}</p>
-                      <p><strong>Dimensiones:</strong> {selectedSalon.dimensiones}</p>
-                      <p><strong>Tipo:</strong> {selectedSalon.tipo}</p>
-
-                      <div>
-                        <strong>Equipamiento:</strong>
-                        <div className="flex flex-wrap gap-2 mt-1">
-                          {selectedSalon.equipamiento.map((item, index) => (
-                            <span key={index} className="badge badge-outline">{item}</span>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div>
-                        <strong>Servicios incluidos:</strong>
-                        <ul className="list-disc list-inside mt-1">
-                          {selectedSalon.serviciosIncluidos.map((servicio, index) => (
-                            <li key={index}>{servicio}</li>
-                          ))}
-                        </ul>
-                      </div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-6">
+                    <button onClick={() => openModal(s)} className="btn btn-white btn-sm w-full rounded-lg font-bold">Vista Rápida</button>
+                  </div>
+                </figure>
+                <div className="card-body p-6 flex flex-col flex-grow">
+                  <div className="flex flex-col mb-4">
+                    <h2 className="card-title text-2xl font-bold mb-1 group-hover:text-primary transition-colors line-clamp-1">{s.nombre}</h2>
+                    <p className="text-sm text-base-content/50 flex items-center gap-1 font-medium italic">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      {s.ubicacion}
+                    </p>
+                  </div>
+                  <p className="text-base-content/70 line-clamp-3 mb-6 flex-grow">{s.descripcion}</p>
+                  <div className="flex justify-between items-center bg-base-200/50 p-4 rounded-2xl mt-auto">
+                    <div className="flex flex-col">
+                      <span className="text-xs uppercase font-bold opacity-40">Capacidad</span>
+                      <span className="font-bold">{s.capacidad} pers.</span>
                     </div>
-
-                    <div className="mt-6">
-                      <button className="btn btn-primary w-full">Solicitar cotización</button>
+                    <div className="text-right">
+                      <span className="text-xs uppercase font-bold opacity-40 block">Desde</span>
+                      <span className="text-xl font-extrabold text-primary">
+                        ${s.precio.toLocaleString('es-CO')}
+                      </span>
                     </div>
                   </div>
+                  <div className="card-actions mt-6">
+                    <Link to={`/banquetes/${s.id}`} className="btn btn-primary w-full rounded-xl shadow-lg hover:shadow-primary/20 normal-case text-lg font-bold">
+                      Ver Disponibilidad
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Modal de Detalles */}
+        <dialog id="modal_salon_details" className="modal modal-bottom sm:modal-middle">
+          <div className="modal-box max-w-4xl p-0 overflow-hidden rounded-3xl">
+            {selectedDetail && (
+              <div className="flex flex-col md:flex-row h-full">
+                <div className="md:w-1/2 h-64 md:h-auto overflow-hidden">
+                  <img src={selectedDetail.imagen} alt={selectedDetail.nombre} className="h-full w-full object-cover" />
+                </div>
+                <div className="md:w-1/2 p-8 flex flex-col">
+                  <form method="dialog">
+                    <button className="btn btn-sm btn-circle btn-ghost absolute right-4 top-4">✕</button>
+                  </form>
+                  <div className="badge badge-outline mb-2">{selectedDetail.tipo}</div>
+                  <h3 className="text-3xl font-bold mb-4">{selectedDetail.nombre}</h3>
+                  <p className="text-base-content/70 mb-6 flex-grow">{selectedDetail.descripcion}</p>
+
+                  <div className="space-y-4 mb-8">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-xs uppercase font-bold opacity-40">Ubicación</p>
+                        <p className="font-medium">{selectedDetail.ubicacion}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-xs uppercase font-bold opacity-40">Precio Base</p>
+                        <p className="font-bold text-xl text-primary">${selectedDetail.precio.toLocaleString('es-CO')}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Link to={`/banquetes/${selectedDetail.id}`} className="btn btn-primary btn-lg rounded-xl shadow-lg normal-case font-bold">
+                    Reservar Ahora
+                  </Link>
                 </div>
               </div>
             )}
           </div>
-          <form method="dialog" className="modal-backdrop">
-            <button onClick={closeModal}>close</button>
-          </form>
         </dialog>
-
-        {/* Información adicional */}
-        <div className="mt-16 bg-base-200 rounded-lg p-8">
-          <h2 className="text-3xl font-bold text-center mb-6">¿Necesitas ayuda para elegir?</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0" />
-                </svg>
-              </div>
-              <h3 className="font-bold text-lg mb-2">Visita nuestros salones</h3>
-              <p>Agenda una cita para conocer nuestros espacios personalmente</p>
-            </div>
-            <div className="text-center">
-              <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <h3 className="font-bold text-lg mb-2">Cotización personalizada</h3>
-              <p>Recibe una propuesta detallada según tus necesidades específicas</p>
-            </div>
-            <div className="text-center">
-              <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-              </div>
-              <h3 className="font-bold text-lg mb-2">Asesoría especializada</h3>
-              <p>Nuestros expertos te guiarán en cada paso de la planificación</p>
-            </div>
-          </div>
-          <div className="text-center mt-6">
-            <button className="btn btn-primary">Contactar a un asesor</button>
-          </div>
-        </div>
       </div>
     </div>
   );
-// src/features/banquetes/pages/Salones.jsx
-import { useState, useEffect } from "react";
-import API_BASE_URL from "../../../config/api";
-
-const Salones = () => {
-    const [selectedFilter, setSelectedFilter] = useState("todos");
-    const [searchTerm, setSearchTerm] = useState("");
-    const [salones, setSalones] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-
-    useEffect(() => {
-        fetchSalones();
-    }, []);
-
-    const fetchSalones = async () => {
-        try {
-            setLoading(true);
-            setError(null);
-            const response = await fetch(`${API_BASE_URL}/banquetes`);
-            if (!response.ok) throw new Error("Error al cargar los salones");
-            const data = await response.json();
-            const salonesFormateados = (data.data || []).map(salon => ({
-                id: salon._id,
-                nombre: salon.nombre,
-                descripcion: salon.descripcion,
-                // Usar salon.imagenes[0] correctamente (no salon.image que no existe)
-                imagen: salon.imagenes?.length > 0
-                    ? salon.imagenes[0]
-                    : "https://images.unsplash.com/photo-1519225421980-715cb0215aed?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
-                tipo: salon.tipo || "general",
-                capacidad: salon.capacidad,
-                precio: salon.precio_base,
-                ubicacion: salon.ubicacion || salon.direccion
-            }));
-            setSalones(salonesFormateados);
-        } catch (err) {
-            setError(err.message || "No se pudieron cargar los salones.");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const types = [
-        { id: "todos", nombre: "Todos" },
-        { id: "lujo", nombre: "De lujo" },
-        { id: "exterior", nombre: "Exteriores" },
-        { id: "general", nombre: "General" }
-    ];
-
-    const filtered = salones.filter(s =>
-        (selectedFilter === "todos" || s.tipo?.toLowerCase() === selectedFilter.toLowerCase()) &&
-        (s.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (s.ubicacion || "").toLowerCase().includes(searchTerm.toLowerCase()))
-    );
-
-    return (
-        <div className="min-h-screen bg-base-100 py-8">
-            <div className="max-w-7xl mx-auto px-4">
-                <h1 className="text-4xl font-bold text-center mb-2">Banquetes</h1>
-                <p className="text-center text-base-content/60 mb-8">
-                    Espacios publicados por propietarios en nuestra plataforma
-                </p>
-
-                {/* Buscador */}
-                <div className="flex flex-col md:flex-row gap-4 mb-6">
-                    <input
-                        type="text"
-                        placeholder="Buscar por nombre o ubicación..."
-                        className="input input-bordered flex-grow"
-                        value={searchTerm}
-                        onChange={e => setSearchTerm(e.target.value)}
-                    />
-                    <div className="flex flex-wrap gap-2">
-                        {types.map(t => (
-                            <button
-                                key={t.id}
-                                className={`btn btn-sm ${selectedFilter === t.id ? 'btn-primary' : 'btn-outline'}`}
-                                onClick={() => setSelectedFilter(t.id)}
-                            >
-                                {t.nombre}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Estados */}
-                {loading && (
-                    <div className="flex justify-center py-16">
-                        <span className="loading loading-spinner loading-lg"></span>
-                    </div>
-                )}
-
-                {error && (
-                    <div className="alert alert-error mb-6">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span>{error}</span>
-                        <button className="btn btn-sm btn-ghost" onClick={fetchSalones}>Reintentar</button>
-                    </div>
-                )}
-
-                {!loading && !error && filtered.length === 0 && (
-                    <div className="flex flex-col items-center justify-center py-16 text-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-base-content/30 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
-                        </svg>
-                        <h2 className="text-xl font-semibold mb-2">No se encontraron salones</h2>
-                        <p className="text-base-content/60">
-                            {salones.length === 0
-                                ? "Aún no hay salones publicados en la plataforma."
-                                : "Intentá con otros términos de búsqueda o filtros."}
-                        </p>
-                    </div>
-                )}
-
-                {/* Grilla de salones */}
-                {!loading && !error && filtered.length > 0 && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {filtered.map(s => (
-                            <div key={s.id} className="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow duration-300">
-                                <figure className="h-48">
-                                    <img src={s.imagen} alt={s.nombre} className="w-full h-full object-cover" />
-                                </figure>
-                                <div className="card-body">
-                                    <h2 className="card-title">{s.nombre}</h2>
-                                    {s.ubicacion && (
-                                        <p className="text-sm text-base-content/60 flex items-center gap-1">
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                            </svg>
-                                            {s.ubicacion}
-                                        </p>
-                                    )}
-                                    <p className="line-clamp-2">{s.descripcion}</p>
-                                    <div className="flex justify-between items-center mt-2">
-                                        {s.capacidad && (
-                                            <div className="badge badge-outline">{s.capacidad} personas</div>
-                                        )}
-                                        {s.precio && (
-                                            <span className="font-bold text-primary">
-                                                ${s.precio.toLocaleString('es-CO')}
-                                            </span>
-                                        )}
-                                    </div>
-                                    <div className="card-actions justify-end mt-4">
-                                        <button className="btn btn-primary btn-sm">Ver detalles</button>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
-        </div>
-    );
 };
 
 export default Salones;

@@ -1,9 +1,10 @@
-// src/pages/AdminDashboard.jsx
+// src/features/admin/pages/AdminDashboard.jsx
 import { useState, useEffect } from "react";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../../../context/AuthContext";
+import API_BASE_URL from "../../../config/api";
 
 const AdminDashboard = () => {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [stats, setStats] = useState({
     totalUsuarios: 0,
     totalPropietarios: 0,
@@ -20,8 +21,7 @@ const AdminDashboard = () => {
 
   const fetchStats = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch('http://localhost:3000/api/admin/stats', {
+      const response = await fetch(`${API_BASE_URL}/admin/stats`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -29,7 +29,7 @@ const AdminDashboard = () => {
 
       if (response.ok) {
         const data = await response.json();
-        setStats(data);
+        setStats(data.data || data);
       }
     } catch (error) {
       console.error("Error fetching stats:", error);
@@ -38,201 +38,102 @@ const AdminDashboard = () => {
     }
   };
 
+  if (!user?.isAdmin) {
+    return (
+      <div className="min-h-screen bg-base-100 flex items-center justify-center p-4">
+        <div className="card bg-error/10 border border-error/20 max-w-md w-full p-8 text-center rounded-3xl">
+          <div className="text-error text-6xl mb-4">🚫</div>
+          <h1 className="text-2xl font-bold text-error mb-2">Acceso Denegado</h1>
+          <p className="text-base-content/60">No tienes los privilegios necesarios para acceder a esta área de control.</p>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-base-100 py-8 flex items-center justify-center">
-        <span className="loading loading-spinner loading-lg"></span>
+      <div className="min-h-screen bg-base-100 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <span className="loading loading-spinner loading-lg text-primary"></span>
+          <p className="font-bold opacity-40 animate-pulse uppercase tracking-widest text-xs">Cargando Protocolos...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-base-100 py-8">
-      <div className="max-w-6xl mx-auto px-4">
-        <h1 className="text-4xl font-bold mb-8">Panel de Administración</h1>
-        
-        {/* Estadísticas */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="stat bg-base-200 rounded-lg">
-            <div className="stat-figure text-primary">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
-            </div>
-            <div className="stat-title">Total Usuarios</div>
-            <div className="stat-value">{stats.totalUsuarios}</div>
+    <div className="min-h-screen bg-base-100 py-12">
+      <div className="max-w-7xl mx-auto px-4 md:px-8">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6 border-b border-base-content/5 pb-8">
+          <div>
+            <h1 className="text-5xl font-extrabold tracking-tight mb-2">Terminal de Control</h1>
+            <p className="text-lg opacity-60 font-medium italic">Panel de Supervisión Administrativa — Le Banquets Group</p>
           </div>
-          
-          <div className="stat bg-base-200 rounded-lg">
-            <div className="stat-figure text-secondary">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
-            </div>
-            <div className="stat-title">Total Propietarios</div>
-            <div className="stat-value">{stats.totalPropietarios}</div>
-          </div>
-          
-          <div className="stat bg-base-200 rounded-lg">
-            <div className="stat-figure text-accent">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
-              </svg>
-            </div>
-            <div className="stat-title">Total Banquetes</div>
-            <div className="stat-value">{stats.totalBanquetes}</div>
-          </div>
-          
-          <div className="stat bg-base-200 rounded-lg">
-            <div className="stat-figure text-info">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-            </div>
-            <div className="stat-title">Total Eventos</div>
-            <div className="stat-value">{stats.totalEventos}</div>
+          <div className="badge badge-primary badge-outline py-4 px-6 rounded-xl font-bold uppercase tracking-widest">
+            Nivel de Acceso: Administrador
           </div>
         </div>
 
-        {/* Acciones rápidas */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="card bg-base-200 shadow-xl">
-            <div className="card-body">
-              <h2 className="card-title">Gestión de Usuarios</h2>
-              <p>Administra los usuarios registrados en el sistema</p>
-              <div className="card-actions justify-end">
-                <button className="btn btn-primary">Ver Usuarios</button>
+        {/* Estadísticas */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
+          {[
+            { label: 'Usuarios', value: stats.totalUsuarios, color: 'text-primary', icon: '👤' },
+            { label: 'Propietarios', value: stats.totalPropietarios, color: 'text-secondary', icon: '🏢' },
+            { label: 'Banquetes', value: stats.totalBanquetes, color: 'text-accent', icon: '🏰' },
+            { label: 'Eventos', value: stats.totalEventos, color: 'text-info', icon: '📅' },
+          ].map((stat) => (
+            <div key={stat.label} className="card bg-base-200 border border-base-300 shadow-sm hover:shadow-xl transition-all p-6 rounded-3xl group">
+              <div className="flex justify-between items-start mb-4">
+                <div className="text-3xl grayscale group-hover:grayscale-0 transition-all">{stat.icon}</div>
+                <div className="badge badge-ghost opacity-40 text-[10px] font-bold">24H</div>
+              </div>
+              <div className="stat-title font-bold opacity-50 uppercase tracking-tighter text-xs">{stat.label}</div>
+              <div className={`stat-value text-4xl font-black ${stat.color} tracking-tighter`}>
+                {stat.value === undefined || stat.value === null ? '—' : stat.value}
+              </div>
+              <div className="mt-4 h-1 w-full bg-base-content/5 rounded-full overflow-hidden">
+                <div className={`h-full bg-current ${stat.color} opacity-30`} style={{ width: '65%' }}></div>
               </div>
             </div>
-          </div>
-          
-          <div className="card bg-base-200 shadow-xl">
-            <div className="card-body">
-              <h2 className="card-title">Gestión de Propietarios</h2>
-              <p>Administra los propietarios y sus banquetes</p>
-              <div className="card-actions justify-end">
-                <button className="btn btn-primary">Ver Propietarios</button>
+          ))}
+        </div>
+
+        {/* Acciones de Gestión */}
+        <h2 className="text-2xl font-bold mb-8 flex items-center gap-3">
+          <span className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+            </svg>
+          </span>
+          Módulos de Gestión
+        </h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {[
+            { title: 'Gestión de Usuarios', desc: 'Control de accesos, roles y bloqueos de seguridad.', btn: 'Explorar Usuarios' },
+            { title: 'Moderación de Banquetes', desc: 'Validación de espacios publicados por propietarios.', btn: 'Revisar Catálogo' },
+            { title: 'Auditoría de Eventos', desc: 'Seguimiento de reservas y satisfacción del cliente.', btn: 'Bitácora de Eventos' },
+            { title: 'Reportes Inteligentes', desc: 'Análisis de tendencias y crecimiento de la red.', btn: 'Generar Informe' },
+            { title: 'Seguridad del Sistema', desc: 'Logs de errores y configuración de parámetros globales.', btn: 'Panel Técnico' },
+            { title: 'Soporte Directo', desc: 'Centro de mensajería con usuarios y propietarios.', btn: 'Abrir Tickets' },
+          ].map((module, i) => (
+            <div key={i} className="card bg-base-200 shadow-md border border-base-300 rounded-[2rem] hover:bg-base-100 hover:scale-[1.02] transition-all">
+              <div className="card-body p-8">
+                <h3 className="card-title text-xl font-bold mb-2">{module.title}</h3>
+                <p className="text-sm opacity-60 mb-6 font-medium">{module.desc}</p>
+                <div className="card-actions">
+                  <button className="btn btn-outline btn-block rounded-2xl normal-case btn-sm font-bold opacity-30 cursor-not-allowed">
+                    {module.btn}
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-          
-          <div className="card bg-base-200 shadow-xl">
-            <div className="card-body">
-              <h2 className="card-title">Reportes</h2>
-              <p>Genera reportes de actividad del sistema</p>
-              <div className="card-actions justify-end">
-                <button className="btn btn-secondary">Generar Reporte</button>
-              </div>
-            </div>
-          </div>
-          
-          <div className="card bg-base-200 shadow-xl">
-            <div className="card-body">
-              <h2 className="card-title">Configuración</h2>
-              <p>Configuración general del sistema</p>
-              <div className="card-actions justify-end">
-                <button className="btn btn-ghost">Configurar</button>
-              </div>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
     </div>
   );
-};
-
-export default AdminDashboard;
-// src/features/admin/pages/AdminDashboard.jsx
-import { useAuth } from "../../../context/AuthContext";
-
-const AdminDashboard = () => {
-    const { user } = useAuth();
-
-    // Guard de rol — ProtectedRoute ya redirige, pero esta verificación
-    // actúa como segunda capa defensiva en la UI
-    if (!user?.isAdmin) {
-        return (
-            <div className="min-h-screen bg-base-100 flex items-center justify-center">
-                <div className="text-center">
-                    <h1 className="text-2xl font-bold text-error mb-2">Acceso Denegado</h1>
-                    <p className="text-base-content/60">No tienes permisos para acceder a esta sección.</p>
-                </div>
-            </div>
-        );
-    }
-
-    return (
-        <div className="min-h-screen bg-base-100 py-8">
-            <div className="max-w-6xl mx-auto px-4">
-                <h1 className="text-4xl font-bold mb-8">Panel de Administración</h1>
-
-                {/* Estadísticas — placeholder hasta implementar endpoint /api/admin/stats */}
-                <div className="alert alert-info mb-8">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span>Las estadísticas estarán disponibles cuando se implemente el endpoint <strong>/api/admin/stats</strong> en el backend.</span>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    {[
-                        { label: 'Total Usuarios', value: '—', color: 'text-primary' },
-                        { label: 'Total Propietarios', value: '—', color: 'text-secondary' },
-                        { label: 'Total Banquetes', value: '—', color: 'text-accent' },
-                        { label: 'Total Eventos', value: '—', color: 'text-info' },
-                    ].map((stat) => (
-                        <div key={stat.label} className="stat bg-base-200 rounded-lg">
-                            <div className="stat-title">{stat.label}</div>
-                            <div className={`stat-value ${stat.color}`}>{stat.value}</div>
-                        </div>
-                    ))}
-                </div>
-
-                {/* Acciones rápidas */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="card bg-base-200 shadow-xl">
-                        <div className="card-body">
-                            <h2 className="card-title">Gestión de Usuarios</h2>
-                            <p>Administra los usuarios registrados en el sistema</p>
-                            <div className="card-actions justify-end">
-                                <button className="btn btn-primary" disabled title="Próximamente">Ver Usuarios</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="card bg-base-200 shadow-xl">
-                        <div className="card-body">
-                            <h2 className="card-title">Gestión de Propietarios</h2>
-                            <p>Administra los propietarios y sus banquetes</p>
-                            <div className="card-actions justify-end">
-                                <button className="btn btn-primary" disabled title="Próximamente">Ver Propietarios</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="card bg-base-200 shadow-xl">
-                        <div className="card-body">
-                            <h2 className="card-title">Reportes</h2>
-                            <p>Genera reportes de actividad del sistema</p>
-                            <div className="card-actions justify-end">
-                                <button className="btn btn-secondary" disabled title="Próximamente">Generar Reporte</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="card bg-base-200 shadow-xl">
-                        <div className="card-body">
-                            <h2 className="card-title">Configuración</h2>
-                            <p>Configuración general del sistema</p>
-                            <div className="card-actions justify-end">
-                                <button className="btn btn-ghost" disabled title="Próximamente">Configurar</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
 };
 
 export default AdminDashboard;

@@ -1,28 +1,3 @@
-import { Routes, Route } from 'react-router-dom';
-
-import MainLayout from '@/shared/layouts/MainLayout';
-import Home from '@/features/home/pages/Home';
-import Login from '@/features/auth/pages/Login';
-import Registro from '@/features/auth/pages/Registro';
-import RegistroPropietario from '@/features/auth/pages/RegistroPropietario';
-import BanquetesList from '@/features/banquetes/pages/BanquetesList';
-import BanqueteDetail from '@/features/banquetes/pages/BanqueteDetail';
-import ProtectedRoute from '@/shared/components/ProtectedRoute';
-
-function App() {
-  return (
-    <Routes>
-      <Route element={<MainLayout />}>
-        <Route path="/" element={<Home />} />
-
-        <Route path="/banquetes" element={<BanquetesList />} />
-        <Route path="/banquetes/:id" element={<BanqueteDetail />} />
-      </Route>
-
-      <Route path="/login" element={<Login />} />
-      <Route path="/registro" element={<Registro />} />
-      <Route path="/registro-propietario" element={<RegistroPropietario />} />
-    </Routes>
 // src/App.jsx
 import { Route, Routes, Navigate } from "react-router-dom";
 import { Toaster } from 'react-hot-toast';
@@ -32,7 +7,8 @@ import Registro from "./features/auth/pages/Registro";
 import RegistroPropietario from "./features/auth/pages/RegistroPropietario";
 import Perfil from "./features/perfil/pages/Perfil";
 import Banquetes from "./features/banquetes/pages/Salones";
-import MisEventos from "./features/perfil/pages/MisEventos";
+import MisEventos from "./features/eventos/pages/MisEventos";
+import Eventos from "./features/eventos/pages/Eventos";
 import MisBanquetes from "./features/banquetes/pages/MisBanquetes";
 import Configuracion from "./features/admin/pages/Configuracion";
 import AdminDashboard from "./features/admin/pages/AdminDashboard";
@@ -81,6 +57,7 @@ function App() {
 
         {/* Rutas públicas */}
         <Route path="/banquetes" element={<Banquetes />} />
+        <Route path="/eventos" element={<Eventos />} />
 
         {/* Rutas protegidas — requieren login */}
         <Route path="/perfil" element={

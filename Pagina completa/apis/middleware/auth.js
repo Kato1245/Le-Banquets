@@ -7,54 +7,36 @@ const catchAsync = require('../utils/catchAsync');
 const JWT_SECRET = process.env.JWT_SECRET;
 
 if (!JWT_SECRET) {
-    console.warn('WARNING: JWT_SECRET is not defined in environment variables!');
+    console.warn('WARNING: JWT_SECRET is not defined in environment variables! Using fallback for development.');
 }
 
 const authenticateToken = catchAsync(async (req, res, next) => {
+    // 1) Obtener el token de las cabeceras
     const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
+    const token = authHeader && (authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : authHeader);
 
     if (!token) {
         return next(new AppError('Token de acceso requerido', 401));
     }
-// Lanzar error al inicio si el secreto no está definido
-if (!process.env.JWT_SECRET) {
-    throw new Error('JWT_SECRET no está definido en las variables de entorno. El servidor no puede iniciar.');
-}
 
-const JWT_SECRET = process.env.JWT_SECRET;
-
-const authenticateToken = async (req, res, next) => {
-    try {
-        const authHeader = req.headers['authorization'];
-        const token = authHeader && authHeader.startsWith('Bearer ')
-            ? authHeader.slice(7)
-            : null;
-
-        if (!token) {
-            return res.status(401).json({
-                success: false,
-                message: 'Token de acceso requerido'
-            });
-        }
-
-        // jwt.verify lanza excepción si el token expiró o es inválido
-        const decoded = jwt.verify(token, JWT_SECRET);
-
-        // Verificar que el usuario aún existe y está activo en la BD
-        const table = decoded.userType === 'propietario' ? 'propietarios' : 'usuarios';
-        const user = await User.findById(decoded.userId, table);
-
-    // Verificar firma del token
+    // 2) Verificar el token
     let decoded;
     try {
-        decoded = jwt.verify(token, JWT_SECRET || 'fallback-secret-for-dev-only');
+        decoded = jwt.verify(token, JWT_SECRET || 'secret-key-fallback');
     } catch (err) {
-        return next(new AppError('Token inválido o expirado', 401));
+        if (err.name === 'TokenExpiredError') {
+            return next(new AppError('Sesión expirada. Por favor inicia sesión nuevamente', 401));
+        }
+        return next(new AppError('Token inválido', 401));
     }
 
-    // Verificar que el usuario aún existe en BD
-    const user = await UserService.findById(decoded.userId, decoded.userType);
+    // 3) Verificar que el usuario aún existe y está activo
+    const authData = await UserService.findById(decoded.userId, decoded.userType);
+
+    // findById in UserService returns the user directly or null
+    // Wait, let's check UserService.findById again.
+    // In Step 141: static async findById(id, userType) { ... return await User.findById(id, table); }
+    const user = authData;
 
     if (!user) {
         return next(new AppError('El usuario perteneciente a este token ya no existe.', 401));
@@ -62,43 +44,13 @@ const authenticateToken = async (req, res, next) => {
 
     if (!user.esta_activo) {
         return next(new AppError('Su cuenta ha sido desactivada.', 401));
-        if (!user.esta_activo) {
-            return res.status(401).json({
-                success: false,
-                message: 'Cuenta desactivada. Contacte al administrador'
-            });
-        }
-
-        req.user = user;
-        req.userType = decoded.userType;
-        next();
-
-    } catch (error) {
-        if (error.name === 'TokenExpiredError') {
-            return res.status(401).json({
-                success: false,
-                message: 'Sesión expirada. Por favor inicia sesión nuevamente'
-            });
-        }
-
-        if (error.name === 'JsonWebTokenError') {
-            return res.status(401).json({
-                success: false,
-                message: 'Token inválido'
-            });
-        }
-
-        console.error('Error inesperado en autenticación:', error.message);
-        return res.status(500).json({
-            success: false,
-            message: 'Error interno de autenticación'
-        });
     }
 
-    // GRANT ACCESS TO PROTECTED ROUTE
+    // 4) Conceder acceso
     req.user = user;
-    req.user.role = decoded.userType; // Normalizar para el frontend
     req.userType = decoded.userType;
+    req.user.role = decoded.userType; // Compatibilidad frontend
+
     next();
 });
 

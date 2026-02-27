@@ -2,42 +2,27 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import API_BASE_URL from '../config/api';
-
-import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import apiClient from "../shared/services/apiClient";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [token, setToken] = useState(localStorage.getItem('token'));
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const AUTH_URL = `${API_BASE_URL}/auth`;
+
+  // ── Logout ─────────────────────────────────────────────────────────────
   const logout = useCallback(() => {
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
     setUser(null);
+    setToken(null);
     setError(null);
+    toast.success('Sesión cerrada correctamente');
   }, []);
-
-  // Cargar usuario si existe token
-  const loadUser = useCallback(async () => {
-    const token = localStorage.getItem("token");
-
-    if (!token) {
-      setLoading(false);
-      return;
-export const useAuth = () => {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth debe usarse dentro de AuthProvider');
-  return ctx;
-};
-
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  const AUTH_URL = `${API_BASE_URL}/auth`;
 
   // ── Verificar token contra el servidor ─────────────────────────────────
   const verifyToken = useCallback(async (tokenToVerify) => {
@@ -49,12 +34,27 @@ export const AuthProvider = ({ children }) => {
         const data = await res.json();
         return { valid: true, user: data.data.user };
       }
-      const err = await res.json().catch(() => ({}));
-      return { valid: false, message: err.message || 'Token inválido' };
+      return { valid: false };
     } catch {
-      return { valid: false, message: 'Error de conexión al verificar token' };
+      return { valid: false };
     }
   }, [AUTH_URL]);
+
+  // ── Cargar perfil de usuario ───────────────────────────────────────────
+  const loadUser = useCallback(async () => {
+    try {
+      const res = await apiClient.get("/auth/profile");
+      const { user: userData, userType } = res.data.data;
+      const fullUser = { ...userData, userType, role: userData.role || userType };
+      setUser(fullUser);
+      localStorage.setItem('user', JSON.stringify(fullUser));
+    } catch (err) {
+      console.error("Error loading user profile:", err);
+      logout();
+    } finally {
+      setLoading(false);
+    }
+  }, [logout]);
 
   // ── Restaurar sesión al cargar la app ──────────────────────────────────
   useEffect(() => {
@@ -62,112 +62,25 @@ export const AuthProvider = ({ children }) => {
       const storedToken = localStorage.getItem('token');
       const storedUser = localStorage.getItem('user');
 
-      if (storedToken && storedUser) {
-        try {
-          const verification = await verifyToken(storedToken);
-          if (verification.valid) {
-            setToken(storedToken);
-            setUser(JSON.parse(storedUser));
-          } else {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            // Solo mostrar toast si la app ya estaba cargada antes
-            if (storedUser) {
-              toast.error('Sesión expirada. Por favor inicia sesión nuevamente.');
-            }
-          }
-        } catch {
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
+      if (storedToken) {
+        if (storedUser) {
+          setUser(JSON.parse(storedUser));
+          setToken(storedToken);
+          setLoading(false);
+          // Verificar en segundo plano si el perfil sigue siendo válido/actualizado
+          loadUser();
+        } else {
+          // Si hay token pero no hay datos de usuario, cargar perfil
+          loadUser();
         }
+      } else {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     checkAuth();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Login ──────────────────────────────────────────────────────────────
-  const login = async (email, password) => {
-    try {
-      const res = await fetch(`${AUTH_URL}/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, contrasena: password }),
-      });
-      const data = await res.json();
-
-      if (data.success) {
-        const { user: userData, token: newToken, userType } = data.data;
-        const fullUser = { ...userData, userType };
-
-        setUser(fullUser);
-        setToken(newToken);
-        localStorage.setItem('token', newToken);
-        localStorage.setItem('user', JSON.stringify(fullUser));
-
-        toast.success('¡Inicio de sesión exitoso!');
-        return { success: true, data: data.data };
-      }
-
-      toast.error(data.message || 'Error al iniciar sesión');
-      return {
-        success: false,
-        message: data.message,
-        attemptsLeft: data.attemptsLeft,
-        locked: data.locked,
-        remainingTime: data.remainingTime
-      };
-    } catch {
-      toast.error('Error de conexión con el servidor');
-      return { success: false, message: 'Error de conexión con el servidor' };
-    }
-
-    try {
-      setLoading(true);
-      const res = await apiClient.get("/auth/profile");
-      const userData = res.data.data.user;
-      const userType = res.data.data.userType;
-
-      setUser({
-        ...userData,
-        role: userData.role || userType // Asegurar que role esté presente
-      });
-    } catch (err) {
-      console.error("Error loading user:", err);
-      logout();
-    } finally {
-      setLoading(false);
-  // ── Registro ───────────────────────────────────────────────────────────
-  const signUp = async (email, password, userData, tipo = 'usuario') => {
-    try {
-      const endpoint = tipo === 'propietario'
-        ? `${AUTH_URL}/register/propietario`
-        : `${AUTH_URL}/register/usuario`;
-
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, contrasena: password, ...userData }),
-      });
-      const data = await res.json();
-
-      if (data.success) {
-        toast.success('Registro exitoso. Por favor verifica tu email.');
-        return { success: true, message: data.message };
-      }
-      toast.error(data.message || 'Error en el registro');
-      return { success: false, message: data.message };
-    } catch {
-      toast.error('Error de conexión');
-      return { success: false, message: 'Error de conexión' };
-    }
-  }, [logout]);
-
-  useEffect(() => {
-    loadUser();
-
-    // Listen for global auth events
+    // Listener para eventos globales de sesión expirada (lanzados por apiClient)
     const handleSessionExpired = () => {
       logout();
       window.location.href = "/login";
@@ -177,31 +90,49 @@ export const AuthProvider = ({ children }) => {
     return () => window.removeEventListener("auth-session-expired", handleSessionExpired);
   }, [loadUser, logout]);
 
+  // ── Login ──────────────────────────────────────────────────────────────
   const login = async (credentials) => {
     try {
       setError(null);
-      const res = await apiClient.post("/auth/login", credentials);
-      localStorage.setItem("token", res.data.data.token);
+      // Usar apiClient o fetch según prefieras, mantendremos concordancia con lo que existía
+      const res = await apiClient.post("/auth/login", {
+        email: credentials.email,
+        contrasena: credentials.password || credentials.contrasena
+      });
 
-      const userData = res.data.data.user;
-      setUser(userData);
+      const { user: userData, token: newToken, userType } = res.data.data;
+      const fullUser = { ...userData, userType, role: userData.role || userType };
+
+      setUser(fullUser);
+      setToken(newToken);
+      localStorage.setItem('token', newToken);
+      localStorage.setItem('user', JSON.stringify(fullUser));
+
+      toast.success('¡Inicio de sesión exitoso!');
       return res.data;
     } catch (err) {
-      setError(err.friendlyMessage);
+      const message = err.friendlyMessage || 'Error al iniciar sesión';
+      setError(message);
+      toast.error(message);
       throw err;
     }
   };
 
+  // ── Registro ───────────────────────────────────────────────────────────
   const register = async (type, data) => {
     try {
       setError(null);
       const endpoint = type === 'propietario' ? '/auth/register/propietario' : '/auth/register/usuario';
       const res = await apiClient.post(endpoint, data);
-      localStorage.setItem("token", res.data.data.token);
-      setUser(res.data.data.user);
-      return res.data;
+
+      if (res.data.success) {
+        toast.success(res.data.message || 'Registro exitoso. Por favor verifica tu email.');
+        return res.data;
+      }
     } catch (err) {
-      setError(err.friendlyMessage);
+      const message = err.friendlyMessage || 'Error en el registro';
+      setError(message);
+      toast.error(message);
       throw err;
     }
   };
@@ -209,94 +140,51 @@ export const AuthProvider = ({ children }) => {
   // ── Recuperación de contraseña ─────────────────────────────────────────
   const resetPassword = async (email) => {
     try {
-      const res = await fetch(`${AUTH_URL}/forgot-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
-      const data = await res.json();
-
-      if (data.success) {
-        toast.success(data.message);
-        return { success: true, message: data.message };
-      }
-      toast.error(data.message);
-      return { success: false, message: data.message };
-    } catch {
-      toast.error('Error de conexión');
-      return { success: false, message: 'Error de conexión' };
+      const res = await apiClient.post('/auth/forgot-password', { email });
+      toast.success(res.data.message);
+      return res.data;
+    } catch (err) {
+      toast.error(err.friendlyMessage);
+      throw err;
     }
   };
 
   // ── Actualizar contraseña ──────────────────────────────────────────────
   const updatePassword = async (resetToken, newPassword) => {
     try {
-      const res = await fetch(`${AUTH_URL}/reset-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: resetToken, newPassword }),
-      });
-      const data = await res.json();
-
-      if (data.success) {
-        toast.success(data.message);
-        return { success: true, message: data.message };
-      }
-      toast.error(data.message);
-      return { success: false, message: data.message };
-    } catch {
-      toast.error('Error de conexión');
-      return { success: false, message: 'Error de conexión' };
+      const res = await apiClient.post('/auth/reset-password', { token: resetToken, newPassword });
+      toast.success(res.data.message);
+      return res.data;
+    } catch (err) {
+      toast.error(err.friendlyMessage);
+      throw err;
     }
   };
-
-  // ── Logout ─────────────────────────────────────────────────────────────
-  const logout = useCallback(() => {
-    setUser(null);
-    setToken(null);
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    toast.success('Sesión cerrada correctamente');
-  }, []);
-
-  // ── Verificación periódica del token ───────────────────────────────────
-  const checkTokenValidity = useCallback(async () => {
-    const currentToken = token || localStorage.getItem('token');
-    if (!currentToken) return false;
-    const verification = await verifyToken(currentToken);
-    return verification.valid;
-  }, [token, verifyToken]);
 
   const value = {
     user,
     token,
     loading,
+    error,
     isAuthenticated: !!user,
+    userType: user?.userType,
     login,
-    signUp,
+    register,
     logout,
     resetPassword,
     updatePassword,
-    checkTokenValidity,
     setUser
   };
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        loading,
-        error,
-        login,
-        register,
-        logout,
-        isAuthenticated: !!user,
-        userType: user?.userType, // Add direct access to userType
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth debe usarse dentro de AuthProvider');
+  return ctx;
+};
