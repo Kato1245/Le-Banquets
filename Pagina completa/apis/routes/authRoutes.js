@@ -4,6 +4,7 @@ const AuthController = require('../controllers/authController');
 const { validateRegistration, validateLogin } = require('../middleware/validation');
 const { authenticateToken } = require('../middleware/auth');
 
+// Registro de usuario normal
 // Registro de usuario
 router.post('/register/usuario',
     validateRegistration('usuario'),
@@ -16,6 +17,8 @@ router.post('/register/propietario',
     AuthController.register
 );
 
+// Login (solo email y contraseña)
+router.post('/login', validateLogin, AuthController.login);
 // Login
 router.post('/login',
     validateLogin,

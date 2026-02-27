@@ -1,7 +1,22 @@
 // middleware/auth.js
 const jwt = require('jsonwebtoken');
-const User = require('../models/userModel');
+const UserService = require('../services/userService');
+const AppError = require('../utils/appError');
+const catchAsync = require('../utils/catchAsync');
 
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+    console.warn('WARNING: JWT_SECRET is not defined in environment variables!');
+}
+
+const authenticateToken = catchAsync(async (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+        return next(new AppError('Token de acceso requerido', 401));
+    }
 // Lanzar error al inicio si el secreto no está definido
 if (!process.env.JWT_SECRET) {
     throw new Error('JWT_SECRET no está definido en las variables de entorno. El servidor no puede iniciar.');
@@ -30,13 +45,23 @@ const authenticateToken = async (req, res, next) => {
         const table = decoded.userType === 'propietario' ? 'propietarios' : 'usuarios';
         const user = await User.findById(decoded.userId, table);
 
-        if (!user) {
-            return res.status(401).json({
-                success: false,
-                message: 'Usuario no encontrado'
-            });
-        }
+    // Verificar firma del token
+    let decoded;
+    try {
+        decoded = jwt.verify(token, JWT_SECRET || 'fallback-secret-for-dev-only');
+    } catch (err) {
+        return next(new AppError('Token inválido o expirado', 401));
+    }
 
+    // Verificar que el usuario aún existe en BD
+    const user = await UserService.findById(decoded.userId, decoded.userType);
+
+    if (!user) {
+        return next(new AppError('El usuario perteneciente a este token ya no existe.', 401));
+    }
+
+    if (!user.esta_activo) {
+        return next(new AppError('Su cuenta ha sido desactivada.', 401));
         if (!user.esta_activo) {
             return res.status(401).json({
                 success: false,
@@ -69,6 +94,12 @@ const authenticateToken = async (req, res, next) => {
             message: 'Error interno de autenticación'
         });
     }
-};
+
+    // GRANT ACCESS TO PROTECTED ROUTE
+    req.user = user;
+    req.user.role = decoded.userType; // Normalizar para el frontend
+    req.userType = decoded.userType;
+    next();
+});
 
 module.exports = { authenticateToken, JWT_SECRET };
