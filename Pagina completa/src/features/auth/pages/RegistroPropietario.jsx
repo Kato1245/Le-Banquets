@@ -1,5 +1,4 @@
 // src/pages/RegistroPropietario.jsx
-// src/features/auth/pages/RegistroPropietario.jsx
 import RegistroPropietarioForm from "../components/RegistroPropietarioForm.jsx"
 
 const RegistroPropietario = () => {
@@ -29,5 +28,4 @@ const RegistroPropietario = () => {
     )
 }
 
-export default RegistroPropietario
 export default RegistroPropietario

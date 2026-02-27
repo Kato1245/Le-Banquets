@@ -1,62 +1,12 @@
-# Le Banquets - Gestión de Eventos y Banquetes
+# React + Vite
 
-Bienvenido a **Le Banquets**, una plataforma integral para la organización y gestión de eventos sociales y corporativos.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## 🏗️ Estructura del Proyecto (Arquitectura Basada en Características)
+Currently, two official plugins are available:
 
-El proyecto ha sido organizado siguiendo una arquitectura basada en features, lo que facilita la escalabilidad y el mantenimiento al agrupar la lógica por funcionalidades de negocio.
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-```text
-Le-Banquets/
-├── apis/                       # Servicios Backend y controladores de API
-├── src/                        # Código fuente del Frontend
-│   ├── context/                # Contextos globales de React
-│   │   └── AuthContext.jsx     # Gestión de estado de autenticación
-│   ├── features/               # Módulos basados en características (Features)
-│   │   ├── admin/              # Panel de Administración
-│   │   │   ├── components/     # Componentes específicos de admin
-│   │   │   └── pages/          # Admin, AdminDashboard, Configuracion
-│   │   ├── auth/               # Autenticación y Autorización
-│   │   │   ├── components/     # LoginForm, RegistroForm, RegistroPropietarioForm
-│   │   │   └── pages/          # Login, Registro, ForgotPassword, ResetPassword
-│   │   ├── banquetes/          # Gestión de Salones y Banquetes
-│   │   │   ├── components/     # Componentes de filtrado y listado
-│   │   │   └── pages/          # Salones, Catering, MisBanquetes
-│   │   ├── home/               # Página de Inicio y Landing
-│   │   │   ├── components/     # BusquedaFiltros, Carrusel
-│   │   │   └── pages/          # Home.jsx
-│   │   └── perfil/             # Perfil de Usuario y Eventos
-│   │       ├── components/     # Componentes de gestión de perfil
-│   │       └── pages/          # Perfil, Eventos, MisEventos
-│   ├── shared/                 # Recursos compartidos y UI común
-│   │   └── components/         # Navbar, ProtectedRoute, TokenValidator
-│   ├── App.jsx                 # Configuración de rutas principal
-│   ├── main.jsx                # Punto de entrada de la aplicación
-│   └── index.css               # Estilos globales y Tailwind/Vite CSS
-├── package.json                # Dependencias y scripts del proyecto
-├── vite.config.js              # Configuración de Vite
-└── README.md                   # Documentación actual del proyecto
-```
+## Expanding the ESLint configuration
 
-## 🚀 Tecnologías Utilizadas
-
-*   **Frontend:** React, Vite, TailwindCSS / DaisyUI.
-*   **Routing:** React Router DOM.
-*   **Estado Global:** React Context API.
-*   **Notificaciones:** React Hot Toast.
-*   **Backend:** Node.js (Servicios en `/apis`).
-
-## 🛠️ Cómo Iniciar
-
-1.  dependencias:
-    ```bash
-    npm install
-    ```
-2.  Inicia el servidor de desarrollo:
-    ```bash
-    npm run dev
-    ```
-3.  Asegúrate de que los servicios de la API en `/apis` estén en ejecución.
-
----
-*Desarrollado para Le Banquets - Tu evento, nuestra pasión.*
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
