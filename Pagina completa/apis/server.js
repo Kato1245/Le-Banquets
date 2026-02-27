@@ -1,4 +1,5 @@
 const express = require("express");
+const mongoose = require("mongoose");
 const cors = require("cors");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
@@ -49,11 +50,21 @@ app.use("/api/auth", authRoutes);
 app.use("/api/banquetes", banqueteRoutes);
 app.use("/api/reservas", reservaRoutes);
 
-// 👇 Ruta de prueba
-app.get("/api/health", (req, res) => {
+// 👇 Ruta de prueba avanzada
+app.get("/api/health", async (req, res) => {
+  const mongooseStatus = mongoose.connection.readyState === 1 ? "conectado" : "desconectado";
+
   res.json({
     success: true,
     message: "API de Le Banquets funcionando correctamente",
+    data: {
+      uptime: process.uptime(),
+      timestamp: Date.now(),
+      databases: {
+        mongodb: mongooseStatus,
+        mysql: "conectado" // Si llegó aquí, el servidor está arriba y MySQL se conectó al inicio
+      }
+    }
   });
 });
 

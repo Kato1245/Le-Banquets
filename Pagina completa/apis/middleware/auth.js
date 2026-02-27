@@ -39,6 +39,7 @@ const authenticateToken = catchAsync(async (req, res, next) => {
 
     // GRANT ACCESS TO PROTECTED ROUTE
     req.user = user;
+    req.user.role = decoded.userType; // Normalizar para el frontend
     req.userType = decoded.userType;
     next();
 });

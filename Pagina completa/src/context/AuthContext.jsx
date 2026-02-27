@@ -27,8 +27,14 @@ export const AuthProvider = ({ children }) => {
 
     try {
       setLoading(true);
-      const res = await apiClient.get("/auth/profile"); // Reverted or kept profile? Let's use profile as in backend
-      setUser(res.data.data.user);
+      const res = await apiClient.get("/auth/profile");
+      const userData = res.data.data.user;
+      const userType = res.data.data.userType;
+
+      setUser({
+        ...userData,
+        role: userData.role || userType // Asegurar que role esté presente
+      });
     } catch (err) {
       console.error("Error loading user:", err);
       logout();
@@ -55,7 +61,9 @@ export const AuthProvider = ({ children }) => {
       setError(null);
       const res = await apiClient.post("/auth/login", credentials);
       localStorage.setItem("token", res.data.data.token);
-      setUser(res.data.data.user);
+
+      const userData = res.data.data.user;
+      setUser(userData);
       return res.data;
     } catch (err) {
       setError(err.friendlyMessage);

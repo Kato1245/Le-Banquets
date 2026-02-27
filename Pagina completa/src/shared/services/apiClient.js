@@ -33,9 +33,22 @@ apiClient.interceptors.response.use(
     }
 
     // Normalizar error para el frontend
-    const errorMessage = error.response?.data?.message || error.message || "Ocurrió un error inesperado";
-    error.friendlyMessage = errorMessage;
+    let errorMessage = "Ocurrió un error inesperado";
 
+    if (error.response?.data) {
+      if (error.response.data.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response.data.errors && Array.isArray(error.response.data.errors)) {
+        // Unir mensajes de validación
+        errorMessage = error.response.data.errors.map(err => err.msg).join(". ");
+      } else if (typeof error.response.data === 'string') {
+        errorMessage = error.response.data;
+      }
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+
+    error.friendlyMessage = errorMessage;
     return Promise.reject(error);
   }
 );

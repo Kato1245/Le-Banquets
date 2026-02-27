@@ -131,7 +131,10 @@ class AuthController {
             success: true,
             message: 'Login exitoso',
             data: {
-                user: userWithoutPassword,
+                user: {
+                    ...userWithoutPassword,
+                    role: userType // Incluir role explícitamente para el frontend
+                },
                 userType: userType,
                 token: token,
                 expiresIn: '24h'
@@ -176,6 +179,15 @@ class AuthController {
         }
 
         const { username, email, telefono } = req.body;
+        const currentEmail = req.user.email;
+
+        // Si intenta cambiar el email, verificar que no exista ya
+        if (email && email !== currentEmail) {
+            const existingUser = await UserService.findByEmail(email);
+            if (existingUser) {
+                return next(new AppError("El email ya está en uso por otra cuenta", 409));
+            }
+        }
 
         const fieldsToUpdate = {};
         if (username !== undefined) fieldsToUpdate.nombre = username;
@@ -189,7 +201,7 @@ class AuthController {
         const result = await UserService.updateUser(userId, fieldsToUpdate, userType);
 
         if (result.affectedRows === 0) {
-            return next(new AppError("Usuario no encontrado o datos iguales", 404));
+            return next(new AppError("No se realizaron cambios o el usuario no existe", 400));
         }
 
         const updatedUser = await UserService.findById(userId, userType);
