@@ -24,10 +24,6 @@ router.get('/profile', authenticateToken, AuthController.getProfile);
 
 router.put('/profile', authenticateToken, AuthController.updateProfile);
 
-// Recuperación de contraseña
-router.post('/forgot-password', AuthController.forgotPassword);
-router.post('/reset-password', AuthController.resetPassword);
-
 // Verificar token
 router.get('/verify', authenticateToken, (req, res) => {
     res.json({
