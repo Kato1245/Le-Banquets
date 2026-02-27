@@ -3,14 +3,12 @@ const router = express.Router();
 const BanqueteController = require("../controllers/banqueteController");
 const { authenticateToken } = require("../middleware/auth");
 const upload = require("../middleware/upload");
-const { validateBanquete } = require("../middleware/validation");
 
 // Rutas protegidas (con upload de imágenes en POST y PUT)
 router.post(
   "/",
   authenticateToken,
   upload.array("imagenes", 5),
-  validateBanquete,
   BanqueteController.create,
 );
 router.get(
@@ -22,7 +20,6 @@ router.put(
   "/:id",
   authenticateToken,
   upload.array("imagenes", 5),
-  validateBanquete,
   BanqueteController.update,
 );
 router.delete("/:id", authenticateToken, BanqueteController.delete);

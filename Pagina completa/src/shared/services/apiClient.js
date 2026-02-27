@@ -3,7 +3,7 @@
 import axios from "axios";
 
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:3000/api",
   withCredentials: false,
 });
 
@@ -18,7 +18,7 @@ apiClient.interceptors.request.use(
 
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 // Interceptor para manejo global de errores
@@ -38,10 +38,15 @@ apiClient.interceptors.response.use(
     if (error.response?.data) {
       if (error.response.data.message) {
         errorMessage = error.response.data.message;
-      } else if (error.response.data.errors && Array.isArray(error.response.data.errors)) {
+      } else if (
+        error.response.data.errors &&
+        Array.isArray(error.response.data.errors)
+      ) {
         // Unir mensajes de validación
-        errorMessage = error.response.data.errors.map(err => err.msg).join(". ");
-      } else if (typeof error.response.data === 'string') {
+        errorMessage = error.response.data.errors
+          .map((err) => err.msg)
+          .join(". ");
+      } else if (typeof error.response.data === "string") {
         errorMessage = error.response.data;
       }
     } else if (error.message) {
@@ -50,7 +55,7 @@ apiClient.interceptors.response.use(
 
     error.friendlyMessage = errorMessage;
     return Promise.reject(error);
-  }
+  },
 );
 
 export default apiClient;

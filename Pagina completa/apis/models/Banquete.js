@@ -11,6 +11,27 @@ const banqueteSchema = new mongoose.Schema({
     required: true,
     trim: true,
   },
+  ubicacion: {
+    type: String,
+    required: true,
+    trim: true,
+  },
+  dimensiones: {
+    type: String,
+    trim: true,
+  },
+  tipo: {
+    type: String,
+    trim: true,
+  },
+  equipamento: {
+    type: String,
+    trim: true,
+  },
+  servicios: {
+    type: String,
+    trim: true,
+  },
   capacidad: {
     type: Number,
     required: true,
