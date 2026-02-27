@@ -59,14 +59,27 @@ class AuthController {
         }
 
         const result = await UserService.createUser(userData, userType);
+        const userId = result.insertId;
+
+        // Generar token para login automático tras registro
+        const token = jwt.sign(
+            { userId: userId, email: email, userType: userType },
+            JWT_SECRET,
+            { expiresIn: '24h' }
+        );
 
         res.status(201).json({
             success: true,
             message: `${userType === 'propietario' ? 'Propietario' : 'Usuario'} registrado exitosamente`,
             data: {
-                id: result.insertId,
-                nombre,
-                email
+                user: {
+                    id: userId,
+                    nombre,
+                    email,
+                    role: userType,
+                    userType: userType
+                },
+                token: token
             }
         });
     });
@@ -133,7 +146,8 @@ class AuthController {
             data: {
                 user: {
                     ...userWithoutPassword,
-                    role: userType // Incluir role explícitamente para el frontend
+                    role: userType, // Para ProtectedRoute
+                    userType: userType // Para compatibilidad
                 },
                 userType: userType,
                 token: token,
@@ -212,6 +226,61 @@ class AuthController {
             message: "Perfil actualizado correctamente",
             data: updatedUser
         });
+    });
+
+    static forgotPassword = catchAsync(async (req, res, next) => {
+        const { email } = req.body;
+        if (!email) return next(new AppError('El email es requerido', 400));
+
+        const authData = await UserService.findByEmail(email);
+        if (!authData) {
+            return res.json({
+                success: true,
+                message: 'Si el correo existe, se ha enviado un enlace de recuperación'
+            });
+        }
+
+        const { user, userType } = authData;
+
+        const resetToken = jwt.sign(
+            { userId: user.id, email: user.email, userType: userType, purpose: 'reset-password' },
+            JWT_SECRET,
+            { expiresIn: '15m' }
+        );
+
+        console.log(`[RESET PASSWORD] Token para ${email}: ${resetToken}`);
+
+        res.json({
+            success: true,
+            message: 'Si el correo existe, se ha enviado un enlace de recuperación',
+            token: resetToken
+        });
+    });
+
+    static resetPassword = catchAsync(async (req, res, next) => {
+        const { token, nuevaContrasena } = req.body;
+
+        if (!token || !nuevaContrasena) {
+            return next(new AppError('Token y nueva contraseña son requeridos', 400));
+        }
+
+        try {
+            const decoded = jwt.verify(token, JWT_SECRET);
+
+            if (decoded.purpose !== 'reset-password') {
+                return next(new AppError('Token inválido para esta operación', 400));
+            }
+
+            const hashedPassword = await bcrypt.hash(nuevaContrasena, 10);
+            await UserService.updateUser(decoded.userId, { contrasena: hashedPassword }, decoded.userType);
+
+            res.json({
+                success: true,
+                message: 'Contraseña actualizada correctamente'
+            });
+        } catch (err) {
+            return next(new AppError('El enlace de recuperación ha expirado o es inválido', 400));
+        }
     });
 }
 

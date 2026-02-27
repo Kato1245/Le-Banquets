@@ -27,9 +27,13 @@ apiClient.interceptors.response.use(
   (error) => {
     // Manejo de sesión expirada
     if (error.response?.status === 401) {
-      localStorage.removeItem("token");
-      // Despachar evento personalizado para que AuthContext reaccione
-      window.dispatchEvent(new CustomEvent("auth-session-expired"));
+      // No disparar el evento si ya estamos en el login o si es un intento de login fallido
+      const isLoginRequest = error.config.url.includes("/auth/login");
+
+      if (!isLoginRequest) {
+        localStorage.removeItem("token");
+        window.dispatchEvent(new CustomEvent("auth-session-expired"));
+      }
     }
 
     // Normalizar error para el frontend

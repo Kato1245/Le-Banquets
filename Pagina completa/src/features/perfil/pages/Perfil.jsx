@@ -1,6 +1,6 @@
 // src/pages/Perfil.jsx
 import { useState, useEffect } from "react"
-import { useAuth } from "../context/AuthContext"
+import { useAuth } from "@/context/AuthContext"
 
 const Perfil = () => {
   const { user } = useAuth()
@@ -25,8 +25,8 @@ const Perfil = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-      
-      const endpoint = user.userType === 'propietario' 
+
+      const endpoint = user.userType === 'propietario'
         ? 'http://localhost:3000/api/auth/profile/propietario'
         : 'http://localhost:3000/api/auth/profile/usuario';
 
@@ -73,8 +73,8 @@ const Perfil = () => {
     try {
       setMessage("Guardando cambios...");
       const token = localStorage.getItem("token");
-      
-      const endpoint = user.userType === 'propietario' 
+
+      const endpoint = user.userType === 'propietario'
         ? 'http://localhost:3000/api/auth/profile/propietario'
         : 'http://localhost:3000/api/auth/profile/usuario';
 
@@ -98,7 +98,7 @@ const Perfil = () => {
       if (data.success) {
         setMessage("✅ Perfil actualizado correctamente");
         setIsEditing(false);
-        
+
         // Actualizar localStorage
         const updatedUser = {
           ...user,
@@ -112,7 +112,7 @@ const Perfil = () => {
           }
         };
         localStorage.setItem('user', JSON.stringify(updatedUser));
-        
+
         setTimeout(() => setMessage(""), 3000);
       } else {
         setMessage("❌ Error al actualizar el perfil");
@@ -143,20 +143,20 @@ const Perfil = () => {
     <div className="min-h-screen bg-base-100 py-8">
       <div className="max-w-4xl mx-auto px-4">
         <h1 className="text-3xl font-bold text-center mb-8">Mi Perfil</h1>
-        
+
         {message && (
           <div className={`alert ${message.includes('✅') ? 'alert-success' : 'alert-error'} mb-6`}>
             <span>{message}</span>
           </div>
         )}
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Información del usuario */}
           <div className="md:col-span-2">
             <div className="card bg-base-200 shadow-xl">
               <div className="card-body">
                 <h2 className="card-title">Información Personal</h2>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="form-control">
                     <label className="label">
@@ -174,7 +174,7 @@ const Perfil = () => {
                       <p className="text-lg">{userData.nombre}</p>
                     )}
                   </div>
-                  
+
                   <div className="form-control">
                     <label className="label">
                       <span className="label-text">Correo electrónico</span>
@@ -191,7 +191,7 @@ const Perfil = () => {
                       <p className="text-lg">{userData.email}</p>
                     )}
                   </div>
-                  
+
                   <div className="form-control">
                     <label className="label">
                       <span className="label-text">Teléfono</span>
@@ -208,7 +208,7 @@ const Perfil = () => {
                       <p className="text-lg">{userData.telefono || "No especificado"}</p>
                     )}
                   </div>
-                  
+
                   <div className="form-control">
                     <label className="label">
                       <span className="label-text">Fecha de Nacimiento</span>
@@ -243,8 +243,8 @@ const Perfil = () => {
                     )}
                   </div>
                 </div>
-              
-                
+
+
                 <div className="card-actions justify-end mt-6">
                   {isEditing ? (
                     <>
@@ -264,7 +264,7 @@ const Perfil = () => {
               </div>
             </div>
           </div>
-          
+
           {/* Sidebar con información adicional */}
           <div className="space-y-6">
             <div className="card bg-base-200 shadow-xl">
@@ -282,7 +282,7 @@ const Perfil = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="card bg-base-200 shadow-xl">
               <div className="card-body">
                 <h3 className="card-title">Estadísticas</h3>

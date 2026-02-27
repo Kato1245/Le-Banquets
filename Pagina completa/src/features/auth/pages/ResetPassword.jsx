@@ -1,6 +1,6 @@
 // src/pages/ResetPassword.jsx
 import { useState } from "react";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 const ResetPassword = () => {
@@ -9,7 +9,7 @@ const ResetPassword = () => {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { updatePassword } = useAuth();
+  const { resetPassword } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -36,7 +36,7 @@ const ResetPassword = () => {
 
     setIsLoading(true);
 
-    const result = await updatePassword(token, newPassword);
+    const result = await resetPassword(token, newPassword);
 
     if (result.success) {
       setMessage(result.message);
@@ -52,7 +52,7 @@ const ResetPassword = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-base-100 relative">
-      <div 
+      <div
         className="absolute inset-0 z-0 bg-cover bg-center"
         style={{
           backgroundImage: "url(https://images.unsplash.com/photo-1519225421980-715cb0215aed?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80)"
@@ -60,7 +60,7 @@ const ResetPassword = () => {
       >
         <div className="absolute inset-0 bg-black opacity-50"></div>
       </div>
-      
+
       <div className="relative z-10 bg-base-100 bg-opacity-95 backdrop-blur-sm p-8 rounded-2xl shadow-xl w-full max-w-md">
         <div className="sm:mx-auto sm:w-full">
           <h2 className="text-3xl font-bold text-center text-base-content">Nueva Contraseña</h2>
@@ -76,7 +76,7 @@ const ResetPassword = () => {
                 <span>{message}</span>
               </div>
             )}
-            
+
             {error && (
               <div className="alert alert-error">
                 <span>{error}</span>
@@ -114,8 +114,8 @@ const ResetPassword = () => {
             </div>
 
             <div className="form-control mt-2">
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 className="btn btn-primary w-full"
                 disabled={isLoading}
               >

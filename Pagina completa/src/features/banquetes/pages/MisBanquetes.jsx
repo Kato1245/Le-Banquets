@@ -1,6 +1,6 @@
 // src/pages/MisBanquetes.jsx
 import { useState, useEffect, useRef } from "react";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 
 const MisBanquetes = () => {
   const { user } = useAuth();
@@ -444,11 +444,10 @@ const MisBanquetes = () => {
                   {/* Zona de arrastrar y soltar */}
                   {canAddMore && (
                     <div
-                      className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all duration-200 ${
-                        isDragging
+                      className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all duration-200 ${isDragging
                           ? "border-primary bg-primary/10 scale-[1.02]"
                           : "border-base-300 hover:border-primary hover:bg-base-200"
-                      }`}
+                        }`}
                       onDragOver={handleDragOver}
                       onDragLeave={handleDragLeave}
                       onDrop={handleDrop}

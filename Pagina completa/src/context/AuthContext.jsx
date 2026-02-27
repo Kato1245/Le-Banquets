@@ -33,7 +33,8 @@ export const AuthProvider = ({ children }) => {
 
       setUser({
         ...userData,
-        role: userData.role || userType // Asegurar que role esté presente
+        role: userData.role || userType,
+        userType: userData.userType || userType
       });
     } catch (err) {
       console.error("Error loading user:", err);
@@ -85,6 +86,24 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const forgotPassword = async (email) => {
+    try {
+      const res = await apiClient.post("/auth/forgot-password", { email });
+      return res.data;
+    } catch (err) {
+      return { success: false, message: err.friendlyMessage };
+    }
+  };
+
+  const resetPassword = async (token, nuevaContrasena) => {
+    try {
+      const res = await apiClient.post("/auth/reset-password", { token, nuevaContrasena });
+      return res.data;
+    } catch (err) {
+      return { success: false, message: err.friendlyMessage };
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -94,8 +113,10 @@ export const AuthProvider = ({ children }) => {
         login,
         register,
         logout,
+        forgotPassword,
+        resetPassword,
         isAuthenticated: !!user,
-        userType: user?.userType, // Add direct access to userType
+        userType: user?.userType,
       }}
     >
       {children}

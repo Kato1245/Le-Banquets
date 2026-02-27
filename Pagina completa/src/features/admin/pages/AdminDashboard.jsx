@@ -1,6 +1,6 @@
 // src/pages/AdminDashboard.jsx
 import { useState, useEffect } from "react";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 
 const AdminDashboard = () => {
   const { user } = useAuth();
@@ -50,7 +50,7 @@ const AdminDashboard = () => {
     <div className="min-h-screen bg-base-100 py-8">
       <div className="max-w-6xl mx-auto px-4">
         <h1 className="text-4xl font-bold mb-8">Panel de Administración</h1>
-        
+
         {/* Estadísticas */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div className="stat bg-base-200 rounded-lg">
@@ -62,7 +62,7 @@ const AdminDashboard = () => {
             <div className="stat-title">Total Usuarios</div>
             <div className="stat-value">{stats.totalUsuarios}</div>
           </div>
-          
+
           <div className="stat bg-base-200 rounded-lg">
             <div className="stat-figure text-secondary">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -72,7 +72,7 @@ const AdminDashboard = () => {
             <div className="stat-title">Total Propietarios</div>
             <div className="stat-value">{stats.totalPropietarios}</div>
           </div>
-          
+
           <div className="stat bg-base-200 rounded-lg">
             <div className="stat-figure text-accent">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -82,7 +82,7 @@ const AdminDashboard = () => {
             <div className="stat-title">Total Banquetes</div>
             <div className="stat-value">{stats.totalBanquetes}</div>
           </div>
-          
+
           <div className="stat bg-base-200 rounded-lg">
             <div className="stat-figure text-info">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -105,7 +105,7 @@ const AdminDashboard = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="card bg-base-200 shadow-xl">
             <div className="card-body">
               <h2 className="card-title">Gestión de Propietarios</h2>
@@ -115,7 +115,7 @@ const AdminDashboard = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="card bg-base-200 shadow-xl">
             <div className="card-body">
               <h2 className="card-title">Reportes</h2>
@@ -125,7 +125,7 @@ const AdminDashboard = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="card bg-base-200 shadow-xl">
             <div className="card-body">
               <h2 className="card-title">Configuración</h2>
