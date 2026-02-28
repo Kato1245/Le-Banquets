@@ -45,7 +45,8 @@ const banqueteSchema = new mongoose.Schema({
     required: true,
   },
   propietario_id: {
-    type: Number, // ID del usuario en MySQL
+    type: mongoose.Schema.Types.ObjectId, // ID del propietario en MongoDB
+    ref: "Propietario",
     required: true,
     index: true,
   },
