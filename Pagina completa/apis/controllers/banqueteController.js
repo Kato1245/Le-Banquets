@@ -17,8 +17,8 @@ class BanqueteController {
         servicios,
       } = req.body;
 
-      // req.user viene del middleware authenticateToken y contiene el ID del usuario de MySQL
-      const propietario_id = req.user.id;
+      // req.user viene del middleware authenticateToken y contiene el documento Mongoose del usuario
+      const propietario_id = req.user._id;
       const userType = req.userType;
 
       if (userType !== "propietario") {
@@ -72,7 +72,7 @@ class BanqueteController {
   // Obtener los banquetes del propietario actual
   static async getMisBanquetes(req, res) {
     try {
-      const propietario_id = req.user.id;
+      const propietario_id = req.user._id;
 
       const banquetes = await Banquete.find({ propietario_id }).sort({
         fecha_creacion: -1,
@@ -112,7 +112,7 @@ class BanqueteController {
   static async update(req, res) {
     try {
       const { id } = req.params;
-      const propietario_id = req.user.id;
+      const propietario_id = req.user._id;
       const {
         nombre,
         direccion,
@@ -197,7 +197,7 @@ class BanqueteController {
   static async delete(req, res) {
     try {
       const { id } = req.params;
-      const propietario_id = req.user.id;
+      const propietario_id = req.user._id;
 
       const banquete = await Banquete.findOne({ _id: id, propietario_id });
 
