@@ -27,11 +27,6 @@ const Navbar = () => {
               Banquetes
             </Link>
           </li>
-          <li>
-            <Link to="/eventos" className="font-medium">
-              Eventos
-            </Link>
-          </li>
           {isAdmin && (
             <li>
               <Link to="/admin" className="font-medium text-warning">

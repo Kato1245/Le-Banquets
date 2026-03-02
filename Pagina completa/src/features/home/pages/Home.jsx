@@ -22,10 +22,7 @@ const Home = () => {
 
                 <div className="container mx-auto px-6 relative z-10 flex flex-col lg:flex-row items-center gap-16">
                     <div className="lg:w-1/2 text-left animate-in fade-in slide-in-from-left-10 duration-1000">
-                        <div className="badge badge-primary badge-outline py-4 px-6 rounded-full mb-8 font-black uppercase tracking-[0.3em] text-[10px] border-2">
-                            The Gold Standard in Events
-                        </div>
-                        <h1 className="text-6xl md:text-8xl font-black text-white leading-[0.9] mb-8 tracking-tighter">
+                        <h1 className="text-6xl md:text-7xl font-black text-white leading-[0.9] mb-8 tracking-tighter">
                             Donde los <span className="text-primary italic serif">Sueños</span> <br />
                             cobran <span className="underline decoration-primary decoration-8 underline-offset-8">Vida</span>
                         </h1>
@@ -43,34 +40,6 @@ const Home = () => {
                                     Unirme Ahora
                                 </Link>
                             )}
-                        </div>
-                    </div>
-
-                    {/* Interactive Glass Card */}
-                    <div className="lg:w-2/5 hidden lg:block animate-in fade-in zoom-in duration-1000 delay-300">
-                        <div className="bg-white/10 backdrop-blur-3xl p-10 rounded-[3rem] border border-white/20 shadow-2xl relative overflow-hidden group">
-                            <div className="absolute -top-24 -right-24 w-64 h-64 bg-primary/20 rounded-full blur-[80px] group-hover:bg-primary/40 transition-colors"></div>
-
-                            <h3 className="text-3xl font-bold text-white mb-8 relative z-10">Búsqueda Inteligente</h3>
-
-                            <div className="space-y-6 relative z-10">
-                                <div className="bg-white/5 p-5 rounded-2xl border border-white/10">
-                                    <p className="text-xs uppercase font-black tracking-widest text-primary mb-2">Tipo de Evento</p>
-                                    <p className="text-white font-bold">Bodas Reales & Galas</p>
-                                </div>
-                                <div className="bg-white/5 p-5 rounded-2xl border border-white/10">
-                                    <p className="text-xs uppercase font-black tracking-widest text-primary mb-2">Ubicación</p>
-                                    <p className="text-white font-bold">Zonas Prime & Exclusivas</p>
-                                </div>
-                                <div className="bg-white/5 p-5 rounded-2xl border border-white/10">
-                                    <p className="text-xs uppercase font-black tracking-widest text-primary mb-2">Invitados</p>
-                                    <p className="text-white font-bold">Desde 50 hasta 2,500+</p>
-                                </div>
-                            </div>
-
-                            <button className="btn btn-block btn-primary mt-10 rounded-2xl border-none font-bold text-lg">
-                                Iniciar Simulador
-                            </button>
                         </div>
                     </div>
                 </div>

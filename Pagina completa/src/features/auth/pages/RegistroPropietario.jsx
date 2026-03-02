@@ -33,19 +33,11 @@ const RegistroPropietario = () => {
                     </div>
 
                     <div className="mt-12 pt-10 border-t border-base-content/5 flex flex-col items-center gap-6">
-                        <div className="flex flex-wrap justify-center gap-8 text-sm opacity-40 font-bold uppercase tracking-widest text-[9px]">
-                            <span>Soporte 24/7</span>
-                            <span>•</span>
-                            <span>Cero Comisiones por Venta</span>
-                            <span>•</span>
-                            <span>Gestión de Calendario</span>
-                        </div>
                         <p className="text-sm font-medium">
                             ¿Ya formas parte de la red? <Link to="/login" className="text-primary hover:underline font-black transition-all">Ingresar al Dashboard</Link>
                         </p>
                     </div>
                 </div>
-
                 <p className="text-center mt-8 text-white/30 text-[10px] uppercase tracking-[0.3em] font-black">
                     Le Banquets Group · Enterprise Division
                 </p>

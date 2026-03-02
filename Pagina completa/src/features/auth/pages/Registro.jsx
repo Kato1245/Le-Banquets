@@ -29,16 +29,6 @@ const Registro = () => {
           <div className="mt-2">
             <RegistroForm />
           </div>
-
-          <div className="mt-10 pt-8 border-t border-base-content/10 flex flex-col items-center gap-4">
-            <p className="text-sm">
-              ¿Ya tienes una cuenta? <Link to="/login" className="text-primary hover:underline font-bold transition-all">Inicia sesión aquí</Link>
-            </p>
-            <div className="divider opacity-20 text-[10px] uppercase font-bold tracking-widest my-0">¿Eres Propietario?</div>
-            <p className="text-sm">
-              ¿Quieres publicar tu salón? <Link to="/registro-propietario" className="text-secondary hover:underline font-bold transition-all">Registra tu empresa</Link>
-            </p>
-          </div>
         </div>
 
         <p className="text-center mt-8 text-white/40 text-xs font-medium tracking-wide">

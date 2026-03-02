@@ -6,7 +6,7 @@ import path from 'path'
 export default defineConfig({
   plugins: [
     react(),
-    tailwindcss() // ← ESTO FALTABA
+    tailwindcss(), // ← ESTO FALTABA
   ],
   resolve: {
     alias: {
