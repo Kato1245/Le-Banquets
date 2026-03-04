@@ -7,6 +7,7 @@ import Registro from "./features/auth/pages/Registro";
 import RegistroPropietario from "./features/auth/pages/RegistroPropietario";
 
 import Banquetes from "./features/banquetes/pages/Salones";
+import BanqueteDetail from "./features/banquetes/pages/BanqueteDetail";
 import MisEventos from "./features/eventos/pages/MisEventos";
 import Eventos from "./features/eventos/pages/Eventos";
 import MisBanquetes from "./features/banquetes/pages/MisBanquetes";
@@ -57,6 +58,7 @@ function App() {
 
         {/* Rutas públicas */}
         <Route path="/banquetes" element={<Banquetes />} />
+        <Route path="/banquetes/:id" element={<BanqueteDetail />} />
         <Route path="/eventos" element={<Eventos />} />
 
         {/* Rutas protegidas — requieren login */}
