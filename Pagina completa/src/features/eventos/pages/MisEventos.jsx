@@ -210,7 +210,8 @@ const MisEventos = () => {
               Explorar Disponibilidad
             </button>
           </div>
-        )}
+        )
+        }
 
         {/* Stats Footer */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16 pt-8 border-t border-base-content/10">
