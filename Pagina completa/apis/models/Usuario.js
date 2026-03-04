@@ -30,6 +30,10 @@ const usuarioSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    foto_perfil: {
+      type: String,
+      default: null,
+    },
     auth_id: {
       type: String,
       required: true,
