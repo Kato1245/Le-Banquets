@@ -170,6 +170,50 @@ export const AuthProvider = ({ children }) => {
     toast.error("El restablecimiento de contraseña no está disponible aún.");
   };
 
+  // ── Actualizar Perfil ──────────────────────────────────────────────────
+  const updateUserProfile = async (data) => {
+    try {
+      const res = await apiClient.put("/auth/profile", data);
+      if (res.data.success) {
+        const fullUser = {
+          ...res.data.data,
+          userType: user.userType,
+          role: res.data.data.role || user.userType,
+        };
+        setUser(fullUser);
+        localStorage.setItem("user", JSON.stringify(fullUser));
+        return res.data;
+      }
+    } catch (err) {
+      throw err;
+    }
+  };
+
+  // ── Cambiar Contraseña ─────────────────────────────────────────────────
+  const changeUserPassword = async (actual, nueva) => {
+    try {
+      const res = await apiClient.put("/auth/password", { actual, nueva });
+      return res.data;
+    } catch (err) {
+      throw err;
+    }
+  };
+
+  // ── Eliminar Cuenta ────────────────────────────────────────────────────
+  const deleteUserAccount = async (contrasena) => {
+    try {
+      const res = await apiClient.delete("/auth/account", {
+        data: { contrasena },
+      });
+      if (res.data.success) {
+        logout();
+      }
+      return res.data;
+    } catch (err) {
+      throw err;
+    }
+  };
+
   // Función esperada por TokenValidator — verifica el token actual
   const checkTokenValidity = useCallback(async () => {
     const currentToken = localStorage.getItem("token");
@@ -190,6 +234,9 @@ export const AuthProvider = ({ children }) => {
     logout,
     resetPassword,
     updatePassword,
+    updateUser: updateUserProfile,
+    changePassword: changeUserPassword,
+    deleteAccount: deleteUserAccount,
     setUser,
     checkTokenValidity,
   };

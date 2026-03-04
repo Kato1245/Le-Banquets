@@ -1,11 +1,22 @@
 // src/features/perfil/pages/Configuracion.jsx
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import toast from "react-hot-toast";
+import apiClient from "../../../shared/services/apiClient";
 
 const Configuracion = () => {
-  const { user } = useAuth();
+  const { user, updateUser, changePassword, deleteAccount } = useAuth();
   const [activeTab, setActiveTab] = useState("perfil");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isPasswordUpdating, setIsPasswordUpdating] = useState(false);
+
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const fileInputRef = useRef(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [fotoPerfil, setFotoPerfil] = useState(user?.foto_perfil || null);
 
   const [userData, setUserData] = useState({
     nombre: user?.nombre || user?.name || "Usuario",
@@ -52,12 +63,104 @@ const Configuracion = () => {
 
   const handlePreferenceChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setPreferences((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
+    setPreferences((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
   };
 
-  const handleSubmit = (e) => {
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("La imagen no debe superar 5 MB");
+      return;
+    }
+
+    setAvatarUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("avatar", file);
+
+      const res = await apiClient.post("/auth/avatar", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      if (res.data.success) {
+        setFotoPerfil(res.data.data.foto_perfil);
+        toast.success("Foto de perfil actualizada");
+      } else {
+        toast.error(res.data.message || "Error al subir la imagen");
+      }
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Error de conexión al subir la imagen",
+      );
+    } finally {
+      setAvatarUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    toast.success("Cambios guardados correctamente");
+    setIsLoading(true);
+    try {
+      if (updateUser) {
+        await updateUser(userData);
+        toast.success("Cambios guardados correctamente");
+      }
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message || "Error al actualizar perfil",
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleUpdatePassword = async (e) => {
+    e.preventDefault();
+    if (!passwords.actual || !passwords.nueva) {
+      toast.error("Debes llenar la contraseña actual y la nueva");
+      return;
+    }
+    if (passwords.nueva !== passwords.confirmar) {
+      toast.error("Las contraseñas nuevas no coinciden");
+      return;
+    }
+    setIsPasswordUpdating(true);
+    try {
+      await changePassword(passwords.actual, passwords.nueva);
+      toast.success("Contraseña actualizada exitosamente");
+      setPasswords({ actual: "", nueva: "", confirmar: "" });
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message || "Error al actualizar contraseña",
+      );
+    } finally {
+      setIsPasswordUpdating(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!deletePassword) {
+      toast.error("Debes ingresar tu contraseña actual");
+      return;
+    }
+    setIsDeleting(true);
+    try {
+      await deleteAccount(deletePassword);
+      setShowDeleteModal(false);
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message ||
+          "Contraseña incorrecta o error al eliminar",
+      );
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const tabs = [
@@ -70,11 +173,12 @@ const Configuracion = () => {
   return (
     <div className="min-h-screen bg-base-100 py-16">
       <div className="max-w-5xl mx-auto px-4 md:px-8">
-
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
           <div>
-            <h1 className="text-5xl font-extrabold tracking-tighter mb-2">Configuración</h1>
+            <h1 className="text-5xl font-extrabold tracking-tighter mb-2">
+              Configuración
+            </h1>
             <p className="text-lg opacity-60 font-medium lowercase italic">
               Gestión de cuenta, seguridad y preferencias personales
             </p>
@@ -84,10 +188,11 @@ const Configuracion = () => {
             {tabs.map((tab) => (
               <button
                 key={tab.id}
-                className={`tab px-6 rounded-xl font-bold transition-all ${activeTab === tab.id
+                className={`tab px-6 rounded-xl font-bold transition-all ${
+                  activeTab === tab.id
                     ? "tab-active bg-primary text-primary-content shadow-lg"
                     : ""
-                  }`}
+                }`}
                 onClick={() => setActiveTab(tab.id)}
               >
                 {tab.label}
@@ -99,7 +204,6 @@ const Configuracion = () => {
         {/* Contenido */}
         <div className="card bg-base-100 shadow-xl border border-base-200 rounded-[2.5rem] overflow-hidden">
           <div className="card-body p-10">
-
             {/* ── PERFIL ── */}
             {activeTab === "perfil" && (
               <div>
@@ -115,11 +219,90 @@ const Configuracion = () => {
                   Información del Perfil
                 </h2>
 
+                {/* Avatar + nombre (Usuario) */}
+                <div className="flex flex-col md:flex-row items-center gap-8 mb-12 p-8 bg-gradient-to-br from-base-200/30 to-base-300/10 rounded-[2rem] border border-base-300/50 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                  <div
+                    className="relative group cursor-pointer"
+                    onClick={() => fileInputRef.current?.click()}
+                    title="Cambiar foto de perfil"
+                  >
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png,image/webp"
+                      ref={fileInputRef}
+                      onChange={handleAvatarChange}
+                      className="hidden"
+                    />
+                    <div className="absolute -inset-0.5 bg-gradient-to-r from-primary to-secondary rounded-full blur opacity-30 group-hover:opacity-60 transition duration-1000 group-hover:duration-200"></div>
+                    <div className="relative w-28 h-28 bg-base-100 rounded-full flex items-center justify-center text-4xl font-black shadow-2xl border-4 border-base-100 ring-2 ring-primary/20 overflow-hidden">
+                      {fotoPerfil ? (
+                        <img
+                          src={fotoPerfil}
+                          alt="Avatar"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="bg-gradient-to-br from-primary to-secondary bg-clip-text text-transparent">
+                          {(userData.nombre || "U").charAt(0).toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+                    {/* Overlay de cámara siempre visible en hover */}
+                    <div className="absolute inset-0 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10 bg-black/30">
+                      {avatarUploading ? (
+                        <span className="loading loading-spinner loading-md text-white"></span>
+                      ) : (
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-8 w-8 text-white drop-shadow"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                          />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                          />
+                        </svg>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-center md:text-left">
+                    <h2 className="text-4xl font-black tracking-tighter mb-2 bg-gradient-to-r from-base-content to-base-content/70 bg-clip-text text-transparent">
+                      {userData.nombre}
+                    </h2>
+                    <div className="flex flex-wrap justify-center md:justify-start gap-2">
+                      <span className="badge badge-primary badge-lg py-4 px-6 rounded-xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20">
+                        {user.userType || user.role || "Usuario"} Premium
+                      </span>
+                      <span className="badge badge-outline badge-lg py-4 px-6 rounded-xl font-bold uppercase tracking-widest text-[10px] opacity-50 border-base-content/20">
+                        ID: {user.id?.slice(-8) || "SENA-2024"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
                 <form onSubmit={handleSubmit}>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {[
-                      { label: "Nombre completo", name: "nombre", type: "text" },
-                      { label: "Correo electrónico", name: "email", type: "email" },
+                      {
+                        label: "Nombre completo",
+                        name: "nombre",
+                        type: "text",
+                      },
+                      {
+                        label: "Correo electrónico",
+                        name: "email",
+                        type: "email",
+                      },
                       { label: "Teléfono", name: "telefono", type: "tel" },
                       { label: "Empresa", name: "empresa", type: "text" },
                     ].map((field) => (
@@ -155,8 +338,16 @@ const Configuracion = () => {
                   </div>
 
                   <div className="card-actions mt-10 pt-8 border-t border-base-content/5">
-                    <button type="submit" className="btn btn-primary rounded-xl px-10 normal-case font-bold shadow-lg">
-                      Guardar Cambios
+                    <button
+                      type="submit"
+                      disabled={isLoading}
+                      className="btn btn-primary rounded-xl px-10 normal-case font-bold shadow-lg"
+                    >
+                      {isLoading ? (
+                        <span className="loading loading-spinner" />
+                      ) : (
+                        "Guardar Cambios"
+                      )}
                     </button>
                     <button
                       type="button"
@@ -185,15 +376,32 @@ const Configuracion = () => {
                   Preferencias de Notificación
                 </h2>
                 <p className="opacity-50 font-medium mb-10 text-sm">
-                  Selecciona qué tipo de notificaciones deseas recibir en tu cuenta.
+                  Selecciona qué tipo de notificaciones deseas recibir en tu
+                  cuenta.
                 </p>
 
                 <div className="space-y-4">
                   {[
-                    { name: "email", label: "Notificaciones por correo electrónico", desc: "Recibe alertas directamente en tu bandeja de entrada" },
-                    { name: "promociones", label: "Promociones y ofertas especiales", desc: "Entérate primero de nuestras ofertas exclusivas" },
-                    { name: "recordatorios", label: "Recordatorios de eventos", desc: "Avisos anticipados sobre tus próximos eventos" },
-                    { name: "newsletter", label: "Newsletter mensual", desc: "Resumen mensual de novedades y tendencias" },
+                    {
+                      name: "email",
+                      label: "Notificaciones por correo electrónico",
+                      desc: "Recibe alertas directamente en tu bandeja de entrada",
+                    },
+                    {
+                      name: "promociones",
+                      label: "Promociones y ofertas especiales",
+                      desc: "Entérate primero de nuestras ofertas exclusivas",
+                    },
+                    {
+                      name: "recordatorios",
+                      label: "Recordatorios de eventos",
+                      desc: "Avisos anticipados sobre tus próximos eventos",
+                    },
+                    {
+                      name: "newsletter",
+                      label: "Newsletter mensual",
+                      desc: "Resumen mensual de novedades y tendencias",
+                    },
                   ].map((item) => (
                     <div
                       key={item.name}
@@ -201,7 +409,9 @@ const Configuracion = () => {
                     >
                       <div>
                         <p className="font-bold text-sm">{item.label}</p>
-                        <p className="text-xs opacity-50 mt-0.5 font-medium">{item.desc}</p>
+                        <p className="text-xs opacity-50 mt-0.5 font-medium">
+                          {item.desc}
+                        </p>
                       </div>
                       <input
                         type="checkbox"
@@ -217,7 +427,9 @@ const Configuracion = () => {
                 <div className="card-actions mt-10 pt-8 border-t border-base-content/5">
                   <button
                     className="btn btn-primary rounded-xl px-10 normal-case font-bold shadow-lg"
-                    onClick={() => toast.success("Preferencias de notificación guardadas")}
+                    onClick={() =>
+                      toast.success("Preferencias de notificación guardadas")
+                    }
                   >
                     Guardar Preferencias
                   </button>
@@ -240,37 +452,47 @@ const Configuracion = () => {
                   Seguridad de la Cuenta
                 </h2>
 
-                <div className="space-y-6 mb-10">
-                  {[
-                    { label: "Contraseña actual", name: "actual" },
-                    { label: "Nueva contraseña", name: "nueva" },
-                    { label: "Confirmar nueva contraseña", name: "confirmar" },
-                  ].map((field) => (
-                    <div key={field.name} className="form-control">
-                      <label className="label">
-                        <span className="label-text text-xs font-bold uppercase tracking-widest opacity-40">
-                          {field.label}
-                        </span>
-                      </label>
-                      <input
-                        type="password"
-                        name={field.name}
-                        value={passwords[field.name]}
-                        onChange={handlePasswordChange}
-                        className="input input-bordered rounded-2xl bg-base-200/50 border-base-300 focus:border-primary focus:outline-none transition-all"
-                      />
-                    </div>
-                  ))}
-                </div>
+                <form onSubmit={handleUpdatePassword}>
+                  <div className="space-y-6 mb-10">
+                    {[
+                      { label: "Contraseña actual", name: "actual" },
+                      { label: "Nueva contraseña", name: "nueva" },
+                      {
+                        label: "Confirmar nueva contraseña",
+                        name: "confirmar",
+                      },
+                    ].map((field) => (
+                      <div key={field.name} className="form-control">
+                        <label className="label">
+                          <span className="label-text text-xs font-bold uppercase tracking-widest opacity-40">
+                            {field.label}
+                          </span>
+                        </label>
+                        <input
+                          type="password"
+                          name={field.name}
+                          value={passwords[field.name]}
+                          onChange={handlePasswordChange}
+                          className="input input-bordered rounded-2xl bg-base-200/50 border-base-300 focus:border-primary focus:outline-none transition-all"
+                        />
+                      </div>
+                    ))}
+                  </div>
 
-                <div className="card-actions mb-10 pb-10 border-b border-base-content/5">
-                  <button
-                    className="btn btn-primary rounded-xl px-10 normal-case font-bold shadow-lg"
-                    onClick={() => toast.success("Contraseña actualizada exitosamente")}
-                  >
-                    Cambiar Contraseña
-                  </button>
-                </div>
+                  <div className="card-actions mb-10 pb-10 border-b border-base-content/5">
+                    <button
+                      type="submit"
+                      disabled={isPasswordUpdating}
+                      className="btn btn-primary rounded-xl px-10 normal-case font-bold shadow-lg"
+                    >
+                      {isPasswordUpdating ? (
+                        <span className="loading loading-spinner" />
+                      ) : (
+                        "Cambiar Contraseña"
+                      )}
+                    </button>
+                  </div>
+                </form>
 
                 <div>
                   <p className="text-xs font-bold opacity-30 uppercase tracking-widest mb-6">
@@ -279,20 +501,67 @@ const Configuracion = () => {
                   <div className="flex items-center justify-between p-6 bg-base-200/50 rounded-2xl border border-base-300">
                     <div className="flex items-center gap-4">
                       <div className="w-10 h-10 bg-primary/10 text-primary flex items-center justify-center rounded-xl font-bold">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-5 w-5"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                          />
                         </svg>
                       </div>
                       <div>
                         <p className="font-bold text-sm">Chrome en Windows</p>
-                        <p className="text-xs opacity-50 font-medium">Bogotá, Colombia — Sesión actual</p>
+                        <p className="text-xs opacity-50 font-medium">
+                          Bogotá, Colombia — Sesión actual
+                        </p>
                       </div>
                     </div>
                     <button
                       className="btn btn-outline btn-error rounded-xl btn-sm px-6 normal-case font-bold"
-                      onClick={() => toast.error("Sesión cerrada")}
+                      onClick={() => toast.error("Sesión cerrada (Demo)")}
                     >
                       Cerrar Sesión
+                    </button>
+                  </div>
+                </div>
+
+                {/* Zona de peligro */}
+                <div className="mt-12 p-8 rounded-[2rem] bg-gradient-to-br from-error/5 to-transparent border border-error/10 overflow-hidden relative">
+                  <div className="relative z-10 text-center sm:text-left">
+                    <h4 className="text-error font-black uppercase tracking-[0.2em] text-[10px] mb-4 flex items-center justify-center sm:justify-start gap-2">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                        />
+                      </svg>
+                      Zona de Peligro
+                    </h4>
+                    <p className="text-sm opacity-60 mb-6 font-medium max-w-xl leading-relaxed">
+                      Una vez que elimines tu cuenta, no hay vuelta atrás.
+                      Asegúrate de haber guardado tu información relevante.
+                      Todos tus datos serán borrados permanentemente.
+                    </p>
+                    <button
+                      className="btn btn-error btn-outline border-2 rounded-xl font-black px-10 normal-case hover:bg-error hover:text-white transition-all shadow-sm"
+                      onClick={() => setShowDeleteModal(true)}
+                    >
+                      Eliminar Cuenta
                     </button>
                   </div>
                 </div>
@@ -324,7 +593,11 @@ const Configuracion = () => {
                     {
                       label: "Zona horaria",
                       name: "zona",
-                      options: ["(UTC-05:00) Bogotá, Lima", "(UTC-06:00) Centro de México", "(UTC-08:00) Pacífico"],
+                      options: [
+                        "(UTC-05:00) Bogotá, Lima",
+                        "(UTC-06:00) Centro de México",
+                        "(UTC-08:00) Pacífico",
+                      ],
                     },
                     {
                       label: "Formato de fecha",
@@ -354,7 +627,9 @@ const Configuracion = () => {
                   <div className="flex items-center justify-between p-6 bg-base-200/50 rounded-2xl border border-base-300 hover:border-primary/30 transition-all">
                     <div>
                       <p className="font-bold text-sm">Modo oscuro</p>
-                      <p className="text-xs opacity-50 mt-0.5 font-medium">Cambia la apariencia de la aplicación</p>
+                      <p className="text-xs opacity-50 mt-0.5 font-medium">
+                        Cambia la apariencia de la aplicación
+                      </p>
                     </div>
                     <input
                       type="checkbox"
@@ -369,32 +644,87 @@ const Configuracion = () => {
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10 pt-8 border-t border-base-content/5">
                   <div className="flex flex-col items-center text-center p-8 bg-base-200/50 rounded-3xl border border-base-300">
-                    <span className="text-4xl font-black text-primary mb-2">v2.0</span>
-                    <span className="text-[10px] uppercase font-bold tracking-widest opacity-40">Versión App</span>
+                    <span className="text-4xl font-black text-primary mb-2">
+                      v2.0
+                    </span>
+                    <span className="text-[10px] uppercase font-bold tracking-widest opacity-40">
+                      Versión App
+                    </span>
                   </div>
                   <div className="flex flex-col items-center text-center p-8 bg-base-200/50 rounded-3xl border border-base-300">
-                    <span className="text-4xl font-black text-secondary mb-2">100%</span>
-                    <span className="text-[10px] uppercase font-bold tracking-widest opacity-40">Perfil Completo</span>
+                    <span className="text-4xl font-black text-secondary mb-2">
+                      100%
+                    </span>
+                    <span className="text-[10px] uppercase font-bold tracking-widest opacity-40">
+                      Perfil Completo
+                    </span>
                   </div>
                   <div className="flex flex-col items-center text-center p-8 bg-base-200/50 rounded-3xl border border-base-300">
-                    <span className="text-4xl font-black text-accent mb-2">Pro</span>
-                    <span className="text-[10px] uppercase font-bold tracking-widest opacity-40">Plan Actual</span>
+                    <span className="text-4xl font-black text-accent mb-2">
+                      Pro
+                    </span>
+                    <span className="text-[10px] uppercase font-bold tracking-widest opacity-40">
+                      Plan Actual
+                    </span>
                   </div>
                 </div>
 
                 <div className="card-actions mt-8">
                   <button
                     className="btn btn-primary rounded-xl px-10 normal-case font-bold shadow-lg"
-                    onClick={() => toast.success("Preferencias guardadas exitosamente")}
+                    onClick={() =>
+                      toast.success("Preferencias guardadas exitosamente")
+                    }
                   >
                     Guardar Preferencias
                   </button>
                 </div>
               </div>
             )}
-
           </div>
         </div>
+        {/* Modal de Eliminar Cuenta */}
+        {showDeleteModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+            <div className="bg-base-100 rounded-3xl p-8 max-w-md w-full shadow-2xl">
+              <h3 className="font-black text-2xl text-error mb-4">
+                ¡Peligro! Eliminar Cuenta
+              </h3>
+              <p className="opacity-70 text-sm mb-6">
+                Esta acción no se puede deshacer. Por favor ingresa tu
+                contraseña actual para confirmar la eliminación de tu cuenta.
+              </p>
+              <div className="form-control mb-6">
+                <input
+                  type="password"
+                  placeholder="Tu contraseña actual"
+                  className="input input-bordered w-full"
+                  value={deletePassword}
+                  onChange={(e) => setDeletePassword(e.target.value)}
+                />
+              </div>
+              <div className="flex gap-4 justify-end">
+                <button
+                  className="btn btn-ghost"
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setDeletePassword("");
+                  }}
+                  disabled={isDeleting}
+                >
+                  Cancelar
+                </button>
+                <button
+                  className="btn btn-error"
+                  onClick={handleDeleteAccount}
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? "Eliminando..." : "Confirmar Eliminación"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

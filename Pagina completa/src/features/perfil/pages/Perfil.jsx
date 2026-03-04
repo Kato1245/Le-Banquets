@@ -143,13 +143,14 @@ const Perfil = () => {
       const formData = new FormData();
       formData.append("avatar", file);
 
-      const res = await fetch(`${API_BASE_URL}/auth/avatar`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
+      // apiClient uses the interceptor for the token automatically
+      const res = await apiClient.post("/auth/avatar", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       });
 
-      const data = await res.json();
+      const data = res.data;
       if (data.success) {
         setFotoPerfil(data.data.foto_perfil);
         const updatedUser = { ...user, foto_perfil: data.data.foto_perfil };
@@ -159,8 +160,10 @@ const Perfil = () => {
       } else {
         toast.error(data.message || "Error al subir la imagen");
       }
-    } catch {
-      toast.error("Error de conexión al subir la imagen");
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Error de conexión al subir la imagen",
+      );
     } finally {
       setAvatarUploading(false);
       // Limpiar input para permitir volver a seleccionar el mismo archivo

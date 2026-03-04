@@ -326,6 +326,25 @@ class AuthController {
         });
       }
 
+      // Validar si el email nuevo ya existe
+      if (fieldsToUpdate.email) {
+        const existingPropietario = await Propietario.findOne({
+          email: fieldsToUpdate.email,
+          _id: { $ne: userId },
+        });
+        const existingUsuario = await Usuario.findOne({
+          email: fieldsToUpdate.email,
+          _id: { $ne: userId },
+        });
+
+        if (existingPropietario || existingUsuario) {
+          return res.status(409).json({
+            success: false,
+            message: "El correo electrónico ya está en uso por otra cuenta",
+          });
+        }
+      }
+
       const TargetModel =
         req.userType === "propietario" ? Propietario : Usuario;
       const updatedUser = await TargetModel.findByIdAndUpdate(
@@ -357,6 +376,62 @@ class AuthController {
       });
     }
   }
+
+  static async changePassword(req, res) {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(400).json({
+          success: false,
+          message: "Usuario no encontrado en el token",
+        });
+      }
+
+      const { actual, nueva } = req.body;
+      if (!actual || !nueva) {
+        return res.status(400).json({
+          success: false,
+          message: "Debe proporcionar la contraseña actual y la nueva",
+        });
+      }
+
+      const TargetModel =
+        req.userType === "propietario" ? Propietario : Usuario;
+      const user = await TargetModel.findById(userId);
+
+      if (!user) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Usuario no encontrado" });
+      }
+
+      const isPasswordValid = await bcrypt.compare(actual, user.contrasena);
+      if (!isPasswordValid) {
+        return res.status(401).json({
+          success: false,
+          message: "La contraseña actual es incorrecta",
+        });
+      }
+
+      const saltRounds = 10;
+      const hashedPassword = await bcrypt.hash(nueva, saltRounds);
+
+      await TargetModel.findByIdAndUpdate(userId, {
+        contrasena: hashedPassword,
+      });
+
+      res.json({
+        success: true,
+        message: "Contraseña actualizada correctamente",
+      });
+    } catch (error) {
+      console.error("Error cambiando contraseña:", error);
+      res
+        .status(500)
+        .json({ success: false, message: "Error interno del servidor" });
+    }
+  }
+
   static async uploadAvatar(req, res) {
     try {
       if (!req.file) {

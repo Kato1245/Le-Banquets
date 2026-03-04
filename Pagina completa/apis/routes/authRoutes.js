@@ -27,6 +27,9 @@ router.get("/profile", authenticateToken, AuthController.getProfile);
 
 router.put("/profile", authenticateToken, AuthController.updateProfile);
 
+// Cambiar contraseña
+router.put("/password", authenticateToken, AuthController.changePassword);
+
 // Subir / cambiar foto de perfil
 router.post(
   "/avatar",
