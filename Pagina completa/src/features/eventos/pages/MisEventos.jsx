@@ -26,31 +26,8 @@ const MisEventos = () => {
         const data = await response.json();
         setEventos(data.eventos || data.data || []);
       } else {
-        // Mock data para propósitos de visualización si el endpoint no está listo
-        setEventos([
-          {
-            id: 1,
-            nombre: "Boda de Ana y Carlos",
-            tipo: "Boda",
-            fecha: "2024-03-15",
-            hora: "16:00",
-            salon: "Salón Imperial",
-            invitados: 120,
-            estado: "confirmado",
-            precio: 28500000
-          },
-          {
-            id: 2,
-            nombre: "Conferencia Tech Solutions",
-            tipo: "Corporativo",
-            fecha: "2024-04-10",
-            hora: "09:00",
-            salon: "Salón Ejecutivo",
-            invitados: 150,
-            estado: "confirmado",
-            precio: 12000000
-          }
-        ]);
+        setEventos([]);
+        toast.error("No pudimos sincronizar tus eventos más recientes.");
       }
     } catch (error) {
       console.error("Error fetching eventos:", error);
@@ -159,7 +136,7 @@ const MisEventos = () => {
                     <div className="flex flex-col justify-between items-start lg:items-end border-l-0 lg:border-l border-base-content/5 lg:pl-10">
                       <div className="text-left lg:text-right mb-6 lg:mb-0">
                         <p className="text-xs font-bold opacity-30 uppercase tracking-widest mb-1">Inversión Final</p>
-                        <p className="text-4xl font-black text-primary tracking-tighter">${evento.precio.toLocaleString()}</p>
+                        <p className="text-4xl font-black text-primary tracking-tighter">${evento.precio.toLocaleString('es-CO')}</p>
                       </div>
 
                       <div className="bg-base-200/50 p-4 rounded-2xl border border-base-300 w-full lg:w-auto">
@@ -220,7 +197,7 @@ const MisEventos = () => {
             <span className="text-[10px] uppercase font-bold tracking-widest opacity-40">Proyectos Totales</span>
           </div>
           <div className="flex flex-col items-center text-center p-8 bg-base-200/50 rounded-3xl border border-base-300">
-            <span className="text-4xl font-black text-secondary mb-2 line-clamp-1">${(eventos.reduce((a, b) => a + b.precio, 0) / 1000).toLocaleString()}k</span>
+            <span className="text-4xl font-black text-secondary mb-2 line-clamp-1">${(eventos.reduce((a, b) => a + (b.precio || 0), 0) / 1000).toLocaleString('es-CO')}k</span>
             <span className="text-[10px] uppercase font-bold tracking-widest opacity-40">Presupuesto Gestionado</span>
           </div>
           <div className="flex flex-col items-center text-center p-8 bg-base-200/50 rounded-3xl border border-base-300">

@@ -211,7 +211,7 @@ const BanqueteForm = ({ onSuccess }) => {
                 {/* Precio Base */}
                 <div className="form-control">
                     <label className="label">
-                        <span className="label-text font-bold opacity-70">Precio Base ($ MXN) <span className="text-error">*</span></span>
+                        <span className="label-text font-bold opacity-70">Precio Base ($ COP) <span className="text-error">*</span></span>
                     </label>
                     <input
                         type="number"
@@ -399,7 +399,7 @@ const BanqueteCard = ({ banquete, onDelete }) => {
                     </div>
                     <div className="flex flex-col items-end">
                         <span className="text-[10px] uppercase font-black opacity-30 tracking-tight">Precio Base</span>
-                        <span className="text-xl font-extrabold text-primary">${(banquete.precio || banquete.precio_base || 0).toLocaleString()}</span>
+                        <span className="text-xl font-extrabold text-primary">${(banquete.precio || banquete.precio_base || 0).toLocaleString('es-CO')}</span>
                     </div>
                 </div>
                 <div className="card-actions justify-end mt-5 gap-2">
@@ -547,8 +547,8 @@ const MisBanquetes = () => {
                             key={tab.id}
                             onClick={() => switchTab(tab.id)}
                             className={`btn btn-sm rounded-xl gap-2 normal-case font-bold transition-all ${activeTab === tab.id
-                                    ? "btn-primary shadow-md"
-                                    : "btn-ghost opacity-60 hover:opacity-100"
+                                ? "btn-primary shadow-md"
+                                : "btn-ghost opacity-60 hover:opacity-100"
                                 }`}
                         >
                             {tab.icon}

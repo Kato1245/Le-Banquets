@@ -120,7 +120,7 @@ const Catering = () => {
                     <h2 className="card-title text-xl font-bold">{item.nombre}</h2>
                     <p className="text-sm opacity-70 mb-4">{item.descripcion}</p>
                     <div className="flex justify-between items-center mt-auto">
-                      <span className="text-xl font-extrabold text-primary">${item.precio_base.toLocaleString()} <small className="text-xs opacity-50 font-normal">/ pers.</small></span>
+                      <span className="text-xl font-extrabold text-primary">${item.precio_base.toLocaleString('es-CO')} <small className="text-xs opacity-50 font-normal">/ pers.</small></span>
                       <button
                         className="btn btn-outline btn-primary btn-sm rounded-lg"
                         onClick={() => addToSelection(item)}
@@ -157,7 +157,7 @@ const Catering = () => {
                         <li key={item.id} className="flex justify-between items-center bg-base-100 p-4 rounded-xl border border-base-300">
                           <div>
                             <p className="font-bold text-sm">{item.nombre}</p>
-                            <p className="text-xs opacity-60">${item.precio_base.toLocaleString()} c/u</p>
+                            <p className="text-xs opacity-60">${item.precio_base.toLocaleString('es-CO')} c/u</p>
                           </div>
                           <button
                             className="btn btn-ghost btn-circle btn-xs text-error"
@@ -173,7 +173,7 @@ const Catering = () => {
 
                     <div className="flex justify-between items-center">
                       <span className="text-lg font-bold opacity-70">Subtotal p/p</span>
-                      <span className="text-3xl font-extrabold text-primary">${calculateTotal().toLocaleString()}</span>
+                      <span className="text-3xl font-extrabold text-primary">${calculateTotal().toLocaleString('es-CO')}</span>
                     </div>
 
                     <div className="card-actions flex-col gap-3 mt-4">

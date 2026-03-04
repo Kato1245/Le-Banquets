@@ -165,7 +165,7 @@ const BanqueteDetail = () => {
                 <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-30 mb-2">Inversión Final Sugerida</p>
                 <div className="flex items-baseline justify-center lg:justify-start gap-2">
                   <span className="text-5xl font-black text-primary tracking-tighter">
-                    ${(banquete.precio_base || banquete.precio)?.toLocaleString()}
+                    ${(banquete.precio_base || banquete.precio)?.toLocaleString('es-CO')}
                   </span>
                   <span className="text-sm opacity-40 font-black uppercase">COP</span>
                 </div>
