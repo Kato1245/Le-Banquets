@@ -108,8 +108,11 @@ const Home = () => {
                             <p className="text-white/60 text-lg mb-10 font-medium max-w-md">
                                 Únete a la comunidad de propietarios más selecta de la región. Digitaliza tu negocio y llena tu calendario con eventos de alto nivel.
                             </p>
-                            <Link to="/registro-propietario" className="btn btn-primary btn-lg rounded-2xl px-12 font-black uppercase text-sm tracking-widest border-none">
-                                Registrar mi Empresa
+                            <Link
+                                to={user?.userType === 'propietario' || user?.role === 'propietario' ? '/mis-banquetes?action=nuevo' : '/registro-propietario'}
+                                className="btn btn-primary btn-lg rounded-2xl px-12 font-black uppercase text-sm tracking-widest border-none"
+                            >
+                                Agregar un Banquete
                             </Link>
                         </div>
 
