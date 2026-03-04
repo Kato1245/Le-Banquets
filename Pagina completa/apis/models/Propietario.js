@@ -30,6 +30,10 @@ const propietarioSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    foto_perfil: {
+      type: String,
+      default: null,
+    },
     rut: {
       type: String,
       default: null,
