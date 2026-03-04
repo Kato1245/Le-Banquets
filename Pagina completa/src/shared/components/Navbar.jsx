@@ -62,8 +62,7 @@ const Navbar = () => {
                   <span className="badge badge-info badge-xs">Propietario</span>
                 )}
               </li>
-              <li className="mt-2 text-base-content/70"><Link to="/perfil">Mi Perfil</Link></li>
-              <li className="text-base-content/70"><Link to="/mis-eventos">Mis Eventos</Link></li>
+              <li className="mt-2 text-base-content/70"><Link to="/mis-eventos">Mis Eventos</Link></li>
               {isPropietario && (
                 <li className="text-base-content/70"><Link to="/mis-banquetes">Mis Banquetes</Link></li>
               )}

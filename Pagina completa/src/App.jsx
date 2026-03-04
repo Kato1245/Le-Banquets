@@ -5,7 +5,7 @@ import Home from "./features/home/pages/Home";
 import Login from "./features/auth/pages/Login";
 import Registro from "./features/auth/pages/Registro";
 import RegistroPropietario from "./features/auth/pages/RegistroPropietario";
-import Perfil from "./features/perfil/pages/Perfil";
+
 import Banquetes from "./features/banquetes/pages/Salones";
 import MisEventos from "./features/eventos/pages/MisEventos";
 import Eventos from "./features/eventos/pages/Eventos";
@@ -60,9 +60,7 @@ function App() {
         <Route path="/eventos" element={<Eventos />} />
 
         {/* Rutas protegidas — requieren login */}
-        <Route path="/perfil" element={
-          <ProtectedRoute><Perfil /></ProtectedRoute>
-        } />
+
         <Route path="/mis-eventos" element={
           <ProtectedRoute><MisEventos /></ProtectedRoute>
         } />
