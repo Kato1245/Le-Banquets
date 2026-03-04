@@ -40,19 +40,15 @@ class AuthController {
         rut,
       } = req.body;
 
-      // Verificar si el usuario ya existe
-      let existingUser;
-      if (userType === "propietario") {
-        existingUser = await Propietario.findOne({ email });
-      } else {
-        existingUser = await Usuario.findOne({ email });
-      }
+      // Verificar si el usuario ya existe en cualquiera de los roles
+      const existingPropietario = await Propietario.findOne({ email });
+      const existingUsuario = await Usuario.findOne({ email });
 
-      if (existingUser) {
-        console.log("Usuario ya existe:", email);
+      if (existingPropietario || existingUsuario) {
+        console.log("Email ya registrado:", email);
         return res.status(409).json({
           success: false,
-          message: "El usuario ya existe con este email",
+          message: "El correo electrónico ya está registrado en el sistema",
         });
       }
 
@@ -415,22 +411,18 @@ class AuthController {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        return res
-          .status(400)
-          .json({
-            success: false,
-            message: "Usuario no encontrado en el token",
-          });
+        return res.status(400).json({
+          success: false,
+          message: "Usuario no encontrado en el token",
+        });
       }
 
       const { contrasena } = req.body;
       if (!contrasena) {
-        return res
-          .status(400)
-          .json({
-            success: false,
-            message: "La contraseña es requerida para eliminar la cuenta",
-          });
+        return res.status(400).json({
+          success: false,
+          message: "La contraseña es requerida para eliminar la cuenta",
+        });
       }
 
       // Verificar contraseña actual
