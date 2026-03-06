@@ -25,11 +25,38 @@ const Perfil = () => {
   const [deletePassword, setDeletePassword] = useState("");
   const [deletingAccount, setDeletingAccount] = useState(false);
 
+  const [activeTab, setActiveTab] = useState("informacion");
+  const [reservas, setReservas] = useState([]);
+  const [loadingReservas, setLoadingReservas] = useState(false);
+
   useEffect(() => {
     if (user) {
       loadUserData();
     }
   }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const loadReservas = async () => {
+    try {
+      setLoadingReservas(true);
+      const res = await fetch(`${API_BASE_URL}/reservas/mis-reservas`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setReservas(data.reservas || data.data || []);
+      }
+    } catch (error) {
+      console.error("Error cargando reservas:", error);
+    } finally {
+      setLoadingReservas(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === "reservas" && reservas.length === 0) {
+      loadReservas();
+    }
+  }, [activeTab]);
 
   const loadUserData = async () => {
     try {
@@ -143,14 +170,13 @@ const Perfil = () => {
       const formData = new FormData();
       formData.append("avatar", file);
 
-      // apiClient uses the interceptor for the token automatically
-      const res = await apiClient.post("/auth/avatar", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+      const res = await fetch(`${API_BASE_URL}/auth/avatar`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
       });
 
-      const data = res.data;
+      const data = await res.json();
       if (data.success) {
         setFotoPerfil(data.data.foto_perfil);
         const updatedUser = { ...user, foto_perfil: data.data.foto_perfil };
@@ -351,165 +377,234 @@ const Perfil = () => {
             </div>
           </div>
 
-          {/* Panel Derecho: Formulario de Información */}
-          <div className="lg:col-span-2">
-            <div className="card bg-base-100 shadow-2xl border border-base-200">
-              <div className="card-body p-8">
-                <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-6 w-6 text-primary"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                    />
-                  </svg>
-                  Información Personal
-                </h3>
+          {/* Panel Derecho: Tabs e Información */}
+          <div className="lg:col-span-2 space-y-6">
+            <div className="flex bg-base-200 p-1.5 rounded-2xl w-full sm:w-fit border border-base-300 shadow-inner">
+              <button
+                className={`flex-1 sm:flex-none px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === 'informacion' ? 'bg-base-100 shadow-sm text-primary' : 'text-base-content/60 hover:text-base-content'}`}
+                onClick={() => setActiveTab('informacion')}
+              >
+                Información Personal
+              </button>
+              <button
+                className={`flex-1 sm:flex-none px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === 'reservas' ? 'bg-base-100 shadow-sm text-primary' : 'text-base-content/60 hover:text-base-content'}`}
+                onClick={() => setActiveTab('reservas')}
+              >
+                Mis Reservas
+              </button>
+            </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="form-control">
-                    <label className="label">
-                      <span className="label-text font-bold opacity-70">
-                        Nombre Completo
-                      </span>
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        name="nombre"
-                        value={userData.nombre}
-                        onChange={handleChange}
-                        className="input input-bordered focus:input-primary transition-all rounded-xl"
-                        placeholder="Ej. Juan Pérez"
+            {activeTab === "informacion" && (
+              <div className="card bg-base-100 shadow-2xl border border-base-200 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                <div className="card-body p-8">
+                  <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-6 w-6 text-primary"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                       />
-                    ) : (
-                      <div className="p-3 bg-base-200 rounded-xl font-medium">
-                        {userData.nombre || "—"}
-                      </div>
-                    )}
+                    </svg>
+                    Información Personal
+                  </h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="form-control">
+                      <label className="label">
+                        <span className="label-text font-bold opacity-70">
+                          Nombre Completo
+                        </span>
+                      </label>
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          name="nombre"
+                          value={userData.nombre}
+                          onChange={handleChange}
+                          className="input input-bordered focus:input-primary transition-all rounded-xl"
+                          placeholder="Ej. Juan Pérez"
+                        />
+                      ) : (
+                        <div className="p-3 bg-base-200 rounded-xl font-medium">
+                          {userData.nombre || "—"}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="form-control">
+                      <label className="label">
+                        <span className="label-text font-bold opacity-70">
+                          Correo Electrónico
+                        </span>
+                      </label>
+                      {isEditing ? (
+                        <input
+                          type="email"
+                          name="email"
+                          value={userData.email}
+                          onChange={handleChange}
+                          className="input input-bordered focus:input-primary transition-all rounded-xl"
+                          placeholder="tu@correo.com"
+                        />
+                      ) : (
+                        <div className="p-3 bg-base-200 rounded-xl font-medium">
+                          {userData.email}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="form-control">
+                      <label className="label">
+                        <span className="label-text font-bold opacity-70">
+                          Teléfono Móvil
+                        </span>
+                      </label>
+                      {isEditing ? (
+                        <input
+                          type="tel"
+                          name="telefono"
+                          value={userData.telefono}
+                          onChange={handleChange}
+                          className="input input-bordered focus:input-primary transition-all rounded-xl"
+                          placeholder="+52 000 000 0000"
+                        />
+                      ) : (
+                        <div className="p-3 bg-base-200 rounded-xl font-medium">
+                          {userData.telefono || "No registrado"}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="form-control">
+                      <label className="label">
+                        <span className="label-text font-bold opacity-70">
+                          Fecha de Nacimiento
+                        </span>
+                      </label>
+                      {isEditing ? (
+                        <input
+                          type="date"
+                          name="fecha_nacimiento"
+                          value={userData.fecha_nacimiento}
+                          onChange={handleChange}
+                          className="input input-bordered focus:input-primary transition-all rounded-xl"
+                        />
+                      ) : (
+                        <div className="p-3 bg-base-200 rounded-xl font-medium">
+                          {userData.fecha_nacimiento || "No registrada"}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="form-control md:col-span-2">
+                      <label className="label">
+                        <span className="label-text font-bold opacity-70">
+                          Documento de Identidad (DNI/INE/Cédula)
+                        </span>
+                      </label>
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          name="documento"
+                          value={userData.documento}
+                          onChange={handleChange}
+                          className="input input-bordered focus:input-primary transition-all rounded-xl w-full"
+                          placeholder="Número de documento"
+                        />
+                      ) : (
+                        <div className="p-3 bg-base-200 rounded-xl font-medium">
+                          {userData.documento || "No especificado"}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="form-control">
-                    <label className="label">
-                      <span className="label-text font-bold opacity-70">
-                        Correo Electrónico
-                      </span>
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="email"
-                        name="email"
-                        value={userData.email}
-                        onChange={handleChange}
-                        className="input input-bordered focus:input-primary transition-all rounded-xl"
-                        placeholder="tu@correo.com"
-                      />
-                    ) : (
-                      <div className="p-3 bg-base-200 rounded-xl font-medium">
-                        {userData.email}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="form-control">
-                    <label className="label">
-                      <span className="label-text font-bold opacity-70">
-                        Teléfono Móvil
-                      </span>
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="tel"
-                        name="telefono"
-                        value={userData.telefono}
-                        onChange={handleChange}
-                        className="input input-bordered focus:input-primary transition-all rounded-xl"
-                        placeholder="+52 000 000 0000"
-                      />
-                    ) : (
-                      <div className="p-3 bg-base-200 rounded-xl font-medium">
-                        {userData.telefono || "No registrado"}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="form-control">
-                    <label className="label">
-                      <span className="label-text font-bold opacity-70">
-                        Fecha de Nacimiento
-                      </span>
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="date"
-                        name="fecha_nacimiento"
-                        value={userData.fecha_nacimiento}
-                        onChange={handleChange}
-                        className="input input-bordered focus:input-primary transition-all rounded-xl"
-                      />
-                    ) : (
-                      <div className="p-3 bg-base-200 rounded-xl font-medium">
-                        {userData.fecha_nacimiento || "No registrada"}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="form-control md:col-span-2">
-                    <label className="label">
-                      <span className="label-text font-bold opacity-70">
-                        Documento de Identidad (DNI/INE/Cédula)
-                      </span>
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        name="documento"
-                        value={userData.documento}
-                        onChange={handleChange}
-                        className="input input-bordered focus:input-primary transition-all rounded-xl w-full"
-                        placeholder="Número de documento"
-                      />
-                    ) : (
-                      <div className="p-3 bg-base-200 rounded-xl font-medium">
-                        {userData.documento || "No especificado"}
-                      </div>
+                  <div className="card-actions justify-end mt-10 gap-3">
+                    {isEditing && (
+                      <>
+                        <button
+                          onClick={() => setIsEditing(false)}
+                          className="btn btn-ghost rounded-xl px-8"
+                          disabled={saving}
+                        >
+                          Descartar
+                        </button>
+                        <button
+                          onClick={handleSave}
+                          className="btn btn-primary rounded-xl px-8 shadow-lg min-w-[160px]"
+                          disabled={saving}
+                        >
+                          {saving ? (
+                            <span className="loading loading-spinner loading-sm"></span>
+                          ) : (
+                            "Guardar Cambios"
+                          )}
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>
+              </div>
+            )}
 
-                <div className="card-actions justify-end mt-10 gap-3">
-                  {isEditing && (
-                    <>
-                      <button
-                        onClick={() => setIsEditing(false)}
-                        className="btn btn-ghost rounded-xl px-8"
-                        disabled={saving}
-                      >
-                        Descartar
-                      </button>
-                      <button
-                        onClick={handleSave}
-                        className="btn btn-primary rounded-xl px-8 shadow-lg min-w-[160px]"
-                        disabled={saving}
-                      >
-                        {saving ? (
-                          <span className="loading loading-spinner loading-sm"></span>
-                        ) : (
-                          "Guardar Cambios"
-                        )}
-                      </button>
-                    </>
+            {activeTab === "reservas" && (
+              <div className="card bg-base-100 shadow-2xl border border-base-200 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                <div className="card-body p-8">
+                  <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    Mis Reservas
+                  </h3>
+
+                  {loadingReservas ? (
+                    <div className="flex flex-col items-center justify-center p-10 opacity-60">
+                      <span className="loading loading-spinner loading-md mb-4 text-primary"></span>
+                      <p className="font-medium text-sm">Cargando tu historial de reservas...</p>
+                    </div>
+                  ) : reservas.length === 0 ? (
+                    <div className="text-center p-10 bg-base-200/50 rounded-2xl border border-base-content/5">
+                      <span className="text-5xl block mb-4">🎟️</span>
+                      <h4 className="text-lg font-bold mb-2">Aún no tienes reservas</h4>
+                      <p className="text-sm opacity-60 mb-6">Explora nuestros salones y banquetes para planificar tu próximo evento soñado.</p>
+                      <a href="/banquetes" className="btn btn-primary rounded-xl px-8 normal-case font-bold">Explorar Espacios</a>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {reservas.map((reserva, idx) => (
+                        <div key={reserva._id || idx} className="bg-base-200/50 rounded-2xl p-5 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center border border-base-content/5 hover:border-primary/30 transition-colors">
+                          <div>
+                            <div className="flex items-center gap-3 mb-2">
+                              <h4 className="font-bold text-lg">{reserva.banquete?.nombre || "Banquete Reservado"}</h4>
+                              <div className={`badge badge-sm uppercase font-bold text-[10px] tracking-widest ${reserva.estado === 'confirmada' ? 'badge-success' : reserva.estado === 'cancelada' ? 'badge-error' : 'badge-warning'}`}>
+                                {reserva.estado || 'Pendiente'}
+                              </div>
+                            </div>
+                            <p className="text-sm opacity-70 mb-1">
+                              <strong>Fecha del Evento:</strong> {reserva.fecha_evento ? new Date(reserva.fecha_evento).toLocaleDateString() : 'Por definir'}
+                            </p>
+                            <p className="text-sm opacity-70">
+                              <strong>Invitados:</strong> {reserva.numero_invitados || 0} personas
+                            </p>
+                          </div>
+                          <div className="text-right w-full sm:w-auto mt-4 sm:mt-0 pt-4 sm:pt-0 border-t sm:border-t-0 border-base-content/10">
+                            <p className="text-[10px] uppercase font-bold opacity-50 tracking-widest mb-1">Costo Estimado</p>
+                            <p className="text-xl font-black text-primary">${(reserva.precio_total || 0).toLocaleString('es-CO')}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>

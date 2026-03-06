@@ -41,12 +41,31 @@ const INITIAL_FORM = {
     imagenes: [],
 };
 
-const BanqueteForm = ({ onSuccess }) => {
+const BanqueteForm = ({ onSuccess, banqueteEdit }) => {
     const { token } = useAuth();
     const [form, setForm] = useState(INITIAL_FORM);
     const [errors, setErrors] = useState({});
     const [submitting, setSubmitting] = useState(false);
     const [imagePreview, setImagePreview] = useState([]);
+
+    useEffect(() => {
+        if (banqueteEdit) {
+            setForm({
+                nombre: banqueteEdit.nombre || "",
+                descripcion: banqueteEdit.descripcion || "",
+                ubicacion: banqueteEdit.ubicacion || "",
+                capacidad: banqueteEdit.capacidad || "",
+                tipo: banqueteEdit.tipo || "general",
+                precio_base: banqueteEdit.precio_base || banqueteEdit.precio || "",
+                imagenes: [],
+            });
+            setImagePreview(banqueteEdit.imagenes || []);
+        } else {
+            setForm(INITIAL_FORM);
+            setImagePreview([]);
+        }
+        setErrors({});
+    }, [banqueteEdit]);
 
     const validate = () => {
         const e = {};
@@ -96,8 +115,13 @@ const BanqueteForm = ({ onSuccess }) => {
             formData.append("precio_base", form.precio_base);
             form.imagenes.forEach(img => formData.append("imagenes", img));
 
-            const res = await fetch(`${API_BASE_URL}/banquetes`, {
-                method: "POST",
+            const method = banqueteEdit ? "PUT" : "POST";
+            const url = banqueteEdit
+                ? `${API_BASE_URL}/banquetes/${banqueteEdit._id}`
+                : `${API_BASE_URL}/banquetes`;
+
+            const res = await fetch(url, {
+                method,
                 headers: { Authorization: `Bearer ${token}` },
                 body: formData,
             });
@@ -105,7 +129,7 @@ const BanqueteForm = ({ onSuccess }) => {
             const data = await res.json();
 
             if (res.ok) {
-                toast.success("¡Banquete publicado exitosamente!");
+                toast.success(banqueteEdit ? "¡Banquete actualizado exitosamente!" : "¡Banquete publicado exitosamente!");
                 setForm(INITIAL_FORM);
                 setImagePreview([]);
                 setErrors({});
@@ -266,8 +290,8 @@ const BanqueteForm = ({ onSuccess }) => {
                     disabled={submitting}
                 >
                     {submitting
-                        ? <><span className="loading loading-spinner loading-sm"></span> Publicando...</>
-                        : "✓ Publicar Banquete"
+                        ? <><span className="loading loading-spinner loading-sm"></span> Guardando...</>
+                        : (banqueteEdit ? "✓ Actualizar Banquete" : "✓ Publicar Banquete")
                     }
                 </button>
             </div>
@@ -356,7 +380,7 @@ const PerfilEmpresaPanel = ({ user }) => {
 };
 
 // ─── Tarjeta de Banquete ───────────────────────────────────────────────────────
-const BanqueteCard = ({ banquete, onDelete }) => {
+const BanqueteCard = ({ banquete, onDelete, onEdit }) => {
     const [deleting, setDeleting] = useState(false);
 
     const handleDelete = async () => {
@@ -415,7 +439,7 @@ const BanqueteCard = ({ banquete, onDelete }) => {
                     </button>
                     <button
                         className="btn btn-outline btn-primary btn-sm rounded-xl normal-case font-bold"
-                        onClick={() => toast.info("Módulo de edición próximamente")}
+                        onClick={() => onEdit(banquete)}
                     >
                         Editar
                     </button>
@@ -458,6 +482,7 @@ const MisBanquetes = () => {
     const [banquetes, setBanquetes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const [banqueteEdit, setBanqueteEdit] = useState(null);
 
     // Sincronizar la pestaña con el query param ?action=nuevo cuando cambia la URL
     useEffect(() => {
@@ -517,11 +542,20 @@ const MisBanquetes = () => {
     };
 
     const handleFormSuccess = () => {
+        setBanqueteEdit(null);
         setActiveTab("mis-banquetes");
         fetchBanquetes();
     };
 
-    const switchTab = (tabId) => setActiveTab(tabId);
+    const handleEdit = (banquete) => {
+        setBanqueteEdit(banquete);
+        setActiveTab("agregar");
+    };
+
+    const switchTab = (tabId) => {
+        if (tabId !== "agregar") setBanqueteEdit(null);
+        setActiveTab(tabId);
+    };
 
     return (
         <div className="min-h-screen bg-base-100 py-12">
@@ -608,26 +642,36 @@ const MisBanquetes = () => {
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                                 {banquetes.map(b => (
-                                    <BanqueteCard key={b._id} banquete={b} onDelete={handleDelete} />
+                                    <BanqueteCard key={b._id} banquete={b} onDelete={handleDelete} onEdit={handleEdit} />
                                 ))}
                             </div>
                         )}
                     </div>
                 )}
 
-                {/* ── Pestaña: Agregar Banquete ── */}
+                {/* ── Pestaña: Agregar/Editar Banquete ── */}
                 {activeTab === "agregar" && (
                     <div>
-                        <div className="mb-8">
-                            <h2 className="text-2xl font-bold mb-1">Publicar Nuevo Banquete</h2>
-                            <p className="text-sm opacity-50 font-medium">
-                                Completa todos los campos. Los campos marcados con <span className="text-error font-bold">*</span> son obligatorios.
-                            </p>
+                        <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                            <div>
+                                <h2 className="text-2xl font-bold mb-1">{banqueteEdit ? "Editar Banquete" : "Publicar Nuevo Banquete"}</h2>
+                                <p className="text-sm opacity-50 font-medium">
+                                    Completa todos los campos. Los campos marcados con <span className="text-error font-bold">*</span> son obligatorios.
+                                </p>
+                            </div>
+                            {banqueteEdit && (
+                                <button
+                                    className="btn btn-ghost border-base-content/20 rounded-xl"
+                                    onClick={() => { setBanqueteEdit(null); setActiveTab("mis-banquetes"); }}
+                                >
+                                    Cancelar Edición
+                                </button>
+                            )}
                         </div>
 
                         <div className="card bg-base-100 shadow-xl border border-base-200 rounded-[2.5rem]">
                             <div className="card-body p-8 md:p-12">
-                                <BanqueteForm onSuccess={handleFormSuccess} />
+                                <BanqueteForm onSuccess={handleFormSuccess} banqueteEdit={banqueteEdit} />
                             </div>
                         </div>
                     </div>
