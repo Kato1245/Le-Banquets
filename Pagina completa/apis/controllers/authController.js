@@ -9,11 +9,6 @@ const loginAttempts = new Map();
 const MAX_ATTEMPTS = 3;
 const LOCK_TIME = 5 * 60 * 1000; // 5 minutos en milisegundos
 
-// Función para generar auth_id
-const generateAuthId = () => {
-  return "auth_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
-};
-
 // Función para obtener IP del cliente
 const getClientIP = (req) => {
   return (
@@ -64,7 +59,6 @@ class AuthController {
         documento: documento || null,
         telefono: telefono || null,
         fecha_nacimiento: fecha_nacimiento || null,
-        auth_id: generateAuthId(),
         esta_activo: true,
         esta_verificado: false,
       };
