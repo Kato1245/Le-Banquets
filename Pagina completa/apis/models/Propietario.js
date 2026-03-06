@@ -38,11 +38,6 @@ const propietarioSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
-    auth_id: {
-      type: String,
-      required: true,
-      unique: true,
-    },
     esta_activo: {
       type: Boolean,
       default: true,

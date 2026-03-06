@@ -8,8 +8,8 @@ const banqueteSchema = new mongoose.Schema({
   },
   direccion: {
     type: String,
-    required: true,
     trim: true,
+    default: null,
   },
   ubicacion: {
     type: String,
