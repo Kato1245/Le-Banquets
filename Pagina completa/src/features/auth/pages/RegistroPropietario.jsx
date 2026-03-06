@@ -9,7 +9,7 @@ const RegistroPropietario = () => {
             <div
                 className="absolute inset-0 z-0 bg-cover bg-center"
                 style={{
-                    backgroundImage: "url(https://images.unsplash.com/photo-1441986300917-64674bd600d8?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80)"
+                    backgroundImage: "url(https://images.unsplash.com/photo-1519167758481-83f550bb49b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80)"
                 }}
             >
                 <div className="absolute inset-0 bg-gradient-to-br from-black/90 via-black/40 to-black/90"></div>
