@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { getImageUrl } from "../../../shared/utils/imageUtils";
 
 const BanqueteCarousel = ({ images = [] }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -7,9 +8,7 @@ const BanqueteCarousel = ({ images = [] }) => {
     if (!images.length) return;
 
     const interval = setInterval(() => {
-      setCurrentIndex((prev) =>
-        prev === images.length - 1 ? 0 : prev + 1
-      );
+      setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
     }, 3000);
 
     return () => clearInterval(interval);
@@ -20,7 +19,7 @@ const BanqueteCarousel = ({ images = [] }) => {
   return (
     <div className="relative w-full h-full overflow-hidden flex items-center justify-center bg-black/5">
       <img
-        src={images[currentIndex]}
+        src={getImageUrl(images[currentIndex])}
         alt="Banquete Preview"
         className="w-full h-full object-cover transition-opacity duration-700 ease-in-out"
         style={{ opacity: 1 }}
@@ -31,8 +30,9 @@ const BanqueteCarousel = ({ images = [] }) => {
           {images.map((_, idx) => (
             <div
               key={idx}
-              className={`h-1.5 rounded-full transition-all duration-300 ${idx === currentIndex ? 'w-6 bg-primary' : 'w-1.5 bg-white/50'
-                }`}
+              className={`h-1.5 rounded-full transition-all duration-300 ${
+                idx === currentIndex ? "w-6 bg-primary" : "w-1.5 bg-white/50"
+              }`}
             />
           ))}
         </div>
