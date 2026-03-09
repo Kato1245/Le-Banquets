@@ -5,6 +5,7 @@ import { useAuth } from "../../../context/AuthContext";
 import toast from "react-hot-toast";
 import API_BASE_URL from "../../../config/api";
 import EmptyState from "../../../shared/components/EmptyState";
+import { getImageUrl } from "../../../shared/utils/imageUtils";
 
 // ─── Iconos SVG inline ────────────────────────────────────────────────────────
 const IconBanquet = () => (
@@ -576,10 +577,7 @@ const BanqueteCard = ({ banquete, onDelete }) => {
     <div className="card bg-base-100 shadow-xl border border-base-200 overflow-hidden group hover:shadow-2xl transition-all duration-500 rounded-[2rem]">
       <figure className="h-56 relative overflow-hidden">
         <img
-          src={
-            banquete.imagenes?.[0] ||
-            "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80"
-          }
+          src={getImageUrl(banquete.imagenes?.[0])}
           alt={banquete.nombre}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
         />
