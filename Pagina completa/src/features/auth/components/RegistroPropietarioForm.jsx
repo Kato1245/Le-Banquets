@@ -56,8 +56,8 @@ const RegistroPropietarioForm = () => {
     const labelClasses = "label-text font-bold opacity-70 mb-1 block pl-1";
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+            <div className="flex flex-col gap-4">
                 {/* Nombre */}
                 <div className="form-control">
                     <label className="label py-1"><span className={labelClasses}>Nombre Completo *</span></label>
@@ -129,25 +129,25 @@ const RegistroPropietarioForm = () => {
                     />
                     {errors.password && <p className="text-error mt-1 text-xs font-bold">{errors.password.message}</p>}
                 </div>
-            </div>
 
-            {/* Confirmar Password (ancho completo) */}
-            <div className="form-control">
-                <label className="label py-1"><span className={labelClasses}>Confirmar Contraseña *</span></label>
-                <input
-                    {...register("confirmPassword", {
-                        required: "Verifica tu contraseña",
-                        validate: (value) => value === password.current || "Las contraseñas no coinciden"
-                    })}
-                    type="password" placeholder="••••••••"
-                    className={inputClasses}
-                />
-                {errors.confirmPassword && <p className="text-error mt-1 text-xs font-bold">{errors.confirmPassword.message}</p>}
+                {/* Confirmar Password */}
+                <div className="form-control">
+                    <label className="label py-1"><span className={labelClasses}>Confirmar Contraseña *</span></label>
+                    <input
+                        {...register("confirmPassword", {
+                            required: "Verifica tu contraseña",
+                            validate: (value) => value === password.current || "Las contraseñas no coinciden"
+                        })}
+                        type="password" placeholder="••••••••"
+                        className={inputClasses}
+                    />
+                    {errors.confirmPassword && <p className="text-error mt-1 text-xs font-bold">{errors.confirmPassword.message}</p>}
+                </div>
             </div>
 
             {/* Captcha */}
-            <div className="form-control pt-4">
-                <div className="flex justify-center bg-base-300/30 p-4 rounded-2xl border border-base-content/5">
+            <div className="form-control pt-2">
+                <div className="flex justify-center bg-base-300/30 p-4 rounded-2xl border border-base-content/5 scale-90 sm:scale-100">
                     <ReCAPTCHA sitekey={RECAPTCHA_SITE_KEY} onChange={handleCaptchaChange} theme="light" />
                 </div>
             </div>
