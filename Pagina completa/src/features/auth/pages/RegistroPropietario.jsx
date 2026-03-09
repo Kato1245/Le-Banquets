@@ -16,15 +16,15 @@ const RegistroPropietario = () => {
             </div>
 
             {/* Content Container */}
-            <div className="relative z-10 w-full max-w-4xl animate-in fade-in slide-in-from-bottom-5 duration-700">
-                <div className="bg-base-100/95 backdrop-blur-3xl p-10 md:p-16 rounded-[3rem] shadow-2xl border border-white/20">
-                    <div className="text-center mb-12">
+            <div className="relative z-10 w-full max-w-xl animate-in fade-in slide-in-from-bottom-5 duration-700">
+                <div className="bg-base-100/95 backdrop-blur-3xl p-10 md:p-14 rounded-[2.5rem] shadow-2xl border border-white/20">
+                    <div className="text-center mb-10">
                         <div className="badge badge-primary py-4 px-8 rounded-full mb-6 font-black uppercase tracking-[0.4em] text-[10px] border-2">
                             Business Partnership
                         </div>
-                        <h2 className="text-5xl font-black text-primary tracking-tighter mb-4 uppercase">Expande tu Alcance</h2>
-                        <p className="text-lg text-base-content/60 font-medium max-w-xl mx-auto">
-                            Registra tu salón o casa de banquetes en la plataforma más exclusiva y conecta con clientes de alto nivel.
+                        <h2 className="text-4xl font-black text-primary tracking-tighter mb-4 uppercase">Únete como Aliado</h2>
+                        <p className="text-lg text-base-content/60 font-medium max-w-md mx-auto">
+                            Registra tu salón o casa de banquetes en la plataforma más exclusiva.
                         </p>
                     </div>
 
@@ -33,7 +33,7 @@ const RegistroPropietario = () => {
                     </div>
 
                     <div className="mt-12 pt-10 border-t border-base-content/5 flex flex-col items-center gap-6">
-                        <p className="text-sm font-medium">
+                        <p className="text-sm font-medium text-center">
                             ¿Ya formas parte de la red? <Link to="/login" className="text-primary hover:underline font-black transition-all">Ingresar al Dashboard</Link>
                         </p>
                     </div>

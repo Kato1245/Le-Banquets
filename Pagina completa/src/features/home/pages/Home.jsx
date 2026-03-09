@@ -136,7 +136,7 @@ const Home = () => {
             {/* Refined Footer */}
             <footer className="bg-base-100 border-t border-base-content/5 py-20 px-6">
                 <div className="container mx-auto">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-16 mb-20">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-16 mb-20">
                         <div className="col-span-1 md:col-span-1">
                             <h2 className="text-2xl font-black tracking-tighter mb-8 uppercase text-primary">Le Banquets</h2>
                             <p className="text-sm opacity-50 font-medium leading-relaxed">
@@ -149,14 +149,6 @@ const Home = () => {
                                 <li><Link to="/banquetes" className="hover:text-primary transition-colors">Todos los Salones</Link></li>
                                 <li><Link to="/catering" className="hover:text-primary transition-colors">Experiencia Catering</Link></li>
                                 <li><Link to="/eventos" className="hover:text-primary transition-colors">Tipos de Evento</Link></li>
-                            </ul>
-                        </div>
-                        <div className="space-y-6">
-                            <h4 className="text-[10px] font-black uppercase tracking-widest opacity-40">Compañía</h4>
-                            <ul className="space-y-4 font-bold text-sm">
-                                <li><a href="#" className="hover:text-primary transition-colors">Nuestra Visión</a></li>
-                                <li><a href="#" className="hover:text-primary transition-colors">Alianzas</a></li>
-                                <li><a href="#" className="hover:text-primary transition-colors">Prensa</a></li>
                             </ul>
                         </div>
                         <div className="space-y-6">

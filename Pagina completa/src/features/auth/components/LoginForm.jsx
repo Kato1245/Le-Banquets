@@ -21,7 +21,7 @@ const LoginForm = () => {
                 email: data.email,
                 password: data.password
             });
-            
+
             // Si el login tiene éxito (no arroja error), redirigimos
             reset();
             navigate('/');
