@@ -94,6 +94,7 @@ const BanqueteForm = ({ onSuccess, banqueteEdit }) => {
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState([]);
+  const [existingImages, setExistingImages] = useState([]);
 
   useEffect(() => {
     if (banqueteEdit) {
@@ -106,9 +107,11 @@ const BanqueteForm = ({ onSuccess, banqueteEdit }) => {
         precio_base: banqueteEdit.precio_base || banqueteEdit.precio || "",
         imagenes: [],
       });
+      setExistingImages(banqueteEdit.imagenes || []);
       setImagePreview(banqueteEdit.imagenes || []);
     } else {
       setForm(INITIAL_FORM);
+      setExistingImages([]);
       setImagePreview([]);
     }
     setErrors({});
@@ -125,6 +128,12 @@ const BanqueteForm = ({ onSuccess, banqueteEdit }) => {
       e.capacidad = "La capacidad debe ser al menos 1 persona.";
     if (form.precio_base === "" || parseFloat(form.precio_base) < 0)
       e.precio_base = "Ingresa un precio base válido (≥ 0).";
+
+    const totalImages = existingImages.length + form.imagenes.length;
+    if (totalImages === 0) {
+      e.imagenes = "Debes subir al menos una imagen del espacio.";
+    }
+
     return e;
   };
 
@@ -135,10 +144,38 @@ const BanqueteForm = ({ onSuccess, banqueteEdit }) => {
   };
 
   const handleImages = (e) => {
-    const files = Array.from(e.target.files).slice(0, 5);
-    setForm((prev) => ({ ...prev, imagenes: files }));
-    const previews = files.map((f) => URL.createObjectURL(f));
-    setImagePreview(previews);
+    const selectedFiles = Array.from(e.target.files);
+    const totalCurrent = existingImages.length + form.imagenes.length;
+
+    if (totalCurrent + selectedFiles.length > 5) {
+      toast.error("Solo puedes subir un máximo de 5 imágenes en total.");
+      return;
+    }
+
+    const newFiles = [...form.imagenes, ...selectedFiles];
+    setForm((prev) => ({ ...prev, imagenes: newFiles }));
+
+    if (errors.imagenes) {
+      setErrors((prev) => ({ ...prev, imagenes: undefined }));
+    }
+
+    const newPreviews = selectedFiles.map((f) => URL.createObjectURL(f));
+    setImagePreview((prev) => [...prev, ...newPreviews]);
+  };
+
+  const removeImage = (index) => {
+    // Si el índice es de una imagen existente
+    if (index < existingImages.length) {
+      const updatedExisting = existingImages.filter((_, i) => i !== index);
+      setExistingImages(updatedExisting);
+      setImagePreview((prev) => prev.filter((_, i) => i !== index));
+    } else {
+      // Si el índice es de una imagen recién seleccionada
+      const localIndex = index - existingImages.length;
+      const updatedFiles = form.imagenes.filter((_, i) => i !== localIndex);
+      setForm((prev) => ({ ...prev, imagenes: updatedFiles }));
+      setImagePreview((prev) => prev.filter((_, i) => i !== index));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -159,6 +196,11 @@ const BanqueteForm = ({ onSuccess, banqueteEdit }) => {
       formData.append("capacidad", form.capacidad);
       formData.append("tipo", form.tipo);
       formData.append("precio_base", form.precio_base);
+
+      if (banqueteEdit) {
+        formData.append("imagenes_existentes", JSON.stringify(existingImages));
+      }
+
       form.imagenes.forEach((img) => formData.append("imagenes", img));
 
       const method = banqueteEdit ? "PUT" : "POST";
@@ -175,8 +217,13 @@ const BanqueteForm = ({ onSuccess, banqueteEdit }) => {
       const data = await res.json();
 
       if (res.ok) {
-        toast.success("¡Banquete publicado exitosamente!");
+        toast.success(
+          banqueteEdit
+            ? "¡Banquete actualizado exitosamente!"
+            : "¡Banquete publicado exitosamente!",
+        );
         setForm(INITIAL_FORM);
+        setExistingImages([]);
         setImagePreview([]);
         setErrors({});
         if (onSuccess) onSuccess();
@@ -343,20 +390,46 @@ const BanqueteForm = ({ onSuccess, banqueteEdit }) => {
             accept="image/*"
             multiple
             onChange={handleImages}
-            className="file-input file-input-bordered file-input-primary rounded-xl w-full"
+            className={`file-input file-input-bordered file-input-primary rounded-xl w-full ${errors.imagenes ? "file-input-error" : ""}`}
           />
+          {errors.imagenes && (
+            <span className="label-text-alt text-error mt-1 font-medium italic">
+              {errors.imagenes}
+            </span>
+          )}
           {imagePreview.length > 0 && (
             <div className="flex gap-3 mt-4 flex-wrap">
               {imagePreview.map((src, i) => (
                 <div
                   key={i}
-                  className="relative w-24 h-24 rounded-2xl overflow-hidden border-2 border-primary/30 shadow-md"
+                  className="relative w-24 h-24 rounded-2xl overflow-hidden border-2 border-primary/30 shadow-md group"
                 >
                   <img
                     src={src}
                     alt={`Preview ${i + 1}`}
                     className="w-full h-full object-cover"
                   />
+                  <button
+                    type="button"
+                    onClick={() => removeImage(i)}
+                    className="absolute top-1 right-1 bg-error text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="Eliminar imagen"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-3 w-3"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={4}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
                 </div>
               ))}
             </div>
@@ -371,6 +444,7 @@ const BanqueteForm = ({ onSuccess, banqueteEdit }) => {
           onClick={() => {
             setForm(INITIAL_FORM);
             setErrors({});
+            setExistingImages([]);
             setImagePreview([]);
           }}
           className="btn btn-ghost rounded-xl px-10 normal-case font-bold"

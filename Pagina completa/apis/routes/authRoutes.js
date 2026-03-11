@@ -19,10 +19,10 @@ router.post(
   AuthController.register,
 );
 
-// Login (solo email y contraseña)
+// Login 
 router.post("/login", AuthController.login);
 
-// Obtener perfil (requiere autenticación)
+// Obtener perfil 
 router.get("/profile", authenticateToken, AuthController.getProfile);
 
 router.put("/profile", authenticateToken, AuthController.updateProfile);
@@ -38,7 +38,7 @@ router.post(
   AuthController.uploadAvatar,
 );
 
-// Eliminar cuenta (requiere contraseña de confirmación)
+// Eliminar cuenta 
 router.delete("/account", authenticateToken, AuthController.deleteAccount);
 
 // Verificar token
