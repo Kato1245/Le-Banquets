@@ -4,7 +4,7 @@ import toast from "react-hot-toast";
 import apiClient from "../../../shared/services/apiClient";
 
 const Configuracion = () => {
-  const { user, updateUser, changePassword, deleteAccount } = useAuth();
+  const { user, setUser, updateUser, changePassword, deleteAccount } = useAuth();
   const [activeTab, setActiveTab] = useState("perfil");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -74,12 +74,17 @@ const Configuracion = () => {
       });
 
       if (res.data.success) {
-        setFotoPerfil(res.data.data.foto_perfil);
-        // AuthContext updateUser doesn't exactly update the session context directly in this page flow,
-        // but we can call an update or manual set if we want. In context we have `setUser`. We might need to get it from useAuth.
+        const newFotoPerfil = res.data.data.foto_perfil;
+        setFotoPerfil(newFotoPerfil);
+        
+        // Actualizar el contexto global para que el Navbar se entere inmediatamente
+        if (user && setUser) {
+          const updatedUser = { ...user, foto_perfil: newFotoPerfil };
+          setUser(updatedUser);
+          localStorage.setItem("user", JSON.stringify(updatedUser)); // Sincronizar persistencia
+        }
+        
         toast.success("Foto de perfil actualizada");
-        // Reload page or let the user click save profile is not needed since it's instantaneous.
-        // We could just refresh if `setUser` isn't grabbed, but let's grab it.
       } else {
         toast.error(res.data.message || "Error al subir la imagen");
       }

@@ -76,13 +76,30 @@ class AuthController {
         result = await Usuario.create(userData);
       }
 
+      // Crear token JWT para auto-login
+      const token = jwt.sign(
+        {
+          userId: result._id,
+          email: result.email,
+          userType: userType,
+        },
+        JWT_SECRET,
+        { expiresIn: "24h" }
+      );
+
+      // Eliminar contraseña de la respuesta
+      const userWithoutPassword = { ...userData };
+      delete userWithoutPassword.contrasena;
+      userWithoutPassword._id = result._id;
+
       res.status(201).json({
         success: true,
         message: `${userType === "propietario" ? "Propietario" : "Usuario"} registrado exitosamente`,
         data: {
-          id: result._id,
-          nombre,
-          email,
+          user: userWithoutPassword,
+          userType: userType,
+          token: token,
+          expiresIn: "24h",
         },
       });
     } catch (error) {

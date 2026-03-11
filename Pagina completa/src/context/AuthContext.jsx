@@ -148,8 +148,25 @@ export const AuthProvider = ({ children }) => {
 
       if (res.data.success) {
         toast.success(
-          res.data.message || "Registro exitoso. Por favor verifica tu email.",
+          res.data.message || "Registro exitoso",
         );
+
+        // Si el backend devuelve token y usuario, iniciar sesión automáticamente
+        const { user: userData, token: newToken, userType: resUserType } = res.data.data || {};
+        
+        if (newToken && userData) {
+          const fullUser = {
+            ...userData,
+            userType: resUserType || type,
+            role: userData.role || resUserType || type,
+          };
+
+          setUser(fullUser);
+          setToken(newToken);
+          localStorage.setItem("token", newToken);
+          localStorage.setItem("user", JSON.stringify(fullUser));
+        }
+
         return res.data;
       }
     } catch (err) {

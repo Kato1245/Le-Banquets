@@ -39,7 +39,7 @@ const RegistroPropietarioForm = () => {
             toast.success('✅ Registro exitoso. ¡Bienvenido a la red de propietarios!');
             reset();
             setCaptchaValue(null);
-            navigate('/banquetes');
+            navigate('/mis-banquetes');
         } catch (error) {
             console.error("Submit error:", error);
             toast.error(error.message || 'Error en el registro');
