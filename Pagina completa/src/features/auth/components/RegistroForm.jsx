@@ -46,7 +46,7 @@ const RegistroForm = () => {
       reset();
       setCaptchaValue(null);
       setCaptchaError("");
-      navigate("/login");
+      navigate("/");
     } catch (error) {
       // El toast de error ya es manejado por AuthContext
       console.error("Error en registro:", error);
