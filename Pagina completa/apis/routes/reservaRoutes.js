@@ -5,5 +5,6 @@ const { authenticateToken } = require("../middleware/auth");
 
 router.post("/", authenticateToken, ReservaController.create);
 router.get("/agenda", authenticateToken, ReservaController.getCitasYReservasPropietario);
+router.get("/mis-reservas", authenticateToken, ReservaController.getMisReservas);
 
 module.exports = router;

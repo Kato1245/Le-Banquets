@@ -3,12 +3,17 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import API_BASE_URL from "../../../config/api";
 import toast from "react-hot-toast";
+import { Link, useNavigate } from "react-router-dom";
+import { getImageUrl } from "../../../shared/utils/imageUtils";
 
 const MisEventos = () => {
   const { user, token } = useAuth();
   const [activeTab, setActiveTab] = useState("proximos");
   const [eventos, setEventos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  const isPropietario = user?.userType === "propietario" || user?.role === "propietario";
 
   useEffect(() => {
     if (user) {
@@ -19,12 +24,25 @@ const MisEventos = () => {
   const fetchEventos = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/eventos/mis-eventos`, {
+      const response = await fetch(`${API_BASE_URL}/reservas/mis-reservas`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (response.ok) {
         const data = await response.json();
-        setEventos(data.eventos || data.data || []);
+        // Mapeamos los datos de la reserva al formato que espera el componente
+        const formattedEventos = (data.data || []).map(res => ({
+          id: res._id,
+          nombre: res.banquete_id?.nombre || "Evento sin nombre",
+          salon: res.banquete_id?.nombre || "N/A",
+          fecha: res.fecha,
+          hora: res.hora,
+          precio: res.monto,
+          tipo: res.banquete_id?.tipo || "general",
+          estado: res.estado === 'confirmada' ? 'confirmado' : res.estado,
+          invitados: res.detalles || "No especificado",
+          imagen: getImageUrl(res.banquete_id?.imagenes?.[0])
+        }));
+        setEventos(formattedEventos);
       } else {
         setEventos([]);
         toast.error("No pudimos sincronizar tus eventos más recientes.");
@@ -181,11 +199,23 @@ const MisEventos = () => {
         ) : (
           <div className="text-center py-32 bg-base-200/30 rounded-[3rem] border border-dashed border-base-content/10">
             <div className="text-7xl mb-6 opacity-10">🗓️</div>
-            <h3 className="text-2xl font-bold mb-2">Sin actividad reciente</h3>
-            <p className="opacity-50 max-w-sm mx-auto mb-8 font-medium">No se encontraron eventos registrados en esta categoría de tu agenda personal.</p>
-            <button className="btn btn-primary rounded-xl px-10 shadow-lg" onClick={() => window.location.href = '/banquetes'}>
-              Explorar Disponibilidad
-            </button>
+            <h3 className="text-2xl font-bold mb-2">
+              {isPropietario ? "Tu agenda de cliente está vacía" : "Sin actividad reciente"}
+            </h3>
+            <p className="opacity-50 max-w-sm mx-auto mb-8 font-medium">
+              {isPropietario
+                ? "Como propietario, puedes gestionar las reservas de tus banquetes desde el panel de control."
+                : "No se encontraron eventos registrados en esta categoría de tu agenda personal."}
+            </p>
+            {isPropietario ? (
+              <button className="btn btn-primary rounded-xl px-10 shadow-lg" onClick={() => navigate('/mis-banquetes?tab=calendario')}>
+                Gestionar mi Disponibilidad
+              </button>
+            ) : (
+              <button className="btn btn-primary rounded-xl px-10 shadow-lg" onClick={() => navigate('/banquetes')}>
+                Explorar Disponibilidad
+              </button>
+            )}
           </div>
         )
         }
