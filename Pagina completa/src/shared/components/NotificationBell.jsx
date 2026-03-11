@@ -1,6 +1,7 @@
 // src/shared/components/NotificationBell.jsx
 import { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import notificacionesService from "../services/notificacionesService";
 import toast from "react-hot-toast";
 
@@ -8,6 +9,7 @@ const NotificationBell = () => {
     const [notificaciones, setNotificaciones] = useState([]);
     const [loading, setLoading] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
+    const { user } = useAuth();
     const navigate = useNavigate();
 
     const fetchNotificaciones = useCallback(async () => {
@@ -32,8 +34,13 @@ const NotificationBell = () => {
             setNotificaciones(prev =>
                 prev.map(n => n._id === id ? { ...n, leido: true } : n)
             );
-            // Redirigir al calendario
-            navigate('/mis-banquetes?tab=calendario');
+            // Redirigir según el tipo de usuario
+            const isPropietario = user?.userType === 'propietario' || user?.role === 'propietario';
+            if (isPropietario) {
+                navigate('/mis-banquetes?tab=calendario');
+            } else {
+                navigate('/mis-eventos');
+            }
             setIsOpen(false);
         } catch (error) {
             toast.error("No se pudo marcar como leída.");
@@ -44,8 +51,13 @@ const NotificationBell = () => {
         if (!n.leido) {
             await handleMarkAsRead(n._id);
         } else {
-            // Incluso si ya está leída, el cliente quiere que al clickear nos lleve al calendario
-            navigate('/mis-banquetes?tab=calendario');
+            // Incluso si ya está leída, redirigir según el tipo de usuario
+            const isPropietario = user?.userType === 'propietario' || user?.role === 'propietario';
+            if (isPropietario) {
+                navigate('/mis-banquetes?tab=calendario');
+            } else {
+                navigate('/mis-eventos');
+            }
             setIsOpen(false);
         }
     };

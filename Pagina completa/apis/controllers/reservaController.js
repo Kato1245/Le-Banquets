@@ -54,7 +54,7 @@ class ReservaController {
             const propietario_id = req.user._id;
 
             const reservas = await Reserva.find({ propietario_id })
-                .populate("banquete_id", "nombre ubicacion imagenes")
+                .populate("banquete_id", "nombre direccion ubicacion imagenes")
                 .populate("usuario_id", "nombre email telefono");
 
             res.json({
@@ -73,7 +73,7 @@ class ReservaController {
             const usuario_id = req.user._id;
 
             const reservas = await Reserva.find({ usuario_id })
-                .populate("banquete_id", "nombre ubicacion imagenes tipo")
+                .populate("banquete_id", "nombre direccion ubicacion imagenes tipo")
                 .populate("propietario_id", "nombre email");
 
             res.json({
