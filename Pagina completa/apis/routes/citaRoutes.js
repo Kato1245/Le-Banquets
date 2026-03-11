@@ -7,5 +7,6 @@ const { authenticateToken } = require("../middleware/auth");
 router.post("/", authenticateToken, CitaController.create);
 router.get("/mis-citas", authenticateToken, CitaController.getMisCitas);
 router.get("/recibidas", authenticateToken, CitaController.getCitasRecibidas);
+router.patch("/:id/estado", authenticateToken, CitaController.actualizarEstado);
 
 module.exports = router;

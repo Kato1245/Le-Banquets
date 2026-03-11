@@ -10,7 +10,13 @@ const marcarComoLeida = async (id) => {
     return response.data;
 };
 
+const eliminar = async (id) => {
+    const response = await apiClient.delete(`/notificaciones/${id}`);
+    return response.data;
+};
+
 export default {
     getMisNotificaciones,
     marcarComoLeida,
+    eliminar,
 };

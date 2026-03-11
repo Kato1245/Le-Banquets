@@ -7,6 +7,9 @@ const OwnerCalendar = () => {
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [currentDate, setCurrentDate] = useState(new Date());
+    const [selectedEvent, setSelectedEvent] = useState(null);
+    const [motivoRechazo, setMotivoRechazo] = useState("");
+    const [isRejecting, setIsRejecting] = useState(false);
 
     useEffect(() => {
         fetchAgenda();
@@ -24,18 +27,34 @@ const OwnerCalendar = () => {
                 id: r._id,
                 title: `Reserva: ${r.banquete_id?.nombre || "N/A"}`,
                 date: new Date(r.fecha),
+                hora: r.hora,
                 type: "reserva",
                 color: "bg-error", // Rojo para reservas
                 user: r.usuario_id?.nombre,
+                email: r.usuario_id?.email,
+                telefono: r.usuario_id?.telefono || "No provisto",
+                banquete: r.banquete_id?.nombre,
+                estado: r.estado,
+                detalles: r.detalles,
+                motivo_rechazo: r.motivo_rechazo,
+                raw: r
             }));
 
             const formatedCitas = citas.map((c) => ({
                 id: c._id,
                 title: `Cita: ${c.banquete_id?.nombre || "N/A"}`,
                 date: new Date(c.fecha_sugerida),
+                hora: c.hora_sugerida,
                 type: "cita",
                 color: "bg-info", // Azul para citas
                 user: c.usuario_id?.nombre,
+                email: c.usuario_id?.email,
+                telefono: "No provisto",
+                banquete: c.banquete_id?.nombre,
+                estado: c.estado,
+                detalles: c.mensaje,
+                motivo_rechazo: c.motivo_rechazo,
+                raw: c
             }));
 
             setEvents([...formatedReservas, ...formatedCitas]);
@@ -43,6 +62,28 @@ const OwnerCalendar = () => {
             toast.error("Error al cargar la agenda");
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleUpdateStatus = async (estado) => {
+        if (estado === 'cancelada' && !motivoRechazo.trim()) {
+            toast.error("Por favor, ingresa un motivo para el rechazo.");
+            return;
+        }
+
+        try {
+            if (selectedEvent.type === 'reserva') {
+                await reservasService.actualizarEstado(selectedEvent.id, estado, motivoRechazo);
+            } else {
+                await citasService.actualizarEstado(selectedEvent.id, estado, motivoRechazo);
+            }
+            toast.success(`Estado actualizado a ${estado}`);
+            setSelectedEvent(null);
+            setMotivoRechazo("");
+            setIsRejecting(false);
+            fetchAgenda();
+        } catch (error) {
+            toast.error("Error al actualizar el estado");
         }
     };
 
@@ -111,6 +152,7 @@ const OwnerCalendar = () => {
                                     <div
                                         key={evt.id}
                                         className={`${evt.color} text-white text-[8px] p-2 rounded-lg font-black uppercase tracking-tighter truncate cursor-pointer hover:scale-105 transition-transform`}
+                                        onClick={() => setSelectedEvent(evt)}
                                         title={`${evt.title} - ${evt.user}`}
                                     >
                                         {evt.title}
@@ -132,6 +174,118 @@ const OwnerCalendar = () => {
                     <span className="text-[10px] font-black uppercase tracking-widest opacity-40">Reservas (Eventos)</span>
                 </div>
             </div>
+
+            {/* ── Modal de Detalles ── */}
+            {selectedEvent && (
+                <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+                    <div className="bg-base-100 w-full max-w-md rounded-[2.5rem] shadow-2xl border border-base-content/5 overflow-hidden animate-in zoom-in-95 duration-300">
+                        <div className="p-8">
+                            <div className="flex justify-between items-start mb-6">
+                                <div className={`badge ${selectedEvent.color} text-white font-black uppercase tracking-tighter text-[10px] py-3 px-4`}>
+                                    {selectedEvent.type}
+                                </div>
+                                <button onClick={() => { setSelectedEvent(null); setIsRejecting(false); setMotivoRechazo(""); }} className="btn btn-circle btn-ghost btn-sm">✕</button>
+                            </div>
+
+                            <h3 className="text-2xl font-black tracking-tight mb-2 uppercase italic">{selectedEvent.banquete}</h3>
+
+                            <div className="space-y-4 mb-8">
+                                <div className="flex items-center gap-3">
+                                    <span className="text-xl">👤</span>
+                                    <div>
+                                        <p className="text-[10px] uppercase font-black opacity-30 leading-none">Cliente</p>
+                                        <p className="font-bold text-sm">{selectedEvent.user}</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <span className="text-xl">📧</span>
+                                    <div>
+                                        <p className="text-[10px] uppercase font-black opacity-30 leading-none">Contacto</p>
+                                        <p className="font-bold text-sm">{selectedEvent.email}</p>
+                                        {selectedEvent.telefono && <p className="text-[10px] opacity-50">{selectedEvent.telefono}</p>}
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <span className="text-xl">📅</span>
+                                    <div>
+                                        <p className="text-[10px] uppercase font-black opacity-30 leading-none">Fecha y Hora</p>
+                                        <p className="font-bold text-sm">
+                                            {selectedEvent.date.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
+                                        </p>
+                                        <p className="text-xs opacity-60 font-medium">A las {selectedEvent.hora}</p>
+                                    </div>
+                                </div>
+                                {selectedEvent.detalles && (
+                                    <div className="bg-base-200/50 p-4 rounded-2xl border border-base-content/5">
+                                        <p className="text-[10px] uppercase font-black opacity-30 mb-1">Nota del cliente</p>
+                                        <p className="text-xs font-medium leading-relaxed italic">"{selectedEvent.detalles}"</p>
+                                    </div>
+                                )}
+
+                                <div className="pt-2 border-t border-base-content/5">
+                                    <p className="text-[10px] uppercase font-black opacity-30 mb-2">Estado actual</p>
+                                    <div className={`badge badge-outline font-bold uppercase tracking-widest text-[9px] py-3 px-4 ${selectedEvent.estado === 'confirmada' ? 'badge-success' :
+                                            selectedEvent.estado === 'cancelada' ? 'badge-error' : 'badge-warning'
+                                        }`}>
+                                        {selectedEvent.estado}
+                                    </div>
+                                    {selectedEvent.motivo_rechazo && (
+                                        <div className="mt-3 text-error text-[10px] font-bold">
+                                            Motivo rechazo: {selectedEvent.motivo_rechazo}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {selectedEvent.estado === 'pendiente' && !isRejecting && (
+                                <div className="grid grid-cols-2 gap-3">
+                                    <button
+                                        onClick={() => handleUpdateStatus('confirmada')}
+                                        className="btn btn-primary rounded-2xl font-black uppercase tracking-widest text-xs"
+                                    >
+                                        Aprobar
+                                    </button>
+                                    <button
+                                        onClick={() => setIsRejecting(true)}
+                                        className="btn btn-outline btn-error rounded-2xl font-black uppercase tracking-widest text-xs"
+                                    >
+                                        Rechazar
+                                    </button>
+                                </div>
+                            )}
+
+                            {isRejecting && (
+                                <div className="space-y-4 animate-in slide-in-from-top-4 duration-300">
+                                    <div>
+                                        <label className="text-[10px] uppercase font-black opacity-40 mb-2 block">Razón del rechazo</label>
+                                        <textarea
+                                            className="textarea textarea-bordered w-full rounded-2xl text-xs font-medium focus:border-error"
+                                            placeholder="Indica al cliente por qué no puedes aceptar..."
+                                            value={motivoRechazo}
+                                            onChange={(e) => setMotivoRechazo(e.target.value)}
+                                            rows={3}
+                                        />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <button
+                                            onClick={() => setIsRejecting(false)}
+                                            className="btn btn-ghost rounded-2xl font-black uppercase tracking-widest text-xs"
+                                        >
+                                            Cancelar
+                                        </button>
+                                        <button
+                                            onClick={() => handleUpdateStatus('cancelada')}
+                                            className="btn btn-error rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg"
+                                        >
+                                            Confirmar Rechazo
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

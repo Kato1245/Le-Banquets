@@ -40,6 +40,10 @@ const reservaSchema = new mongoose.Schema({
         type: String,
         trim: true,
     },
+    motivo_rechazo: {
+        type: String,
+        trim: true,
+    },
     fecha_creacion: {
         type: Date,
         default: Date.now,

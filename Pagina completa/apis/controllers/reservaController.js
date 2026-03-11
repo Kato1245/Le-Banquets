@@ -85,6 +85,58 @@ class ReservaController {
             res.status(500).json({ success: false, message: "Error interno del servidor" });
         }
     }
+
+    // Actualizar estado de una reserva
+    static async actualizarEstado(req, res) {
+        try {
+            const { id } = req.params;
+            const { estado, motivo_rechazo } = req.body;
+            const propietario_id = req.user._id;
+
+            const reserva = await Reserva.findOne({ _id: id, propietario_id }).populate("banquete_id", "nombre");
+
+            if (!reserva) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Reserva no encontrada o no tienes permisos",
+                });
+            }
+
+            reserva.estado = estado;
+            if (estado === "cancelada" && motivo_rechazo) {
+                reserva.motivo_rechazo = motivo_rechazo;
+            }
+            await reserva.save();
+
+            // Notificar al usuario
+            const NotificacionController = require("./notificacionController");
+            let mensajeNotif = "";
+            if (estado === "confirmada") {
+                mensajeNotif = `¡Tu reserva para "${reserva.banquete_id.nombre}" ha sido confirmada!`;
+            } else if (estado === "cancelada") {
+                mensajeNotif = `Tu reserva para "${reserva.banquete_id.nombre}" fue rechazada. Motivo: ${motivo_rechazo || "No especificado"}.`;
+            }
+
+            if (mensajeNotif) {
+                await NotificacionController.create({
+                    destinatario_id: reserva.usuario_id,
+                    onModel: "Usuario",
+                    mensaje: mensajeNotif,
+                    tipo: "evento",
+                    referencia_id: reserva._id,
+                });
+            }
+
+            res.json({
+                success: true,
+                message: `Reserva ${estado === "confirmada" ? "confirmada" : "cancelada"} correctamente`,
+                data: reserva,
+            });
+        } catch (error) {
+            console.error("Error al actualizar estado de reserva:", error);
+            res.status(500).json({ success: false, message: "Error interno del servidor" });
+        }
+    }
 }
 
 module.exports = ReservaController;
