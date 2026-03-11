@@ -1,13 +1,14 @@
 // src/features/auth/pages/ForgotPassword.jsx
 import { useState } from "react";
 import { useAuth } from "../../../context/AuthContext";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { resetPassword } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -16,7 +17,10 @@ const ForgotPassword = () => {
     try {
       const result = await resetPassword(email);
       if (result.success) {
-        toast.success(result.message || "Enlace enviado. Revisa tu correo.");
+        toast.success(result.message || "Código enviado. Revisa tu correo.");
+        // Redirigir a la página de reseteo pasando el email por la URL (opcional)
+        // para que ResetPassword sepa a qué email pertenece el código.
+        navigate(`/reset-password?email=${encodeURIComponent(email)}`);
       } else {
         toast.error(result.message || "Error al solicitar recuperación");
       }
@@ -43,7 +47,7 @@ const ForgotPassword = () => {
         <div className="bg-base-100/90 backdrop-blur-2xl p-10 rounded-[2.5rem] shadow-2xl border border-white/10">
           <div className="text-center mb-8">
             <div className="w-16 h-1 bg-primary mx-auto mb-6 rounded-full"></div>
-            <h2 className="text-3xl font-extrabold text-primary tracking-tight mb-2">Recuperar Acceso</h2>
+            <h2 className="text-3xl font-extrabold text-primary tracking-tight mb-2">ta</h2>
             <p className="text-sm text-base-content/60 font-medium px-4">
               Ingresa tu dirección de correo y te enviaremos un enlace de restauración.
             </p>

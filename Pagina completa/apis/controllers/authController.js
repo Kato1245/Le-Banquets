@@ -3,6 +3,8 @@ const Usuario = require("../models/Usuario");
 const Propietario = require("../models/Propietario");
 const jwt = require("jsonwebtoken");
 const { JWT_SECRET } = require("../middleware/auth");
+const { sendResetEmail } = require("../config/mailer");
+const crypto = require("crypto");
 
 // Almacena intentos por IP (en memoria)
 const loginAttempts = new Map();
@@ -512,6 +514,101 @@ class AuthController {
       res
         .status(500)
         .json({ success: false, message: "Error interno del servidor" });
+    }
+  }
+
+  static async forgotPassword(req, res) {
+    try {
+      const { email } = req.body;
+      if (!email) {
+        return res.status(400).json({ success: false, message: "El email es requerido" });
+      }
+
+      // Buscar en ambas tablas
+      let user = await Usuario.findOne({ email });
+      let userType = "usuario";
+
+      if (!user) {
+        user = await Propietario.findOne({ email });
+        userType = "propietario";
+      }
+
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "El correo electrónico no se encuentra registrado",
+        });
+      }
+
+      // Generar código de 6 dígitos
+      const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+      const expires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutos
+
+      // Guardar en el modelo correspondiente
+      const TargetModel = userType === "propietario" ? Propietario : Usuario;
+      await TargetModel.findByIdAndUpdate(user._id, {
+        reset_password_token: resetCode,
+        reset_password_expires: expires
+      });
+
+      // Enviar email
+      const emailSent = await sendResetEmail(email, resetCode, user.nombre);
+
+      if (emailSent.success) {
+        res.json({ success: true, message: "Código enviado correctamente" });
+      } else {
+        res.status(500).json({ success: false, message: "Error al enviar el correo" });
+      }
+    } catch (error) {
+      console.error("Error en forgotPassword:", error);
+      res.status(500).json({ success: false, message: "Error interno del servidor" });
+    }
+  }
+
+  static async resetPassword(req, res) {
+    try {
+      const { email, code, nuevaContrasena } = req.body;
+
+      if (!email || !code || !nuevaContrasena) {
+        return res.status(400).json({ success: false, message: "Todos los campos son requeridos" });
+      }
+
+      // Buscar usuario con el código y que no haya expirado
+      let user = await Usuario.findOne({
+        email,
+        reset_password_token: code,
+        reset_password_expires: { $gt: Date.now() }
+      });
+      let userType = "usuario";
+
+      if (!user) {
+        user = await Propietario.findOne({
+          email,
+          reset_password_token: code,
+          reset_password_expires: { $gt: Date.now() }
+        });
+        userType = "propietario";
+      }
+
+      if (!user) {
+        return res.status(400).json({ success: false, message: "Código inválido o expirado" });
+      }
+
+      // Actualizar contraseña
+      const saltRounds = 10;
+      const hashedPassword = await bcrypt.hash(nuevaContrasena, saltRounds);
+
+      const TargetModel = userType === "propietario" ? Propietario : Usuario;
+      await TargetModel.findByIdAndUpdate(user._id, {
+        contrasena: hashedPassword,
+        reset_password_token: null,
+        reset_password_expires: null
+      });
+
+      res.json({ success: true, message: "Contraseña actualizada con éxito" });
+    } catch (error) {
+      console.error("Error en resetPassword:", error);
+      res.status(500).json({ success: false, message: "Error interno del servidor" });
     }
   }
 }
