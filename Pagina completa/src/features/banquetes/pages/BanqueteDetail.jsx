@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import banquetesService from "../services/banquetesService";
 import BanqueteCarousel from "../components/BanqueteCarousel";
 import BanqueteCitaModal from "../components/BanqueteCitaModal";
+import BanqueteGalleryModal from "../components/BanqueteGalleryModal";
 import { useAuth } from "@/context/AuthContext";
 
 const BanqueteDetail = () => {
@@ -13,6 +14,7 @@ const BanqueteDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isCitaModalOpen, setIsCitaModalOpen] = useState(false);
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
 
   const handleAction = (type) => {
     if (!isAuthenticated) {
@@ -84,7 +86,7 @@ const BanqueteDetail = () => {
           <div className="badge badge-primary py-4 px-8 rounded-full mb-6 font-black uppercase tracking-[0.4em] text-[10px] shadow-2xl border-none">
             Espacio Exclusivo
           </div>
-          <h1 className="text-6xl md:text-8xl font-black text-white tracking-tighter uppercase leading-[0.8] mb-4">
+          <h1 className="text-6xl md:text-8xl font-black text-white tracking-tighter uppercase leading-[0.8] mb-4 break-words">
             {banquete.nombre}
           </h1>
           <p className="flex items-center gap-3 text-white/80 font-bold text-sm tracking-widest uppercase">
@@ -111,7 +113,7 @@ const BanqueteDetail = () => {
               <h2 className="text-4xl font-black tracking-tighter uppercase mb-8">
                 Un entorno donde los <span className="text-primary italic serif lowercase">sueños</span> cobran vida
               </h2>
-              <p className="text-2xl opacity-70 leading-relaxed font-medium serif italic">
+              <p className="text-2xl opacity-70 leading-relaxed font-medium serif italic break-words whitespace-pre-line">
                 {banquete.descripcion || "Este majestuoso salón ha sido concebido para quienes buscan la perfección en cada detalle. Arquitectura atemporal, iluminación de vanguardia y un servicio que redefine la hospitalidad de lujo."}
               </p>
             </div>
@@ -136,15 +138,18 @@ const BanqueteDetail = () => {
                 <p className="text-xs font-black uppercase tracking-widest opacity-40 mb-1">Dimensión</p>
                 <p className="text-2xl font-black">{banquete.tamano || '750'} <span className="text-[10px]">M²</span></p>
               </div>
-              <div className="p-8 bg-base-200/50 rounded-[2.5rem] border border-base-300 flex flex-col items-center text-center group hover:border-primary/30 transition-all col-span-2 md:col-span-1">
+              <button
+                onClick={() => setIsGalleryOpen(true)}
+                className="p-8 bg-base-200/50 rounded-[2.5rem] border border-base-300 flex flex-col items-center text-center group hover:border-primary/30 transition-all col-span-2 md:col-span-1 hover:bg-base-200 cursor-pointer"
+              >
                 <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-4 group-hover:scale-110 transition-transform">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                 </div>
-                <p className="text-xs font-black uppercase tracking-widest opacity-40 mb-1">Categoría</p>
-                <p className="text-2xl font-black uppercase tracking-tighter">{banquete.tipo || 'Lujo'}</p>
-              </div>
+                <p className="text-xs font-black uppercase tracking-widest opacity-40 mb-1">Galería</p>
+                <p className="text-2xl font-black uppercase tracking-tighter">Imágenes</p>
+              </button>
             </div>
 
             {/* Servicios Elite */}
@@ -236,6 +241,13 @@ const BanqueteDetail = () => {
         banquete={banquete}
         isOpen={isCitaModalOpen}
         onClose={() => setIsCitaModalOpen(false)}
+      />
+
+      {/* Modal para Galería de Imágenes */}
+      <BanqueteGalleryModal
+        banquete={banquete}
+        isOpen={isGalleryOpen}
+        onClose={() => setIsGalleryOpen(false)}
       />
     </div>
   );
