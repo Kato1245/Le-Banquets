@@ -4,6 +4,9 @@ require("dotenv").config();
 
 const authRoutes = require("./routes/authRoutes");
 const banqueteRoutes = require("./routes/banqueteRoutes");
+const citaRoutes = require("./routes/citaRoutes");
+const reservaRoutes = require("./routes/reservaRoutes");
+const notificacionRoutes = require("./routes/notificacionRoutes");
 const connectDB = require("./config/mongo");
 
 // Conectar a MongoDB
@@ -20,6 +23,9 @@ app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 // Rutas
 app.use("/api/auth", authRoutes);
 app.use("/api/banquetes", banqueteRoutes);
+app.use("/api/citas", citaRoutes);
+app.use("/api/reservas", reservaRoutes);
+app.use("/api/notificaciones", notificacionRoutes);
 
 // Ruta de prueba
 app.get("/api/health", (req, res) => {

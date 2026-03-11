@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import banquetesService from "../services/banquetesService";
 import BanqueteCarousel from "../components/BanqueteCarousel";
+import BanqueteCitaModal from "../components/BanqueteCitaModal";
 import { useAuth } from "@/context/AuthContext";
 
 const BanqueteDetail = () => {
@@ -11,14 +12,20 @@ const BanqueteDetail = () => {
   const [banquete, setBanquete] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isCitaModalOpen, setIsCitaModalOpen] = useState(false);
 
   const handleAction = (type) => {
     if (!isAuthenticated) {
       navigate('/login', { state: { from: `/banquetes/${id}` } });
       return;
     }
-    // Lógica para reserva o visita (se implementará después)
-    console.log(`Solicitando ${type} para ${id}`);
+
+    if (type === 'visita') {
+      setIsCitaModalOpen(true);
+    } else {
+      // Lógica para reserva (se implementará después)
+      console.log(`Solicitando ${type} para ${id}`);
+    }
   };
 
   useEffect(() => {
@@ -223,6 +230,13 @@ const BanqueteDetail = () => {
           <p className="text-xs font-black uppercase tracking-[0.5em] opacity-20 italic">Redefiniendo el lujo en cada celebración</p>
         </div>
       </div>
+
+      {/* Modal para Solicitar Cita */}
+      <BanqueteCitaModal
+        banquete={banquete}
+        isOpen={isCitaModalOpen}
+        onClose={() => setIsCitaModalOpen(false)}
+      />
     </div>
   );
 };
