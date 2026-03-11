@@ -1,7 +1,6 @@
 const multer = require("multer");
 
-// Usar memoryStorage: los archivos se mantienen en RAM como Buffer
-// Luego se convierten a Base64 en el controller.
+// Usar memoryStorage: los archivos se mantienen en RAM como Buffer luego se convierten a Base64 en el controller.
 const storage = multer.memoryStorage();
 
 // Filtro de archivos: solo imágenes

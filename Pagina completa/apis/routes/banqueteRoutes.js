@@ -4,7 +4,7 @@ const BanqueteController = require("../controllers/banqueteController");
 const { authenticateToken } = require("../middleware/auth");
 const upload = require("../middleware/upload");
 
-// Rutas protegidas (con upload de imágenes en POST y PUT)
+// Rutas protegidas 
 router.post(
   "/",
   authenticateToken,
