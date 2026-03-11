@@ -10,7 +10,13 @@ const getAgendaPropietario = async () => {
     return response.data.data;
 };
 
+const actualizarEstado = async (id, estado, motivo_rechazo) => {
+    const response = await apiClient.patch(`/reservas/${id}/estado`, { estado, motivo_rechazo });
+    return response.data;
+};
+
 export default {
     createReserva,
     getAgendaPropietario,
+    actualizarEstado,
 };

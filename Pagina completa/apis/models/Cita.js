@@ -32,6 +32,10 @@ const citaSchema = new mongoose.Schema({
         type: String,
         trim: true,
     },
+    motivo_rechazo: {
+        type: String,
+        trim: true,
+    },
     estado: {
         type: String,
         enum: ["pendiente", "confirmada", "cancelada"],

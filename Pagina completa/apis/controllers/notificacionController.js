@@ -73,6 +73,34 @@ class NotificacionController {
             });
         }
     }
+
+    // Eliminar notificación
+    static async eliminarNotificacion(req, res) {
+        try {
+            const { id } = req.params;
+            const destinatario_id = req.user._id;
+
+            const notificacion = await Notificacion.findOneAndDelete({ _id: id, destinatario_id });
+
+            if (!notificacion) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Notificación no encontrada",
+                });
+            }
+
+            res.json({
+                success: true,
+                message: "Notificación eliminada correctamente",
+            });
+        } catch (error) {
+            console.error("Error al eliminar notificación:", error);
+            res.status(500).json({
+                success: false,
+                message: "Error interno del servidor",
+            });
+        }
+    }
 }
 
 module.exports = NotificacionController;

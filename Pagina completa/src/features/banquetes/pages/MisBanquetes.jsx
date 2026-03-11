@@ -7,7 +7,6 @@ import API_BASE_URL from "../../../config/api";
 import EmptyState from "../../../shared/components/EmptyState";
 import { getImageUrl } from "../../../shared/utils/imageUtils";
 import OwnerCalendar from "../components/OwnerCalendar";
-import notificacionesService from "../../../shared/services/notificacionesService";
 
 // ─── Iconos SVG inline ────────────────────────────────────────────────────────
 const IconBanquet = () => (
@@ -742,7 +741,6 @@ const MisBanquetes = () => {
     return searchParams.get("action") === "nuevo" ? "agregar" : "mis-banquetes";
   });
   const [banquetes, setBanquetes] = useState([]);
-  const [notificaciones, setNotificaciones] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -783,20 +781,10 @@ const MisBanquetes = () => {
       (user.userType === "propietario" || user.role === "propietario")
     ) {
       fetchBanquetes();
-      fetchNotificaciones();
     } else {
       setLoading(false);
     }
   }, [user, fetchBanquetes]);
-
-  const fetchNotificaciones = async () => {
-    try {
-      const data = await notificacionesService.getMisNotificaciones();
-      setNotificaciones(data);
-    } catch (error) {
-      console.error("Error fetching notifications");
-    }
-  };
 
   const handleDelete = async (id) => {
     try {
@@ -841,34 +829,6 @@ const MisBanquetes = () => {
             </p>
           </div>
           <div className="flex items-center gap-4">
-            <div className="dropdown dropdown-end">
-              <label tabIndex={0} className="btn btn-ghost btn-circle">
-                <div className="indicator">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                  </svg>
-                  {notificaciones.some(n => !n.leido) && (
-                    <span className="badge badge-error badge-xs indicator-item"></span>
-                  )}
-                </div>
-              </label>
-              <div tabIndex={0} className="mt-3 z-[100] card card-compact dropdown-content w-80 bg-base-100 shadow-2xl border border-base-200 rounded-[2rem] overflow-hidden">
-                <div className="card-body p-6">
-                  <h3 className="font-black text-xs uppercase tracking-widest opacity-40 mb-4">Notificaciones</h3>
-                  <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
-                    {notificaciones.length > 0 ? (
-                      notificaciones.map((n) => (
-                        <div key={n._id} className={`p-4 rounded-2xl text-[10px] font-bold leading-relaxed ${n.leido ? 'opacity-40 bg-base-200' : 'bg-primary/5 border border-primary/20 animate-pulse-subtle'}`}>
-                          {n.mensaje}
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-center py-4 opacity-30 text-xs">Sin novedades aún.</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
             <div className="badge badge-outline badge-info py-4 px-5 font-bold uppercase tracking-widest text-[10px]">
               🏢 Propietario
             </div>

@@ -15,8 +15,14 @@ const getCitasRecibidas = async () => {
     return response.data.data;
 };
 
+const actualizarEstado = async (id, estado, motivo_rechazo) => {
+    const response = await apiClient.patch(`/citas/${id}/estado`, { estado, motivo_rechazo });
+    return response.data;
+};
+
 export default {
     createCita,
     getMisCitas,
     getCitasRecibidas,
+    actualizarEstado,
 };
