@@ -54,8 +54,8 @@ class ReservaController {
             const propietario_id = req.user._id;
 
             const reservas = await Reserva.find({ propietario_id })
-                .populate("banquete_id", "nombre")
-                .populate("usuario_id", "nombre");
+                .populate("banquete_id", "nombre ubicacion imagenes")
+                .populate("usuario_id", "nombre email telefono");
 
             res.json({
                 success: true,
@@ -63,6 +63,25 @@ class ReservaController {
             });
         } catch (error) {
             console.error("Error al obtener agenda:", error);
+            res.status(500).json({ success: false, message: "Error interno del servidor" });
+        }
+    }
+
+    // Obtener mis reservas (como cliente)
+    static async getMisReservas(req, res) {
+        try {
+            const usuario_id = req.user._id;
+
+            const reservas = await Reserva.find({ usuario_id })
+                .populate("banquete_id", "nombre ubicacion imagenes tipo")
+                .populate("propietario_id", "nombre email");
+
+            res.json({
+                success: true,
+                data: reservas,
+            });
+        } catch (error) {
+            console.error("Error al obtener mis reservas:", error);
             res.status(500).json({ success: false, message: "Error interno del servidor" });
         }
     }
