@@ -47,7 +47,7 @@ const Navbar = () => {
 
       {user ? (
         <div className="flex-none gap-2 flex items-center">
-          {isPropietario && <NotificationBell />}
+          <NotificationBell />
           <div className="dropdown dropdown-end">
             <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar">
               <div className="w-10 rounded-full bg-primary text-primary-content flex items-center justify-center font-bold">

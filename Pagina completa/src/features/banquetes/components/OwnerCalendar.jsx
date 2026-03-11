@@ -37,6 +37,7 @@ const OwnerCalendar = () => {
                 estado: r.estado,
                 detalles: r.detalles,
                 motivo_rechazo: r.motivo_rechazo,
+                direccion: r.banquete_id?.direccion || r.banquete_id?.ubicacion || "No especificada",
                 raw: r
             }));
 
@@ -54,6 +55,7 @@ const OwnerCalendar = () => {
                 estado: c.estado,
                 detalles: c.mensaje,
                 motivo_rechazo: c.motivo_rechazo,
+                direccion: c.banquete_id?.direccion || c.banquete_id?.ubicacion || "No especificada",
                 raw: c
             }));
 
@@ -206,6 +208,13 @@ const OwnerCalendar = () => {
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-3">
+                                    <span className="text-xl">📍</span>
+                                    <div>
+                                        <p className="text-[10px] uppercase font-black opacity-30 leading-none">Ubicación del Banquete</p>
+                                        <p className="font-bold text-sm leading-tight">{selectedEvent.direccion}</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-3">
                                     <span className="text-xl">📅</span>
                                     <div>
                                         <p className="text-[10px] uppercase font-black opacity-30 leading-none">Fecha y Hora</p>
@@ -225,7 +234,7 @@ const OwnerCalendar = () => {
                                 <div className="pt-2 border-t border-base-content/5">
                                     <p className="text-[10px] uppercase font-black opacity-30 mb-2">Estado actual</p>
                                     <div className={`badge badge-outline font-bold uppercase tracking-widest text-[9px] py-3 px-4 ${selectedEvent.estado === 'confirmada' ? 'badge-success' :
-                                            selectedEvent.estado === 'cancelada' ? 'badge-error' : 'badge-warning'
+                                        selectedEvent.estado === 'cancelada' ? 'badge-error' : 'badge-warning'
                                         }`}>
                                         {selectedEvent.estado}
                                     </div>
