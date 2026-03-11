@@ -8,7 +8,7 @@ const upload = require("../middleware/upload");
 router.post(
   "/",
   authenticateToken,
-  upload.array("imagenes", 5),
+  upload.array("imagenes", 20),
   BanqueteController.create,
 );
 router.get(
@@ -19,7 +19,7 @@ router.get(
 router.put(
   "/:id",
   authenticateToken,
-  upload.array("imagenes", 5),
+  upload.array("imagenes", 20),
   BanqueteController.update,
 );
 router.delete("/:id", authenticateToken, BanqueteController.delete);

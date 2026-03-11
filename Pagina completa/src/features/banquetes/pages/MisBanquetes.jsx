@@ -146,8 +146,8 @@ const BanqueteForm = ({ onSuccess, banqueteEdit }) => {
     const selectedFiles = Array.from(e.target.files);
     const totalCurrent = existingImages.length + form.imagenes.length;
 
-    if (totalCurrent + selectedFiles.length > 5) {
-      toast.error("Solo puedes subir un máximo de 5 imágenes en total.");
+    if (totalCurrent + selectedFiles.length > 20) {
+      toast.error("Solo puedes subir un máximo de 20 imágenes en total.");
       return;
     }
 
@@ -381,7 +381,7 @@ const BanqueteForm = ({ onSuccess, banqueteEdit }) => {
           <label className="label">
             <span className="label-text font-bold opacity-70">
               Imágenes del espacio{" "}
-              <span className="opacity-40 font-normal">(máx. 5)</span>
+              <span className="opacity-40 font-normal">(máx. 20)</span>
             </span>
           </label>
           <input
@@ -631,7 +631,7 @@ const PerfilEmpresaPanel = ({ user }) => {
 };
 
 // ─── Tarjeta de Banquete ───────────────────────────────────────────────────────
-const BanqueteCard = ({ banquete, onDelete }) => {
+const BanqueteCard = ({ banquete, onDelete, onEdit }) => {
   const [deleting, setDeleting] = useState(false);
 
   const handleDelete = async () => {
@@ -699,7 +699,7 @@ const BanqueteCard = ({ banquete, onDelete }) => {
           </button>
           <button
             className="btn btn-outline btn-primary btn-sm rounded-xl normal-case font-bold"
-            onClick={() => toast.info("Módulo de edición próximamente")}
+            onClick={() => onEdit(banquete)}
           >
             Editar
           </button>
@@ -743,6 +743,7 @@ const MisBanquetes = () => {
   const [banquetes, setBanquetes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [banqueteEdit, setBanqueteEdit] = useState(null);
 
   // Sincronizar la pestaña con el query param ?action=nuevo cuando cambia la URL
   useEffect(() => {
@@ -806,7 +807,13 @@ const MisBanquetes = () => {
 
   const handleFormSuccess = () => {
     setActiveTab("mis-banquetes");
+    setBanqueteEdit(null);
     fetchBanquetes();
+  };
+
+  const handleEdit = (banquete) => {
+    setBanqueteEdit(banquete);
+    setActiveTab("agregar");
   };
 
   const switchTab = (tabId) => setActiveTab(tabId);
@@ -866,7 +873,10 @@ const MisBanquetes = () => {
               </div>
               <button
                 className="btn btn-primary rounded-xl px-8 shadow-lg normal-case font-bold gap-2"
-                onClick={() => switchTab("agregar")}
+                onClick={() => {
+                  setBanqueteEdit(null);
+                  switchTab("agregar");
+                }}
               >
                 <IconAdd />
                 Agregar Banquete
@@ -926,6 +936,7 @@ const MisBanquetes = () => {
                     key={b._id}
                     banquete={b}
                     onDelete={handleDelete}
+                    onEdit={handleEdit}
                   />
                 ))}
               </div>
@@ -938,18 +949,18 @@ const MisBanquetes = () => {
           <div>
             <div className="mb-8">
               <h2 className="text-2xl font-bold mb-1">
-                Publicar Nuevo Banquete
+                {banqueteEdit ? "Editar Banquete" : "Publicar Nuevo Banquete"}
               </h2>
               <p className="text-sm opacity-50 font-medium">
-                Completa todos los campos. Los campos marcados con{" "}
-                <span className="text-error font-bold">*</span> son
-                obligatorios.
+                {banqueteEdit
+                  ? "Modifica la información de tu espacio. Recuerda que los cambios serán visibles de inmediato."
+                  : "Completa todos los campos. Los campos marcados con * son obligatorios."}
               </p>
             </div>
 
             <div className="card bg-base-100 shadow-xl border border-base-200 rounded-[2.5rem]">
               <div className="card-body p-8 md:p-12">
-                <BanqueteForm onSuccess={handleFormSuccess} />
+                <BanqueteForm onSuccess={handleFormSuccess} banqueteEdit={banqueteEdit} />
               </div>
             </div>
           </div>
