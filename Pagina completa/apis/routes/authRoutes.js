@@ -41,6 +41,10 @@ router.post(
 // Eliminar cuenta 
 router.delete("/account", authenticateToken, AuthController.deleteAccount);
 
+// Recuperación de contraseña
+router.post("/forgot-password", AuthController.forgotPassword);
+router.post("/reset-password", AuthController.resetPassword);
+
 // Verificar token
 router.get("/verify", authenticateToken, (req, res) => {
   res.json({

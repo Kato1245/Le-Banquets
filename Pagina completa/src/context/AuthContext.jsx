@@ -161,13 +161,33 @@ export const AuthProvider = ({ children }) => {
   };
 
   // ── Recuperación/actualización de contraseña ──────────────────────────
-  // NOTA: estas rutas no están implementadas en el backend actual.
-  const resetPassword = async () => {
-    toast.error("La recuperación de contraseña no está disponible aún.");
+  const requestPasswordReset = async (email) => {
+    try {
+      const res = await apiClient.post("/auth/forgot-password", { email });
+      return res.data;
+    } catch (err) {
+      const message = err.friendlyMessage || "Error al solicitar recuperación";
+      toast.error(message);
+      throw err;
+    }
   };
 
-  const updatePassword = async () => {
-    toast.error("El restablecimiento de contraseña no está disponible aún.");
+  const updatePasswordAfterReset = async (email, code, nuevaContrasena) => {
+    try {
+      const res = await apiClient.post("/auth/reset-password", {
+        email,
+        code,
+        nuevaContrasena,
+      });
+      if (res.data.success) {
+        toast.success("Contraseña actualizada con éxito");
+      }
+      return res.data;
+    } catch (err) {
+      const message = err.friendlyMessage || "Error al actualizar contraseña";
+      toast.error(message);
+      throw err;
+    }
   };
 
   // ── Actualizar Perfil ──────────────────────────────────────────────────
@@ -232,8 +252,8 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
-    resetPassword,
-    updatePassword,
+    resetPassword: requestPasswordReset,
+    updatePassword: updatePasswordAfterReset,
     updateUser: updateUserProfile,
     changePassword: changeUserPassword,
     deleteAccount: deleteUserAccount,
