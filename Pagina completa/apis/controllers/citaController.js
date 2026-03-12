@@ -6,120 +6,99 @@ const NotificacionController = require("./notificacionController");
 const { sendAppointmentStatusEmail } = require("../config/mailer");
 
 class CitaController {
-    // Crear una nueva solicitud de cita
-    static async create(req, res) {
-        try {
-            const { banquete_id, fecha_sugerida, hora_sugerida, mensaje } = req.body;
-            const usuario_id = req.user._id;
+  // Crear una nueva solicitud de cita
+  static async create(req, res) {
+    try {
+      const { banquete_id, fecha_sugerida, hora_sugerida, mensaje } = req.body;
+      const usuario_id = req.user._id;
 
-            // Obtener el banquete para conocer al propietario
-            const banquete = await Banquete.findById(banquete_id);
-            if (!banquete) {
-                return res.status(404).json({
-                    success: false,
-                    message: "Banquete no encontrado",
-                });
-            }
+      // Obtener el banquete para conocer al propietario
+      const banquete = await Banquete.findById(banquete_id);
+      if (!banquete) {
+        return res.status(404).json({
+          success: false,
+          message: "Banquete no encontrado",
+        });
+      }
 
-            const propietario_id = banquete.propietario_id;
+      const propietario_id = banquete.propietario_id;
 
-            const nuevaCita = new Cita({
-                usuario_id,
-                banquete_id,
-                propietario_id,
-                fecha_sugerida,
-                hora_sugerida,
-                mensaje,
-            });
+      const nuevaCita = new Cita({
+        usuario_id,
+        banquete_id,
+        propietario_id,
+        fecha_sugerida,
+        hora_sugerida,
+        mensaje,
+      });
 
-            await nuevaCita.save();
+      await nuevaCita.save();
 
-            // Notificar al propietario (notificación interna)
-            await NotificacionController.create({
-                destinatario_id: propietario_id,
-                onModel: "Propietario",
-                mensaje: `Nueva solicitud de cita para "${banquete.nombre}" el ${new Date(fecha_sugerida).toLocaleDateString()}`,
-                tipo: "cita",
-                referencia_id: nuevaCita._id,
-            });
+      // Notificar al propietario
+      await NotificacionController.create({
+        destinatario_id: propietario_id,
+        onModel: "Propietario",
+        mensaje: `Nueva solicitud de cita para "${banquete.nombre}" el ${new Date(fecha_sugerida).toLocaleDateString()}`,
+        tipo: "cita",
+        referencia_id: nuevaCita._id,
+      });
 
-            // Notificar al propietario por correo si tiene la opción activa
-            const propietario = await Propietario.findById(propietario_id);
-
-            // Verificamos si existe el propietario y si tiene el correo habilitado (por defecto true)
-            const mailHabilitado = propietario && (propietario.notificaciones?.email !== false);
-
-            if (mailHabilitado) {
-                const cliente = await Usuario.findById(usuario_id);
-                const { sendReservationRequestEmail } = require("../config/mailer");
-                console.log(`Enviando correo de cita a propietario: ${propietario.email}`);
-                await sendReservationRequestEmail(propietario.email, {
-                    banqueteNombre: banquete.nombre,
-                    clienteNombre: cliente?.nombre || "Un cliente",
-                    fecha: fecha_sugerida,
-                    hora: hora_sugerida,
-                    monto: 0,
-                    detalles: `Solicitud de cita: ${mensaje}`,
-                });
-            }
-
-            res.status(201).json({
-                success: true,
-                message: "Solicitud de cita enviada exitosamente",
-                data: nuevaCita,
-            });
-        } catch (error) {
-            console.error("Error al crear cita:", error);
-            res.status(500).json({
-                success: false,
-                message: "Error interno del servidor",
-            });
-        }
+      res.status(201).json({
+        success: true,
+        message: "Solicitud de cita enviada exitosamente",
+        data: nuevaCita,
+      });
+    } catch (error) {
+      console.error("Error al crear cita:", error);
+      res.status(500).json({
+        success: false,
+        message: "Error interno del servidor",
+      });
     }
+  }
 
-    // Obtener citas del usuario actual
-    static async getMisCitas(req, res) {
-        try {
-            const usuario_id = req.user._id;
+  // Obtener citas del usuario actual
+  static async getMisCitas(req, res) {
+    try {
+      const usuario_id = req.user._id;
 
-            const citas = await Cita.find({ usuario_id })
-                .populate("banquete_id", "nombre direccion ubicacion")
-                .sort({ fecha_creacion: -1 });
+      const citas = await Cita.find({ usuario_id })
+        .populate("banquete_id", "nombre direccion direccion")
+        .sort({ fecha_creacion: -1 });
 
-            res.json({
-                success: true,
-                data: citas,
-            });
-        } catch (error) {
-            console.error("Error al obtener mis citas:", error);
-            res.status(500).json({
-                success: false,
-                message: "Error interno del servidor",
-            });
-        }
+      res.json({
+        success: true,
+        data: citas,
+      });
+    } catch (error) {
+      console.error("Error al obtener mis citas:", error);
+      res.status(500).json({
+        success: false,
+        message: "Error interno del servidor",
+      });
     }
+  }
 
-    // Obtener citas recibidas por el propietario
-    static async getCitasRecibidas(req, res) {
-        try {
-            const propietario_id = req.user._id;
+  // Obtener citas recibidas por el propietario
+  static async getCitasRecibidas(req, res) {
+    try {
+      const propietario_id = req.user._id;
 
-            const citas = await Cita.find({ propietario_id })
-                .populate("usuario_id", "nombre email")
-                .populate("banquete_id", "nombre")
-                .sort({ fecha_creacion: -1 });
+      const citas = await Cita.find({ propietario_id })
+        .populate("usuario_id", "nombre email")
+        .populate("banquete_id", "nombre")
+        .sort({ fecha_creacion: -1 });
 
-            res.json({
-                success: true,
-                data: citas,
-            });
-        } catch (error) {
-            console.error("Error al obtener citas recibidas:", error);
-            res.status(500).json({
-                success: false,
-                message: "Error interno del servidor",
-            });
-        }
+      res.json({
+        success: true,
+        data: citas,
+      });
+    } catch (error) {
+      console.error("Error al obtener citas recibidas:", error);
+      res.status(500).json({
+        success: false,
+        message: "Error interno del servidor",
+      });
     }
 
     // Actualizar estado de una cita
@@ -188,6 +167,7 @@ class CitaController {
             });
         }
     }
+  }
 }
 
 module.exports = CitaController;

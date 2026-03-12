@@ -69,43 +69,47 @@ class ReservaController {
             res.status(500).json({ success: false, message: "Error interno del servidor" });
         }
     }
+  }
 
-    // Obtener reservas (para calendario del propietario)
-    static async getCitasYReservasPropietario(req, res) {
-        try {
-            const propietario_id = req.user._id;
+  // Obtener reservas (para calendario del propietario)
+  static async getCitasYReservasPropietario(req, res) {
+    try {
+      const propietario_id = req.user._id;
 
-            const reservas = await Reserva.find({ propietario_id })
-                .populate("banquete_id", "nombre direccion ubicacion imagenes")
-                .populate("usuario_id", "nombre email telefono");
+      const reservas = await Reserva.find({ propietario_id })
+        .populate("banquete_id", "nombre direccion direccion imagenes")
+        .populate("usuario_id", "nombre email telefono");
 
-            res.json({
-                success: true,
-                data: reservas,
-            });
-        } catch (error) {
-            console.error("Error al obtener agenda:", error);
-            res.status(500).json({ success: false, message: "Error interno del servidor" });
-        }
+      res.json({
+        success: true,
+        data: reservas,
+      });
+    } catch (error) {
+      console.error("Error al obtener agenda:", error);
+      res
+        .status(500)
+        .json({ success: false, message: "Error interno del servidor" });
     }
+  }
 
-    // Obtener mis reservas (como cliente)
-    static async getMisReservas(req, res) {
-        try {
-            const usuario_id = req.user._id;
+  // Obtener mis reservas (como cliente)
+  static async getMisReservas(req, res) {
+    try {
+      const usuario_id = req.user._id;
 
-            const reservas = await Reserva.find({ usuario_id })
-                .populate("banquete_id", "nombre direccion ubicacion imagenes tipo")
-                .populate("propietario_id", "nombre email");
+      const reservas = await Reserva.find({ usuario_id })
+        .populate("banquete_id", "nombre direccion direccion imagenes tipo")
+        .populate("propietario_id", "nombre email");
 
-            res.json({
-                success: true,
-                data: reservas,
-            });
-        } catch (error) {
-            console.error("Error al obtener mis reservas:", error);
-            res.status(500).json({ success: false, message: "Error interno del servidor" });
-        }
+      res.json({
+        success: true,
+        data: reservas,
+      });
+    } catch (error) {
+      console.error("Error al obtener mis reservas:", error);
+      res
+        .status(500)
+        .json({ success: false, message: "Error interno del servidor" });
     }
 
     // Actualizar estado de una reserva
@@ -173,6 +177,7 @@ class ReservaController {
             res.status(500).json({ success: false, message: "Error interno del servidor" });
         }
     }
+  }
 }
 
 module.exports = ReservaController;

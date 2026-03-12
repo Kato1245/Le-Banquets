@@ -33,8 +33,8 @@ const Salones = () => {
         tipo: salon.tipo || "general",
         capacidad: salon.capacidad || 0,
         precio: salon.precio_base || salon.precio || 0,
-        ubicacion:
-          salon.ubicacion || salon.direccion || "Ubicación no especificada",
+        direccion:
+          salon.direccion || salon.direccion || "Dirección no especificada",
         servicios: salon.servicios || [],
       }));
       setSalones(salonesFormateados);
@@ -62,7 +62,7 @@ const Salones = () => {
       (selectedFilter === "todos" ||
         s.tipo?.toLowerCase() === selectedFilter.toLowerCase()) &&
       (s.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.ubicacion.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        s.direccion.toLowerCase().includes(searchTerm.toLowerCase()) ||
         s.descripcion.toLowerCase().includes(searchTerm.toLowerCase())),
   );
 
@@ -108,7 +108,7 @@ const Salones = () => {
               </span>
               <input
                 type="text"
-                placeholder="Busca por nombre, ubicación o palabras clave..."
+                placeholder="Busca por nombre, Dirección o palabras clave..."
                 className="input input-bordered w-full pl-12 rounded-2xl focus:input-primary transition-all border-base-300"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -230,7 +230,7 @@ const Salones = () => {
                           d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                         />
                       </svg>
-                      {s.ubicacion}
+                      {s.direccion}
                     </p>
                   </div>
                   <p className="text-base-content/70 line-clamp-3 mb-6 flex-grow">
@@ -317,10 +317,10 @@ const Salones = () => {
                       </div>
                       <div>
                         <p className="text-xs uppercase font-bold opacity-40">
-                          Ubicación
+                          Dirección
                         </p>
                         <p className="font-medium">
-                          {selectedDetail.ubicacion}
+                          {selectedDetail.direccion}
                         </p>
                       </div>
                     </div>
