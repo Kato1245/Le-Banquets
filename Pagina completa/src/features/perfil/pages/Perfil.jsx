@@ -529,13 +529,7 @@ const Perfil = () => {
                   <div className="card-actions justify-end mt-10 gap-3">
                     {isEditing && (
                       <>
-                        <button
-                          onClick={() => setIsEditing(false)}
-                          className="btn btn-ghost rounded-xl px-8"
-                          disabled={saving}
-                        >
-                          Descartar
-                        </button>
+
                         <button
                           onClick={handleSave}
                           className="btn btn-primary rounded-xl px-8 shadow-lg min-w-[160px]"

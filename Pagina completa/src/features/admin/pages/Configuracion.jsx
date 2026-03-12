@@ -34,10 +34,10 @@ const Configuracion = () => {
   });
 
   const [notifications, setNotifications] = useState({
-    email: true,
-    reservas: true,
-    recordatorios: true,
-    newsletter: false,
+    email: user?.notificaciones?.email ?? true,
+    reservas: user?.notificaciones?.reservas ?? true,
+    recordatorios: user?.notificaciones?.recordatorios ?? true,
+    newsletter: user?.notificaciones?.newsletter ?? false,
   });
 
   const handleInputChange = (e) => {
@@ -76,14 +76,14 @@ const Configuracion = () => {
       if (res.data.success) {
         const newFotoPerfil = res.data.data.foto_perfil;
         setFotoPerfil(newFotoPerfil);
-        
+
         // Actualizar el contexto global para que el Navbar se entere inmediatamente
         if (user && setUser) {
           const updatedUser = { ...user, foto_perfil: newFotoPerfil };
           setUser(updatedUser);
           localStorage.setItem("user", JSON.stringify(updatedUser)); // Sincronizar persistencia
         }
-        
+
         toast.success("Foto de perfil actualizada");
       } else {
         toast.error(res.data.message || "Error al subir la imagen");
@@ -153,7 +153,7 @@ const Configuracion = () => {
     } catch (error) {
       toast.error(
         error?.response?.data?.message ||
-          "Contraseña incorrecta o error al eliminar",
+        "Contraseña incorrecta o error al eliminar",
       );
     } finally {
       setIsDeleting(false);
@@ -187,11 +187,10 @@ const Configuracion = () => {
             {tabs.map((tab) => (
               <button
                 key={tab.id}
-                className={`tab px-4 rounded-xl font-bold transition-all whitespace-nowrap text-sm ${
-                  activeTab === tab.id
-                    ? "tab-active bg-primary text-primary-content shadow-lg"
-                    : ""
-                }`}
+                className={`tab px-4 rounded-xl font-bold transition-all whitespace-nowrap text-sm ${activeTab === tab.id
+                  ? "tab-active bg-primary text-primary-content shadow-lg"
+                  : ""
+                  }`}
                 onClick={() => setActiveTab(tab.id)}
               >
                 {tab.label}
@@ -314,13 +313,13 @@ const Configuracion = () => {
                         disabled: false,
                       },
                       user?.userType === "propietario" ||
-                      user?.role === "propietario"
+                        user?.role === "propietario"
                         ? {
-                            label: "RUT / Registro Único",
-                            name: "rut",
-                            type: "text",
-                            disabled: false,
-                          }
+                          label: "RUT / Registro Único",
+                          name: "rut",
+                          type: "text",
+                          disabled: false,
+                        }
                         : null,
                     ]
                       .filter(Boolean)
@@ -357,13 +356,7 @@ const Configuracion = () => {
                         "Editar Perfil"
                       )}
                     </button>
-                    <button
-                      type="button"
-                      className="btn btn-ghost rounded-xl px-8 normal-case font-bold opacity-60"
-                      onClick={() => toast.info("Cambios descartados")}
-                    >
-                      Descartar
-                    </button>
+
                   </div>
                 </form>
               </div>
@@ -506,11 +499,26 @@ const Configuracion = () => {
                 <div className="card-actions mt-10 pt-8 border-t border-base-content/5">
                   <button
                     className="btn btn-primary rounded-xl px-10 normal-case font-bold shadow-lg"
-                    onClick={() =>
-                      toast.success("Preferencias de notificación guardadas")
-                    }
+                    disabled={isLoading}
+                    onClick={async () => {
+                      setIsLoading(true);
+                      try {
+                        if (updateUser) {
+                          await updateUser({ notificaciones: notifications });
+                          toast.success("Preferencias de notificación guardadas");
+                        }
+                      } catch (error) {
+                        toast.error("Error al guardar preferencias");
+                      } finally {
+                        setIsLoading(false);
+                      }
+                    }}
                   >
-                    Guardar Preferencias
+                    {isLoading ? (
+                      <span className="loading loading-spinner" />
+                    ) : (
+                      "Guardar Preferencias"
+                    )}
                   </button>
                 </div>
               </div>

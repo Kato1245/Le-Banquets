@@ -1,6 +1,9 @@
 const Cita = require("../models/Cita");
 const Banquete = require("../models/Banquete");
+const Propietario = require("../models/Propietario");
+const Usuario = require("../models/Usuario");
 const NotificacionController = require("./notificacionController");
+const { sendAppointmentStatusEmail } = require("../config/mailer");
 
 class CitaController {
   // Crear una nueva solicitud de cita
@@ -97,62 +100,72 @@ class CitaController {
         message: "Error interno del servidor",
       });
     }
-  }
 
-  // Actualizar estado de una cita
-  static async actualizarEstado(req, res) {
-    try {
-      const { id } = req.params;
-      const { estado, motivo_rechazo } = req.body;
-      const propietario_id = req.user._id;
+    // Actualizar estado de una cita
+    static async actualizarEstado(req, res) {
+        try {
+            const { id } = req.params;
+            const { estado, motivo_rechazo } = req.body;
+            const propietario_id = req.user._id;
 
-      const cita = await Cita.findOne({ _id: id, propietario_id }).populate(
-        "banquete_id",
-        "nombre",
-      );
+            const cita = await Cita.findOne({ _id: id, propietario_id }).populate("banquete_id", "nombre");
 
-      if (!cita) {
-        return res.status(404).json({
-          success: false,
-          message: "Cita no encontrada o no tienes permisos",
-        });
-      }
+            if (!cita) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Cita no encontrada o no tienes permisos",
+                });
+            }
 
-      cita.estado = estado;
-      if (estado === "cancelada" && motivo_rechazo) {
-        cita.motivo_rechazo = motivo_rechazo;
-      }
-      await cita.save();
+            cita.estado = estado;
+            if (estado === "cancelada" && motivo_rechazo) {
+                cita.motivo_rechazo = motivo_rechazo;
+            }
+            await cita.save();
 
-      // Notificar al usuario sobre el cambio
-      let mensajeNotif = "";
-      if (estado === "confirmada") {
-        mensajeNotif = `¡Tu cita para "${cita.banquete_id.nombre}" ha sido aceptada! Te esperamos el ${new Date(cita.fecha_sugerida).toLocaleDateString()}.`;
-      } else if (estado === "cancelada") {
-        mensajeNotif = `Tu solicitud para "${cita.banquete_id.nombre}" fue rechazada. Motivo: ${motivo_rechazo || "No especificado"}.`;
-      }
+            // Notificar al usuario sobre el cambio (interna)
+            let mensajeNotif = "";
+            if (estado === "confirmada") {
+                mensajeNotif = `¡Tu cita para "${cita.banquete_id.nombre}" ha sido aceptada! Te esperamos el ${new Date(cita.fecha_sugerida).toLocaleDateString()}.`;
+            } else if (estado === "cancelada") {
+                mensajeNotif = `Tu solicitud para "${cita.banquete_id.nombre}" fue rechazada. Motivo: ${motivo_rechazo || "No especificado"}.`;
+            }
 
-      if (mensajeNotif) {
-        await NotificacionController.create({
-          destinatario_id: cita.usuario_id,
-          onModel: "Usuario",
-          mensaje: mensajeNotif,
-          tipo: "cita",
-          referencia_id: cita._id,
-        });
-      }
+            if (mensajeNotif) {
+                await NotificacionController.create({
+                    destinatario_id: cita.usuario_id,
+                    onModel: "Usuario",
+                    mensaje: mensajeNotif,
+                    tipo: "cita",
+                    referencia_id: cita._id,
+                });
+            }
 
-      res.json({
-        success: true,
-        message: `Cita ${estado === "confirmada" ? "aceptada" : "rechazada"} correctamente`,
-        data: cita,
-      });
-    } catch (error) {
-      console.error("Error al actualizar estado de cita:", error);
-      res.status(500).json({
-        success: false,
-        message: "Error interno del servidor",
-      });
+            // Notificar al usuario por correo si tiene la opción activa
+            const usuario = await Usuario.findById(cita.usuario_id);
+            if (usuario && usuario.notificaciones?.email) {
+                await sendAppointmentStatusEmail(usuario.email, {
+                    nombreUsuario: usuario.nombre,
+                    banqueteNombre: cita.banquete_id.nombre,
+                    estado: estado,
+                    motivo_rechazo: motivo_rechazo,
+                    fecha: cita.fecha_sugerida,
+                    hora: cita.hora_sugerida,
+                });
+            }
+
+            res.json({
+                success: true,
+                message: `Cita ${estado === "confirmada" ? "aceptada" : "rechazada"} correctamente`,
+                data: cita,
+            });
+        } catch (error) {
+            console.error("Error al actualizar estado de cita:", error);
+            res.status(500).json({
+                success: false,
+                message: "Error interno del servidor",
+            });
+        }
     }
   }
 }

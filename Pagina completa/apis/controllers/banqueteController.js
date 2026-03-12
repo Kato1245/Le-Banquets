@@ -64,6 +64,7 @@ class BanqueteController {
       res.status(500).json({
         success: false,
         message: "Error interno del servidor",
+        error: error.message
       });
     }
   }
@@ -244,6 +245,7 @@ class BanqueteController {
       res.status(500).json({
         success: false,
         message: "Error interno del servidor",
+        error: error.message
       });
     }
   }

@@ -1,54 +1,73 @@
 const Reserva = require("../models/Reserva");
 const Banquete = require("../models/Banquete");
+const Propietario = require("../models/Propietario");
+const Usuario = require("../models/Usuario");
 const NotificacionController = require("./notificacionController");
+const { sendReservationRequestEmail } = require("../config/mailer");
 
 class ReservaController {
-  // Crear reserva
-  static async create(req, res) {
-    try {
-      const { banquete_id, fecha, hora, monto, detalles } = req.body;
-      const usuario_id = req.user._id;
+    // Crear reserva
+    static async create(req, res) {
+        try {
+            const { banquete_id, fecha, hora, monto, detalles } = req.body;
+            const usuario_id = req.user._id;
 
-      const banquete = await Banquete.findById(banquete_id);
-      if (!banquete) {
-        return res
-          .status(404)
-          .json({ success: false, message: "Banquete no encontrado" });
-      }
+            const banquete = await Banquete.findById(banquete_id);
+            if (!banquete) {
+                return res.status(404).json({ success: false, message: "Banquete no encontrado" });
+            }
 
-      const propietario_id = banquete.propietario_id;
+            const propietario_id = banquete.propietario_id;
 
-      const nuevaReserva = new Reserva({
-        usuario_id,
-        banquete_id,
-        propietario_id,
-        fecha,
-        hora,
-        monto,
-        detalles,
-      });
+            const nuevaReserva = new Reserva({
+                usuario_id,
+                banquete_id,
+                propietario_id,
+                fecha,
+                hora,
+                monto,
+                detalles,
+            });
 
-      await nuevaReserva.save();
+            await nuevaReserva.save();
 
-      // Notificar al propietario
-      await NotificacionController.create({
-        destinatario_id: propietario_id,
-        onModel: "Propietario",
-        mensaje: `Nueva reserva confirmada para "${banquete.nombre}" el ${new Date(fecha).toLocaleDateString()}`,
-        tipo: "reserva",
-        referencia_id: nuevaReserva._id,
-      });
+            // Notificar al propietario (notificación interna)
+            await NotificacionController.create({
+                destinatario_id: propietario_id,
+                onModel: "Propietario",
+                mensaje: `Nueva reserva confirmada para "${banquete.nombre}" el ${new Date(fecha).toLocaleDateString()}`,
+                tipo: "reserva",
+                referencia_id: nuevaReserva._id,
+            });
 
-      res.status(201).json({
-        success: true,
-        message: "Reserva realizada exitosamente",
-        data: nuevaReserva,
-      });
-    } catch (error) {
-      console.error("Error al crear reserva:", error);
-      res
-        .status(500)
-        .json({ success: false, message: "Error interno del servidor" });
+            // Notificar al propietario por correo si tiene la opción activa
+            const propietario = await Propietario.findById(propietario_id);
+
+            // Verificamos si existe el propietario y si tiene el correo habilitado (por defecto true si no existe el campo)
+            const mailHabilitado = propietario && (propietario.notificaciones?.email !== false);
+
+            if (mailHabilitado) {
+                const cliente = await Usuario.findById(usuario_id);
+                console.log(`Enviando correo de solicitud a propietario: ${propietario.email}`);
+                await sendReservationRequestEmail(propietario.email, {
+                    banqueteNombre: banquete.nombre,
+                    clienteNombre: cliente?.nombre || "Un cliente",
+                    fecha,
+                    hora,
+                    monto,
+                    detalles,
+                });
+            }
+
+            res.status(201).json({
+                success: true,
+                message: "Reserva realizada exitosamente",
+                data: nuevaReserva,
+            });
+        } catch (error) {
+            console.error("Error al crear reserva:", error);
+            res.status(500).json({ success: false, message: "Error interno del servidor" });
+        }
     }
   }
 
@@ -92,62 +111,71 @@ class ReservaController {
         .status(500)
         .json({ success: false, message: "Error interno del servidor" });
     }
-  }
 
-  // Actualizar estado de una reserva
-  static async actualizarEstado(req, res) {
-    try {
-      const { id } = req.params;
-      const { estado, motivo_rechazo } = req.body;
-      const propietario_id = req.user._id;
+    // Actualizar estado de una reserva
+    static async actualizarEstado(req, res) {
+        try {
+            const { id } = req.params;
+            const { estado, motivo_rechazo } = req.body;
+            const propietario_id = req.user._id;
 
-      const reserva = await Reserva.findOne({
-        _id: id,
-        propietario_id,
-      }).populate("banquete_id", "nombre");
+            const reserva = await Reserva.findOne({ _id: id, propietario_id }).populate("banquete_id", "nombre");
 
-      if (!reserva) {
-        return res.status(404).json({
-          success: false,
-          message: "Reserva no encontrada o no tienes permisos",
-        });
-      }
+            if (!reserva) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Reserva no encontrada o no tienes permisos",
+                });
+            }
 
-      reserva.estado = estado;
-      if (estado === "cancelada" && motivo_rechazo) {
-        reserva.motivo_rechazo = motivo_rechazo;
-      }
-      await reserva.save();
+            reserva.estado = estado;
+            if (estado === "cancelada" && motivo_rechazo) {
+                reserva.motivo_rechazo = motivo_rechazo;
+            }
+            await reserva.save();
 
-      // Notificar al usuario
-      const NotificacionController = require("./notificacionController");
-      let mensajeNotif = "";
-      if (estado === "confirmada") {
-        mensajeNotif = `¡Tu reserva para "${reserva.banquete_id.nombre}" ha sido confirmada!`;
-      } else if (estado === "cancelada") {
-        mensajeNotif = `Tu reserva para "${reserva.banquete_id.nombre}" fue rechazada. Motivo: ${motivo_rechazo || "No especificado"}.`;
-      }
+            // Notificar al usuario
+            const NotificacionController = require("./notificacionController");
+            let mensajeNotif = "";
+            if (estado === "confirmada") {
+                mensajeNotif = `¡Tu reserva para "${reserva.banquete_id.nombre}" ha sido confirmada!`;
+            } else if (estado === "cancelada") {
+                mensajeNotif = `Tu reserva para "${reserva.banquete_id.nombre}" fue rechazada. Motivo: ${motivo_rechazo || "No especificado"}.`;
+            }
 
-      if (mensajeNotif) {
-        await NotificacionController.create({
-          destinatario_id: reserva.usuario_id,
-          onModel: "Usuario",
-          mensaje: mensajeNotif,
-          tipo: "evento",
-          referencia_id: reserva._id,
-        });
-      }
+            if (mensajeNotif) {
+                await NotificacionController.create({
+                    destinatario_id: reserva.usuario_id,
+                    onModel: "Usuario",
+                    mensaje: mensajeNotif,
+                    tipo: "evento",
+                    referencia_id: reserva._id,
+                });
+            }
 
-      res.json({
-        success: true,
-        message: `Reserva ${estado === "confirmada" ? "confirmada" : "cancelada"} correctamente`,
-        data: reserva,
-      });
-    } catch (error) {
-      console.error("Error al actualizar estado de reserva:", error);
-      res
-        .status(500)
-        .json({ success: false, message: "Error interno del servidor" });
+            // Notificar al usuario por correo si tiene la opción activa
+            const usuario = await Usuario.findById(reserva.usuario_id);
+            if (usuario && usuario.notificaciones?.email) {
+                const { sendReservationStatusEmail } = require("../config/mailer");
+                await sendReservationStatusEmail(usuario.email, {
+                    nombreUsuario: usuario.nombre,
+                    banqueteNombre: reserva.banquete_id.nombre,
+                    estado: estado,
+                    motivo_rechazo: motivo_rechazo,
+                    fecha: reserva.fecha,
+                    hora: reserva.hora,
+                });
+            }
+
+            res.json({
+                success: true,
+                message: `Reserva ${estado === "confirmada" ? "confirmada" : "cancelada"} correctamente`,
+                data: reserva,
+            });
+        } catch (error) {
+            console.error("Error al actualizar estado de reserva:", error);
+            res.status(500).json({ success: false, message: "Error interno del servidor" });
+        }
     }
   }
 }
