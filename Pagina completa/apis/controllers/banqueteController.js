@@ -8,7 +8,6 @@ class BanqueteController {
       const {
         nombre,
         direccion,
-        ubicacion,
         dimensiones,
         tipo,
         capacidad,
@@ -42,7 +41,6 @@ class BanqueteController {
       const nuevoBanquete = new Banquete({
         nombre,
         direccion,
-        ubicacion,
         dimensiones,
         tipo,
         capacidad,
@@ -126,7 +124,6 @@ class BanqueteController {
       const {
         nombre,
         direccion,
-        ubicacion,
         dimensiones,
         tipo,
         capacidad,
@@ -149,7 +146,6 @@ class BanqueteController {
       // Actualizar campos de texto
       if (nombre !== undefined) banquete.nombre = nombre;
       if (direccion !== undefined) banquete.direccion = direccion;
-      if (ubicacion !== undefined) banquete.ubicacion = ubicacion;
       if (dimensiones !== undefined) banquete.dimensiones = dimensiones;
       if (tipo !== undefined) banquete.tipo = tipo;
       if (capacidad !== undefined) banquete.capacidad = capacidad;
@@ -164,9 +160,10 @@ class BanqueteController {
       // Parsear imágenes existentes
       if (imagenes_existentes) {
         try {
-          const parsed = typeof imagenes_existentes === "string"
-            ? JSON.parse(imagenes_existentes)
-            : imagenes_existentes;
+          const parsed =
+            typeof imagenes_existentes === "string"
+              ? JSON.parse(imagenes_existentes)
+              : imagenes_existentes;
 
           if (Array.isArray(parsed)) {
             imagenesFinales = parsed;
@@ -174,7 +171,10 @@ class BanqueteController {
             imagenesFinales = [parsed];
           }
         } catch (e) {
-          console.warn("No se pudo parsear imagenes_existentes, usándolo como string:", e);
+          console.warn(
+            "No se pudo parsear imagenes_existentes, usándolo como string:",
+            e,
+          );
           imagenesFinales = [imagenes_existentes];
         }
       }
@@ -203,14 +203,16 @@ class BanqueteController {
       if (error.message && error.message.includes("large")) {
         return res.status(413).json({
           success: false,
-          message: "El banquete es demasiado grande (posiblemente por demasiadas imágenes de alta resolución)",
+          message:
+            "El banquete es demasiado grande (posiblemente por demasiadas imágenes de alta resolución)",
         });
       }
 
       res.status(500).json({
         success: false,
         message: "Error interno del servidor al actualizar el banquete",
-        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        details:
+          process.env.NODE_ENV === "development" ? error.message : undefined,
       });
     }
   }

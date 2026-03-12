@@ -65,7 +65,7 @@ const BanqueteCard = ({ banquete }) => {
               />
             </svg>
             <span className="truncate">
-              {banquete.direccion || banquete.ubicacion}
+              {banquete.direccion || banquete.direccion}
             </span>
           </div>
 
