@@ -1,6 +1,9 @@
 const Cita = require("../models/Cita");
 const Banquete = require("../models/Banquete");
+const Propietario = require("../models/Propietario");
+const Usuario = require("../models/Usuario");
 const NotificacionController = require("./notificacionController");
+const { sendAppointmentStatusEmail } = require("../config/mailer");
 
 class CitaController {
     // Crear una nueva solicitud de cita
@@ -31,7 +34,7 @@ class CitaController {
 
             await nuevaCita.save();
 
-            // Notificar al propietario
+            // Notificar al propietario (notificación interna)
             await NotificacionController.create({
                 destinatario_id: propietario_id,
                 onModel: "Propietario",
@@ -39,6 +42,26 @@ class CitaController {
                 tipo: "cita",
                 referencia_id: nuevaCita._id,
             });
+
+            // Notificar al propietario por correo si tiene la opción activa
+            const propietario = await Propietario.findById(propietario_id);
+
+            // Verificamos si existe el propietario y si tiene el correo habilitado (por defecto true)
+            const mailHabilitado = propietario && (propietario.notificaciones?.email !== false);
+
+            if (mailHabilitado) {
+                const cliente = await Usuario.findById(usuario_id);
+                const { sendReservationRequestEmail } = require("../config/mailer");
+                console.log(`Enviando correo de cita a propietario: ${propietario.email}`);
+                await sendReservationRequestEmail(propietario.email, {
+                    banqueteNombre: banquete.nombre,
+                    clienteNombre: cliente?.nombre || "Un cliente",
+                    fecha: fecha_sugerida,
+                    hora: hora_sugerida,
+                    monto: 0,
+                    detalles: `Solicitud de cita: ${mensaje}`,
+                });
+            }
 
             res.status(201).json({
                 success: true,
@@ -121,7 +144,7 @@ class CitaController {
             }
             await cita.save();
 
-            // Notificar al usuario sobre el cambio
+            // Notificar al usuario sobre el cambio (interna)
             let mensajeNotif = "";
             if (estado === "confirmada") {
                 mensajeNotif = `¡Tu cita para "${cita.banquete_id.nombre}" ha sido aceptada! Te esperamos el ${new Date(cita.fecha_sugerida).toLocaleDateString()}.`;
@@ -136,6 +159,19 @@ class CitaController {
                     mensaje: mensajeNotif,
                     tipo: "cita",
                     referencia_id: cita._id,
+                });
+            }
+
+            // Notificar al usuario por correo si tiene la opción activa
+            const usuario = await Usuario.findById(cita.usuario_id);
+            if (usuario && usuario.notificaciones?.email) {
+                await sendAppointmentStatusEmail(usuario.email, {
+                    nombreUsuario: usuario.nombre,
+                    banqueteNombre: cita.banquete_id.nombre,
+                    estado: estado,
+                    motivo_rechazo: motivo_rechazo,
+                    fecha: cita.fecha_sugerida,
+                    hora: cita.hora_sugerida,
                 });
             }
 

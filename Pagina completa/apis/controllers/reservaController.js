@@ -1,6 +1,9 @@
 const Reserva = require("../models/Reserva");
 const Banquete = require("../models/Banquete");
+const Propietario = require("../models/Propietario");
+const Usuario = require("../models/Usuario");
 const NotificacionController = require("./notificacionController");
+const { sendReservationRequestEmail } = require("../config/mailer");
 
 class ReservaController {
     // Crear reserva
@@ -28,7 +31,7 @@ class ReservaController {
 
             await nuevaReserva.save();
 
-            // Notificar al propietario
+            // Notificar al propietario (notificación interna)
             await NotificacionController.create({
                 destinatario_id: propietario_id,
                 onModel: "Propietario",
@@ -36,6 +39,25 @@ class ReservaController {
                 tipo: "reserva",
                 referencia_id: nuevaReserva._id,
             });
+
+            // Notificar al propietario por correo si tiene la opción activa
+            const propietario = await Propietario.findById(propietario_id);
+
+            // Verificamos si existe el propietario y si tiene el correo habilitado (por defecto true si no existe el campo)
+            const mailHabilitado = propietario && (propietario.notificaciones?.email !== false);
+
+            if (mailHabilitado) {
+                const cliente = await Usuario.findById(usuario_id);
+                console.log(`Enviando correo de solicitud a propietario: ${propietario.email}`);
+                await sendReservationRequestEmail(propietario.email, {
+                    banqueteNombre: banquete.nombre,
+                    clienteNombre: cliente?.nombre || "Un cliente",
+                    fecha,
+                    hora,
+                    monto,
+                    detalles,
+                });
+            }
 
             res.status(201).json({
                 success: true,
@@ -124,6 +146,20 @@ class ReservaController {
                     mensaje: mensajeNotif,
                     tipo: "evento",
                     referencia_id: reserva._id,
+                });
+            }
+
+            // Notificar al usuario por correo si tiene la opción activa
+            const usuario = await Usuario.findById(reserva.usuario_id);
+            if (usuario && usuario.notificaciones?.email) {
+                const { sendReservationStatusEmail } = require("../config/mailer");
+                await sendReservationStatusEmail(usuario.email, {
+                    nombreUsuario: usuario.nombre,
+                    banqueteNombre: reserva.banquete_id.nombre,
+                    estado: estado,
+                    motivo_rechazo: motivo_rechazo,
+                    fecha: reserva.fecha,
+                    hora: reserva.hora,
                 });
             }
 

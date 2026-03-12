@@ -27,10 +27,10 @@ const Configuracion = () => {
   });
 
   const [notifications, setNotifications] = useState({
-    email: true,
-    promociones: true,
-    recordatorios: true,
-    newsletter: false,
+    email: user?.notificaciones?.email ?? true,
+    promociones: user?.notificaciones?.promociones ?? true,
+    recordatorios: user?.notificaciones?.recordatorios ?? true,
+    newsletter: user?.notificaciones?.newsletter ?? false,
   });
 
   const [passwords, setPasswords] = useState({
@@ -156,7 +156,7 @@ const Configuracion = () => {
     } catch (error) {
       toast.error(
         error?.response?.data?.message ||
-          "Contraseña incorrecta o error al eliminar",
+        "Contraseña incorrecta o error al eliminar",
       );
     } finally {
       setIsDeleting(false);
@@ -188,11 +188,10 @@ const Configuracion = () => {
             {tabs.map((tab) => (
               <button
                 key={tab.id}
-                className={`tab px-6 rounded-xl font-bold transition-all ${
-                  activeTab === tab.id
-                    ? "tab-active bg-primary text-primary-content shadow-lg"
-                    : ""
-                }`}
+                className={`tab px-6 rounded-xl font-bold transition-all ${activeTab === tab.id
+                  ? "tab-active bg-primary text-primary-content shadow-lg"
+                  : ""
+                  }`}
                 onClick={() => setActiveTab(tab.id)}
               >
                 {tab.label}
@@ -349,13 +348,7 @@ const Configuracion = () => {
                         "Guardar Cambios"
                       )}
                     </button>
-                    <button
-                      type="button"
-                      className="btn btn-ghost rounded-xl px-8 normal-case font-bold opacity-60"
-                      onClick={() => toast.info("Cambios descartados")}
-                    >
-                      Descartar
-                    </button>
+
                   </div>
                 </form>
               </div>
@@ -427,11 +420,26 @@ const Configuracion = () => {
                 <div className="card-actions mt-10 pt-8 border-t border-base-content/5">
                   <button
                     className="btn btn-primary rounded-xl px-10 normal-case font-bold shadow-lg"
-                    onClick={() =>
-                      toast.success("Preferencias de notificación guardadas")
-                    }
+                    disabled={isLoading}
+                    onClick={async () => {
+                      setIsLoading(true);
+                      try {
+                        if (updateUser) {
+                          await updateUser({ notificaciones });
+                          toast.success("Preferencias de notificación guardadas");
+                        }
+                      } catch (error) {
+                        toast.error("Error al guardar preferencias");
+                      } finally {
+                        setIsLoading(false);
+                      }
+                    }}
                   >
-                    Guardar Preferencias
+                    {isLoading ? (
+                      <span className="loading loading-spinner" />
+                    ) : (
+                      "Guardar Preferencias"
+                    )}
                   </button>
                 </div>
               </div>

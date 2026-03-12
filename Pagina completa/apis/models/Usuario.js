@@ -50,6 +50,12 @@ const usuarioSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    notificaciones: {
+      email: { type: Boolean, default: true },
+      promociones: { type: Boolean, default: true },
+      recordatorios: { type: Boolean, default: true },
+      newsletter: { type: Boolean, default: false },
+    },
   },
   {
     timestamps: {

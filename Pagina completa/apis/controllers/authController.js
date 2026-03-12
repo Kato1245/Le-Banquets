@@ -63,6 +63,12 @@ class AuthController {
         fecha_nacimiento: fecha_nacimiento || null,
         esta_activo: true,
         esta_verificado: false,
+        notificaciones: {
+          email: true,
+          promociones: true,
+          recordatorios: true,
+          newsletter: false,
+        },
       };
 
       if (userType === "propietario") {
@@ -321,7 +327,14 @@ class AuthController {
       }
 
       // Campos enviados desde el frontend
-      const { nombre, email, telefono, fecha_nacimiento, documento } = req.body;
+      const {
+        nombre,
+        email,
+        telefono,
+        fecha_nacimiento,
+        documento,
+        notificaciones,
+      } = req.body;
 
       // Crear objeto con los campos a actualizar
       const fieldsToUpdate = {};
@@ -331,6 +344,8 @@ class AuthController {
       if (fecha_nacimiento !== undefined)
         fieldsToUpdate.fecha_nacimiento = fecha_nacimiento;
       if (documento !== undefined) fieldsToUpdate.documento = documento;
+      if (notificaciones !== undefined)
+        fieldsToUpdate.notificaciones = notificaciones;
 
       if (Object.keys(fieldsToUpdate).length === 0) {
         return res.status(400).json({
@@ -386,6 +401,7 @@ class AuthController {
       res.status(500).json({
         success: false,
         message: "Error interno del servidor",
+        error: error.message
       });
     }
   }
