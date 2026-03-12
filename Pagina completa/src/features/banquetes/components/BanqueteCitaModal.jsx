@@ -1,7 +1,6 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
 import citasService from "../services/citasService";
-import { getImageUrl } from "../../../shared/utils/imageUtils";
 
 const BanqueteCitaModal = ({ banquete, isOpen, onClose }) => {
     const [loading, setLoading] = useState(false);
@@ -11,12 +10,34 @@ const BanqueteCitaModal = ({ banquete, isOpen, onClose }) => {
         mensaje: "",
     });
 
+    const [currentMonth, setCurrentMonth] = useState(new Date());
+
     if (!isOpen || !banquete) return null;
+
+    // Lógica del calendario interactivo
+    const daysInMonth = (date) => new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+    const firstDayOfMonth = (date) => new Date(date.getFullYear(), date.getMonth(), 1).getDay();
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
+
+    const handleDateSelect = (day) => {
+        const selected = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        if (selected < today) return; // No permitir fechas pasadas
+
+        setFormData(prev => ({
+            ...prev,
+            fecha_sugerida: selected.toISOString().split("T")[0]
+        }));
+    };
+
+    const nextMonth = () => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1));
+    const prevMonth = () => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1));
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -25,142 +46,147 @@ const BanqueteCitaModal = ({ banquete, isOpen, onClose }) => {
             const citaData = {
                 banquete_id: banquete._id,
                 ...formData,
+                fecha_sugerida: new Date(formData.fecha_sugerida + 'T12:00:00')
             };
             await citasService.createCita(citaData);
-            toast.success("¡Solicitud de cita enviada correctamente!");
+            toast.success("¡Solicitud enviada! Te contactaremos pronto.");
             onClose();
         } catch (error) {
-            toast.error(error.friendlyMessage || "Error al enviar la solicitud de cita");
+            toast.error(error.friendlyMessage || "Error al enviar la solicitud");
         } finally {
             setLoading(false);
         }
     };
 
+    const selectedDate = new Date(formData.fecha_sugerida + 'T12:00:00');
+
     return (
         <dialog open className="modal modal-open items-center justify-center p-4">
-            <div className="modal-box max-w-5xl p-0 overflow-hidden bg-base-100 rounded-[3rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] border border-white/5 flex flex-col lg:flex-row min-h-[600px] animate-in zoom-in-95 duration-300">
-
-                {/* Lado Izquierdo: Contexto Visual */}
-                <div className="lg:w-5/12 relative hidden lg:block overflow-hidden bg-neutral">
-                    <img
-                        src={getImageUrl(banquete.imagenes?.[0])}
-                        alt={banquete.nombre}
-                        className="absolute inset-0 w-full h-full object-cover scale-110 blur-[2px] opacity-40 brightness-50"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary/40 to-black/80"></div>
-
-                    <div className="relative z-10 h-full p-12 flex flex-col justify-between text-white">
-                        <div>
-                            <div className="badge badge-outline border-white/30 text-white/70 py-4 px-6 rounded-full mb-8 font-black uppercase tracking-[0.3em] text-[10px]">
-                                Previsualización de Visita
-                            </div>
-                            <h3 className="text-5xl font-black tracking-tighter uppercase leading-[0.9] mb-4">
+            <div className="modal-box max-w-4xl p-0 bg-base-100 rounded-[3rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.7)] border border-base-300 overflow-hidden animate-in zoom-in-95 duration-500">
+                <div className="flex flex-col lg:flex-row min-h-[550px]">
+                    
+                    {/* Sección Izquierda: Calendario Premium Alignment */}
+                    <div className="lg:w-1/2 p-10 bg-base-200/40 relative overflow-hidden flex flex-col">
+                        {/* Glow effect matching Home.jsx stats */}
+                        <div className="absolute top-0 left-0 w-48 h-48 bg-primary/5 rounded-full blur-[80px] -translate-x-1/2 -translate-y-1/2"></div>
+                        
+                        <header className="relative z-10 mb-10">
+                            <h2 className="text-5xl font-black tracking-tighter uppercase leading-none text-white">
+                                Reservar <br />
+                            </h2>
+                            <p className="text-[10px] font-black opacity-30 uppercase tracking-[0.4em] mt-4 border-l-2 border-primary pl-3">
                                 {banquete.nombre}
-                            </h3>
-                            <p className="text-sm opacity-60 font-medium tracking-widest uppercase flex items-center gap-2">
-                                <span className="text-primary text-xl">📍</span>
-                                {banquete.direccion || banquete.ubicacion}
                             </p>
-                        </div>
+                        </header>
 
-                        <div className="space-y-6">
-                            <div className="p-6 bg-white/5 backdrop-blur-xl rounded-[2rem] border border-white/10">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-2">Protocolo de Visita</p>
-                                <p className="text-xs leading-relaxed opacity-70">
-                                    Nuestras visitas guiadas tienen una duración aproximada de 45 minutos donde conocerás cada rincón del salón y las opciones de personalización.
-                                </p>
-                            </div>
-                            <div className="flex items-center gap-4 px-4 opacity-40">
-                                <div className="h-px flex-1 bg-current"></div>
-                                <span className="text-[10px] font-black uppercase tracking-[0.4em]">Le Banquets</span>
-                                <div className="h-px flex-1 bg-current"></div>
+                        <div className="relative z-10 space-y-6 flex-1 flex flex-col justify-center">
+                            
+                            <div className="bg-base-100/40 backdrop-blur-md rounded-[2.5rem] p-8 border border-base-300 shadow-2xl relative group">
+                                <div className="flex justify-between items-center mb-8 px-2">
+                                    <span className="text-xs font-black uppercase tracking-[0.3em] text-primary italic">
+                                        {currentMonth.toLocaleString('es-ES', { month: 'long', year: 'numeric' })}
+                                    </span>
+                                    <div className="flex gap-1 bg-base-300/30 p-1 rounded-xl">
+                                        <button type="button" onClick={prevMonth} className="btn btn-ghost btn-xs rounded-lg hover:bg-primary hover:text-white transition-all">«</button>
+                                        <button type="button" onClick={nextMonth} className="btn btn-ghost btn-xs rounded-lg hover:bg-primary hover:text-white transition-all">»</button>
+                                    </div>
+                                </div>
+                                
+                                <div className="grid grid-cols-7 gap-2 text-center mb-4">
+                                    {['D', 'L', 'M', 'M', 'J', 'V', 'S'].map(d => (
+                                        <span key={d} className="text-[9px] font-black opacity-20">{d}</span>
+                                    ))}
+                                </div>
+                                <div className="grid grid-cols-7 gap-2">
+                                    {[...Array(firstDayOfMonth(currentMonth))].map((_, i) => (
+                                        <div key={`empty-${i}`} className="h-10"></div>
+                                    ))}
+                                    {[...Array(daysInMonth(currentMonth))].map((_, i) => {
+                                        const day = i + 1;
+                                        const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+                                        const isSelected = selectedDate.getDate() === day && 
+                                                           selectedDate.getMonth() === currentMonth.getMonth() &&
+                                                           selectedDate.getFullYear() === currentMonth.getFullYear();
+                                        const isPast = date < new Date().setHours(0,0,0,0);
+
+                                        return (
+                                            <button
+                                                key={day}
+                                                type="button"
+                                                onClick={() => handleDateSelect(day)}
+                                                disabled={isPast}
+                                                className={`h-11 w-full rounded-2xl text-[11px] font-black transition-all duration-300 ${
+                                                    isSelected ? 'bg-primary text-black shadow-[0_10px_30px_-5px_rgba(220,165,78,0.5)] scale-110 z-10' : 
+                                                    isPast ? 'opacity-5 cursor-not-allowed' : 'hover:bg-primary/20 hover:text-primary'
+                                                }`}
+                                            >
+                                                {day}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                {/* Lado Derecho: Formulario */}
-                <div className="flex-1 p-8 md:p-14 relative bg-base-100">
-                    <button
-                        onClick={onClose}
-                        className="btn btn-sm btn-circle btn-ghost absolute right-8 top-8 z-50 hover:bg-base-200 transition-colors"
-                    >
-                        ✕
-                    </button>
-
-                    <header className="mb-10">
-                        <h2 className="text-4xl font-black tracking-tighter uppercase mb-2 italic">Agendar Encuentro</h2>
-                        <p className="text-sm opacity-40 font-bold tracking-widest uppercase">Completa los detalles para tu visita personalizada</p>
-                    </header>
-
-                    <form onSubmit={handleSubmit} className="space-y-4 flex flex-col h-full">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="form-control">
-                                <div className="relative group">
-                                    <span className="absolute left-5 top-1/2 -translate-y-1/2 text-primary font-bold z-10 group-focus-within:scale-110 transition-transform">📅</span>
-                                    <input
-                                        type="date"
-                                        name="fecha_sugerida"
-                                        required
-                                        className="input input-bordered w-full h-14 pl-14 rounded-2xl bg-base-200/50 border-base-300 focus:input-primary font-black uppercase text-[10px] tracking-widest transition-all"
-                                        value={formData.fecha_sugerida}
-                                        onChange={handleChange}
-                                        min={new Date().toISOString().split("T")[0]}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="form-control">
-                                <div className="relative group">
-                                    <span className="absolute left-5 top-1/2 -translate-y-1/2 text-primary font-bold z-10 group-focus-within:scale-110 transition-transform">🕒</span>
-                                    <input
-                                        type="time"
-                                        name="hora_sugerida"
-                                        required
-                                        className="input input-bordered w-full h-14 pl-14 rounded-2xl bg-base-200/50 border-base-300 focus:input-primary font-black text-[10px] tracking-[0.3em] transition-all"
-                                        value={formData.hora_sugerida}
-                                        onChange={handleChange}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Botón ahora arriba del textarea para acceso rápido */}
-                        <div className="pt-2">
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="btn btn-primary w-full h-14 rounded-[2.5rem] normal-case text-lg font-black shadow-[0_20px_40px_-10px_rgba(var(--p),0.3)] hover:shadow-[0_25px_50px_-12px_rgba(var(--p),0.5)] transition-all hover:scale-[1.01] active:scale-95 border-none group"
-                            >
-                                {loading ? (
-                                    <span className="loading loading-spinner text-white"></span>
-                                ) : (
-                                    <div className="flex items-center gap-3">
-                                        SOLICITAR CITA AHORA
-                                        <span className="group-hover:translate-x-2 transition-transform">→</span>
+                    {/* Sección Derecha: Parámetros Alignment */}
+                    <div className="flex-1 p-10 md:p-14 flex flex-col justify-between bg-base-100 relative">
+                        <button onClick={onClose} className="btn btn-sm btn-circle btn-ghost absolute right-10 top-10 hover:bg-base-200 transition-all hover:rotate-90">✕</button>
+                        
+                        <form onSubmit={handleSubmit} className="space-y-10 h-full flex flex-col pt-6">
+                            <div className="space-y-10 flex-1">
+                                <div className="form-control group">
+                                    <label className="label py-0 mb-4">
+                                        <span className="label-text text-[10px] font-black uppercase tracking-[0.3em] opacity-40 italic flex items-center gap-3">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_10px_rgba(220,165,78,1)]"></span>
+                                            2. Franja Horaria
+                                        </span>
+                                    </label>
+                                    <div className="relative">
+                                        <input
+                                            type="time"
+                                            name="hora_sugerida"
+                                            required
+                                            className="input input-bordered w-full h-16 px-8 rounded-2xl bg-base-200/50 border-base-300 focus:border-primary focus:bg-base-200 transition-all font-black text-sm tracking-[0.4em]"
+                                            value={formData.hora_sugerida}
+                                            onChange={handleChange}
+                                        />
+                                        <div className="absolute right-6 top-1/2 -translate-y-1/2 text-xl opacity-20"></div>
                                     </div>
-                                )}
-                            </button>
-                        </div>
+                                </div>
 
-                        <div className="form-control flex-1">
-                            <textarea
-                                name="mensaje"
-                                className="textarea textarea-bordered w-full h-44 rounded-[2.5rem] bg-base-200/30 border-base-300 focus:textarea-primary font-medium p-8 leading-relaxed resize-none transition-all placeholder:opacity-30 text-sm"
-                                placeholder="Escribe aquí tu visión, dudas o detalles especiales sobre tu evento... (Opcional)"
-                                value={formData.mensaje}
-                                onChange={handleChange}
-                            ></textarea>
-                            <div className="flex items-center justify-center gap-4 mt-4 opacity-20">
-                                <div className="h-px flex-1 bg-current"></div>
-                                <p className="text-[9px] font-black uppercase tracking-[0.5em]">Confirmación en menos de 24h</p>
-                                <div className="h-px flex-1 bg-current"></div>
+                                <div className="form-control group">
+                                    <label className="label py-0 mb-4">
+                                        <span className="label-text text-[10px] font-black uppercase tracking-[0.3em] opacity-40 italic flex items-center gap-3">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_10px_rgba(220,165,78,1)]"></span>
+                                            3. Observaciones Especiales
+                                        </span>
+                                    </label>
+                                    <textarea
+                                        name="mensaje"
+                                        className="textarea textarea-bordered h-60 rounded-[2rem] bg-base-200/50 border-base-300 focus:border-primary focus:bg-base-200 transition-all font-medium p-8 resize-none text-xs placeholder:opacity-20 shadow-inner"
+                                        placeholder="¿Algún detalle que debamos considerar antes de tu visita?"
+                                        value={formData.mensaje}
+                                        onChange={handleChange}
+                                    ></textarea>
+                                </div>
                             </div>
-                        </div>
-                    </form>
+
+                            <div className="relative pt-8 group">
+                                <div className="absolute -inset-1 bg-gradient-to-r from-primary/30 to-secondary/30 rounded-[2rem] blur opacity-0 group-hover:opacity-100 transition duration-700"></div>
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="btn btn-primary btn-block h-15 rounded-[2rem] font-black shadow-2xl hover:scale-[1.02] active:scale-95 transition-all text-[11px] tracking-[0.4em] border-none relative z-10 uppercase text-black"
+                                >
+                                    {loading ? <span className="loading loading-spinner text-black"></span> : "Confirmar Visita"}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
-            <div className="modal-backdrop bg-black/80 backdrop-blur-xl" onClick={onClose}></div>
+            <div className="modal-backdrop bg-black/95 backdrop-blur-md" onClick={onClose}></div>
         </dialog>
     );
 };

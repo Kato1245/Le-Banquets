@@ -1,4 +1,5 @@
 const Cita = require("../models/Cita");
+const Reserva = require("../models/Reserva");
 const Banquete = require("../models/Banquete");
 const NotificacionController = require("./notificacionController");
 
@@ -19,6 +20,35 @@ class CitaController {
             }
 
             const propietario_id = banquete.propietario_id;
+            
+            // Validar si ya existe una cita o reserva confirmada para este banquete en la misma fecha y hora
+            const [citaExistente, reservaExistente] = await Promise.all([
+                Cita.findOne({
+                    banquete_id,
+                    fecha_sugerida: {
+                        $gte: new Date(new Date(fecha_sugerida).setHours(0, 0, 0, 0)),
+                        $lte: new Date(new Date(fecha_sugerida).setHours(23, 59, 59, 999))
+                    },
+                    hora_sugerida,
+                    estado: { $ne: "cancelada" }
+                }),
+                Reserva.findOne({
+                    banquete_id,
+                    fecha: {
+                        $gte: new Date(new Date(fecha_sugerida).setHours(0, 0, 0, 0)),
+                        $lte: new Date(new Date(fecha_sugerida).setHours(23, 59, 59, 999))
+                    },
+                    hora: hora_sugerida,
+                    estado: { $in: ["confirmada", "pendiente"] }
+                })
+            ]);
+
+            if (citaExistente || reservaExistente) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Ya existe un compromiso programado para esta fecha y hora. Por favor, selecciona otro horario.",
+                });
+            }
 
             const nuevaCita = new Cita({
                 usuario_id,
@@ -31,11 +61,18 @@ class CitaController {
 
             await nuevaCita.save();
 
+            // Formatear fecha para la notificación (Local)
+            const fechaLocal = new Date(fecha_sugerida).toLocaleDateString("es-ES", {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric"
+            });
+
             // Notificar al propietario
             await NotificacionController.create({
                 destinatario_id: propietario_id,
                 onModel: "Propietario",
-                mensaje: `Nueva solicitud de cita para "${banquete.nombre}" el ${new Date(fecha_sugerida).toLocaleDateString()}`,
+                mensaje: `Nueva solicitud de cita para "${banquete.nombre}" el ${fechaLocal} a las ${hora_sugerida}`,
                 tipo: "cita",
                 referencia_id: nuevaCita._id,
             });

@@ -1,4 +1,5 @@
 const Reserva = require("../models/Reserva");
+const Cita = require("../models/Cita");
 const Banquete = require("../models/Banquete");
 const NotificacionController = require("./notificacionController");
 
@@ -16,6 +17,35 @@ class ReservaController {
 
             const propietario_id = banquete.propietario_id;
 
+            // Validar si ya existe una cita o reserva confirmada para este banquete en la misma fecha y hora
+            const [citaExistente, reservaExistente] = await Promise.all([
+                Cita.findOne({
+                    banquete_id,
+                    fecha_sugerida: {
+                        $gte: new Date(new Date(fecha).setHours(0, 0, 0, 0)),
+                        $lte: new Date(new Date(fecha).setHours(23, 59, 59, 999))
+                    },
+                    hora_sugerida: hora,
+                    estado: { $ne: "cancelada" }
+                }),
+                Reserva.findOne({
+                    banquete_id,
+                    fecha: {
+                        $gte: new Date(new Date(fecha).setHours(0, 0, 0, 0)),
+                        $lte: new Date(new Date(fecha).setHours(23, 59, 59, 999))
+                    },
+                    hora,
+                    estado: { $in: ["confirmada", "pendiente"] }
+                })
+            ]);
+
+            if (citaExistente || reservaExistente) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Ya existe un compromiso programado para esta fecha y hora. Por favor, selecciona otro horario.",
+                });
+            }
+
             const nuevaReserva = new Reserva({
                 usuario_id,
                 banquete_id,
@@ -28,11 +58,18 @@ class ReservaController {
 
             await nuevaReserva.save();
 
+            // Formatear fecha para la notificación (Local)
+            const fechaLocal = new Date(fecha).toLocaleDateString("es-ES", {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric"
+            });
+
             // Notificar al propietario
             await NotificacionController.create({
                 destinatario_id: propietario_id,
                 onModel: "Propietario",
-                mensaje: `Nueva reserva confirmada para "${banquete.nombre}" el ${new Date(fecha).toLocaleDateString()}`,
+                mensaje: `Nueva reserva confirmada para "${banquete.nombre}" el ${fechaLocal} a las ${hora}`,
                 tipo: "reserva",
                 referencia_id: nuevaReserva._id,
             });
