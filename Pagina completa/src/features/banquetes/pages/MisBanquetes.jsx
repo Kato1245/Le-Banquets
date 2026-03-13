@@ -80,7 +80,7 @@ const TIPOS = ["general", "lujo", "exterior", "corporativo", "rustico"];
 const INITIAL_FORM = {
   nombre: "",
   descripcion: "",
-  ubicacion: "",
+  direccion: "",
   capacidad: "",
   tipo: "general",
   precio_base: "",
@@ -100,7 +100,7 @@ const BanqueteForm = ({ onSuccess, banqueteEdit }) => {
       setForm({
         nombre: banqueteEdit.nombre || "",
         descripcion: banqueteEdit.descripcion || "",
-        ubicacion: banqueteEdit.ubicacion || "",
+        direccion: banqueteEdit.direccion || "",
         capacidad: banqueteEdit.capacidad || "",
         tipo: banqueteEdit.tipo || "general",
         precio_base: banqueteEdit.precio_base || banqueteEdit.precio || "",
@@ -120,13 +120,27 @@ const BanqueteForm = ({ onSuccess, banqueteEdit }) => {
     const e = {};
     if (!form.nombre.trim() || form.nombre.trim().length < 3)
       e.nombre = "El nombre debe tener al menos 3 caracteres.";
+    else if (form.nombre.trim().length > 50)
+      e.nombre = "El nombre no puede exceder los 50 caracteres.";
+
     if (!form.descripcion.trim() || form.descripcion.trim().length < 20)
       e.descripcion = "La descripción debe tener al menos 20 caracteres.";
-    if (!form.ubicacion.trim()) e.ubicacion = "La ubicación es obligatoria.";
+    else if (form.descripcion.trim().length > 500)
+      e.descripcion = "La descripción no puede exceder los 500 caracteres.";
+
+    if (!form.direccion.trim()) e.direccion = "La Dirección es obligatoria.";
+    else if (form.direccion.trim().length > 50)
+      e.direccion = "La dirección no puede exceder los 50 caracteres.";
+
     if (!form.capacidad || parseInt(form.capacidad) < 1)
       e.capacidad = "La capacidad debe ser al menos 1 persona.";
+    else if (form.capacidad.toString().length > 4)
+      e.capacidad = "La capacidad no puede exceder los 4 dígitos.";
+
     if (form.precio_base === "" || parseFloat(form.precio_base) < 0)
       e.precio_base = "Ingresa un precio base válido (≥ 0).";
+    else if (form.precio_base.toString().length > 12)
+      e.precio_base = "El precio no puede exceder los 12 dígitos.";
 
     const totalImages = existingImages.length + form.imagenes.length;
     if (totalImages === 0) {
@@ -191,7 +205,7 @@ const BanqueteForm = ({ onSuccess, banqueteEdit }) => {
       const formData = new FormData();
       formData.append("nombre", form.nombre.trim());
       formData.append("descripcion", form.descripcion.trim());
-      formData.append("ubicacion", form.ubicacion.trim());
+      formData.append("direccion", form.direccion.trim());
       formData.append("capacidad", form.capacidad);
       formData.append("tipo", form.tipo);
       formData.append("precio_base", form.precio_base);
@@ -251,6 +265,7 @@ const BanqueteForm = ({ onSuccess, banqueteEdit }) => {
             name="nombre"
             value={form.nombre}
             onChange={handleChange}
+            maxLength={50}
             placeholder="Ej. Salón Imperial Las Flores"
             className={`input input-bordered focus:input-primary rounded-xl transition-all ${errors.nombre ? "input-error" : ""}`}
           />
@@ -268,13 +283,14 @@ const BanqueteForm = ({ onSuccess, banqueteEdit }) => {
               Descripción <span className="text-error">*</span>
             </span>
             <span className="label-text-alt opacity-40">
-              {form.descripcion.length} / 20 mín.
+              {form.descripcion.length} / 500 máx.
             </span>
           </label>
           <textarea
             name="descripcion"
             value={form.descripcion}
             onChange={handleChange}
+            maxLength={500}
             placeholder="Describe tu espacio: capacidades, ambientación, servicios incluidos..."
             rows={4}
             className={`textarea textarea-bordered focus:textarea-primary rounded-xl transition-all resize-none ${errors.descripcion ? "textarea-error" : ""}`}
@@ -286,24 +302,25 @@ const BanqueteForm = ({ onSuccess, banqueteEdit }) => {
           )}
         </div>
 
-        {/* Ubicación */}
+        {/* Dirección */}
         <div className="form-control">
           <label className="label">
             <span className="label-text font-bold opacity-70">
-              Ubicación <span className="text-error">*</span>
+              Dirección <span className="text-error">*</span>
             </span>
           </label>
           <input
             type="text"
-            name="ubicacion"
-            value={form.ubicacion}
+            name="direccion"
+            value={form.direccion}
             onChange={handleChange}
+            maxLength={50}
             placeholder="Ej. Calle 123, Ciudad"
-            className={`input input-bordered focus:input-primary rounded-xl transition-all ${errors.ubicacion ? "input-error" : ""}`}
+            className={`input input-bordered focus:input-primary rounded-xl transition-all ${errors.direccion ? "input-error" : ""}`}
           />
-          {errors.ubicacion && (
+          {errors.direccion && (
             <span className="label-text-alt text-error mt-1 font-medium">
-              {errors.ubicacion}
+              {errors.direccion}
             </span>
           )}
         </div>
@@ -340,7 +357,9 @@ const BanqueteForm = ({ onSuccess, banqueteEdit }) => {
             type="number"
             name="capacidad"
             value={form.capacidad}
-            onChange={handleChange}
+            onChange={(e) => {
+              if (e.target.value.length <= 4) handleChange(e);
+            }}
             min="1"
             placeholder="Ej. 150"
             className={`input input-bordered focus:input-primary rounded-xl transition-all ${errors.capacidad ? "input-error" : ""}`}
@@ -363,7 +382,9 @@ const BanqueteForm = ({ onSuccess, banqueteEdit }) => {
             type="number"
             name="precio_base"
             value={form.precio_base}
-            onChange={handleChange}
+            onChange={(e) => {
+              if (e.target.value.length <= 12) handleChange(e);
+            }}
             min="0"
             step="100"
             placeholder="Ej. 15000"
@@ -580,9 +601,9 @@ const PerfilEmpresaPanel = ({ user }) => {
                 label: "Miembro desde",
                 value: user?.createdAt
                   ? new Date(user.createdAt).toLocaleDateString("es", {
-                    year: "numeric",
-                    month: "long",
-                  })
+                      year: "numeric",
+                      month: "long",
+                    })
                   : "—",
               },
               {
@@ -729,7 +750,11 @@ const BanqueteSkeleton = () => (
 const TABS = [
   { id: "mis-banquetes", label: "Mis Banquetes", icon: <IconBanquet /> },
   { id: "agregar", label: "Agregar Banquete", icon: <IconAdd /> },
-  { id: "calendario", label: "Calendario", icon: <span className="text-lg">📅</span> },
+  {
+    id: "calendario",
+    label: "Calendario",
+    icon: <span className="text-lg">📅</span>,
+  },
   { id: "estadisticas", label: "Estadísticas", icon: <IconStats /> },
   { id: "empresa", label: "Perfil de Empresa", icon: <IconCompany /> },
 ];
@@ -848,10 +873,11 @@ const MisBanquetes = () => {
             <button
               key={tab.id}
               onClick={() => switchTab(tab.id)}
-              className={`btn btn-sm rounded-xl gap-2 normal-case font-bold transition-all ${activeTab === tab.id
-                ? "btn-primary shadow-md"
-                : "btn-ghost opacity-60 hover:opacity-100"
-                }`}
+              className={`btn btn-sm rounded-xl gap-2 normal-case font-bold transition-all ${
+                activeTab === tab.id
+                  ? "btn-primary shadow-md"
+                  : "btn-ghost opacity-60 hover:opacity-100"
+              }`}
             >
               {tab.icon}
               {tab.label}
@@ -960,7 +986,10 @@ const MisBanquetes = () => {
 
             <div className="card bg-base-100 shadow-xl border border-base-200 rounded-[2.5rem]">
               <div className="card-body p-8 md:p-12">
-                <BanqueteForm onSuccess={handleFormSuccess} banqueteEdit={banqueteEdit} />
+                <BanqueteForm
+                  onSuccess={handleFormSuccess}
+                  banqueteEdit={banqueteEdit}
+                />
               </div>
             </div>
           </div>
