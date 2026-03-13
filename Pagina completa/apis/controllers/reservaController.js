@@ -69,15 +69,14 @@ class ReservaController {
             res.status(500).json({ success: false, message: "Error interno del servidor" });
         }
     }
-  }
 
-  // Obtener reservas (para calendario del propietario)
+    // Obtener reservas (para calendario del propietario)
   static async getCitasYReservasPropietario(req, res) {
     try {
       const propietario_id = req.user._id;
 
       const reservas = await Reserva.find({ propietario_id })
-        .populate("banquete_id", "nombre direccion direccion imagenes")
+        .populate("banquete_id", "nombre direccion imagenes")
         .populate("usuario_id", "nombre email telefono");
 
       res.json({
@@ -98,7 +97,7 @@ class ReservaController {
       const usuario_id = req.user._id;
 
       const reservas = await Reserva.find({ usuario_id })
-        .populate("banquete_id", "nombre direccion direccion imagenes tipo")
+        .populate("banquete_id", "nombre direccion imagenes tipo")
         .populate("propietario_id", "nombre email");
 
       res.json({
@@ -110,6 +109,7 @@ class ReservaController {
       res
         .status(500)
         .json({ success: false, message: "Error interno del servidor" });
+        }
     }
 
     // Actualizar estado de una reserva
@@ -177,7 +177,6 @@ class ReservaController {
             res.status(500).json({ success: false, message: "Error interno del servidor" });
         }
     }
-  }
 }
 
 module.exports = ReservaController;

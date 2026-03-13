@@ -100,9 +100,10 @@ class CitaController {
         message: "Error interno del servidor",
       });
     }
+  }
 
-    // Actualizar estado de una cita
-    static async actualizarEstado(req, res) {
+  // Actualizar estado de una cita
+  static async actualizarEstado(req, res) {
         try {
             const { id } = req.params;
             const { estado, motivo_rechazo } = req.body;
@@ -167,7 +168,6 @@ class CitaController {
             });
         }
     }
-  }
 }
 
 module.exports = CitaController;
