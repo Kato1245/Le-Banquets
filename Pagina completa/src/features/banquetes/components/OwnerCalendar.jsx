@@ -3,6 +3,15 @@ import reservasService from "../services/reservasService";
 import citasService from "../services/citasService";
 import toast from "react-hot-toast";
 
+// Parsea una fecha ISO de MongoDB creando un Date en hora LOCAL para evitar
+// el desfase UTC → local que movía los eventos al día anterior.
+const parseFechaLocal = (fechaISO) => {
+  if (!fechaISO) return new Date();
+  const [year, month, day] = new Date(fechaISO).toISOString().split("T")[0].split("-").map(Number);
+  return new Date(year, month - 1, day); // mes es 0-indexado
+};
+
+
 const OwnerCalendar = () => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,7 +35,7 @@ const OwnerCalendar = () => {
       const formatedReservas = reservas.map((r) => ({
         id: r._id,
         title: `Reserva: ${r.banquete_id?.nombre || "N/A"}`,
-        date: new Date(r.fecha),
+        date: parseFechaLocal(r.fecha),
         hora: r.hora,
         type: "reserva",
         color: "bg-error", // Rojo para reservas
@@ -47,7 +56,7 @@ const OwnerCalendar = () => {
       const formatedCitas = citas.map((c) => ({
         id: c._id,
         title: `Cita: ${c.banquete_id?.nombre || "N/A"}`,
-        date: new Date(c.fecha_sugerida),
+        date: parseFechaLocal(c.fecha_sugerida),
         hora: c.hora_sugerida,
         type: "cita",
         color: "bg-info", // Azul para citas

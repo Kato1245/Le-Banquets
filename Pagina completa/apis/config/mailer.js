@@ -1,6 +1,14 @@
 const nodemailer = require("nodemailer");
 require("dotenv").config();
 
+// Helper: formatea fecha sin desfase de zona horaria (UTC → local).
+const formatearFecha = (fecha) => {
+  if (!fecha) return "fecha no disponible";
+  const iso = new Date(fecha).toISOString();
+  const [year, month, day] = iso.split("T")[0].split("-");
+  return `${day}/${month}/${year}`;
+};
+
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
   port: process.env.EMAIL_PORT,
@@ -68,7 +76,7 @@ const sendReservationRequestEmail = async (propietarioEmail, reservaData) => {
           
           <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #4a90e2;">
             <p style="margin: 5px 0;"><strong>Cliente:</strong> ${clienteNombre}</p>
-            <p style="margin: 5px 0;"><strong>Fecha:</strong> ${new Date(fecha).toLocaleDateString()}</p>
+            <p style="margin: 5px 0;"><strong>Fecha:</strong> ${formatearFecha(fecha)}</p>
             <p style="margin: 5px 0;"><strong>Hora:</strong> ${hora}</p>
             <p style="margin: 5px 0;"><strong>Costo Estimado:</strong> $${monto.toLocaleString()}</p>
             ${detalles ? `<p style="margin: 5px 0;"><strong>Detalles:</strong> ${detalles}</p>` : ""}
@@ -112,7 +120,7 @@ const sendReservationStatusEmail = async (usuarioEmail, data) => {
           
           <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid ${esAceptada ? '#27ae60' : '#e74c3c'};">
             <p style="margin: 5px 0;"><strong>Banquete:</strong> ${banqueteNombre}</p>
-            <p style="margin: 5px 0;"><strong>Fecha:</strong> ${new Date(fecha).toLocaleDateString()}</p>
+            <p style="margin: 5px 0;"><strong>Fecha:</strong> ${formatearFecha(fecha)}</p>
             <p style="margin: 5px 0;"><strong>Hora:</strong> ${hora}</p>
             <p style="margin: 5px 0;"><strong>Estado:</strong> <span style="text-transform: uppercase; font-weight: bold; color: ${esAceptada ? '#27ae60' : '#e74c3c'};">${estado}</span></p>
             ${!esAceptada && motivo_rechazo ? `<p style="margin: 5px 0; color: #e74c3c;"><strong>Motivo:</strong> ${motivo_rechazo}</p>` : ""}
@@ -156,7 +164,7 @@ const sendAppointmentStatusEmail = async (usuarioEmail, data) => {
           
           <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid ${esAceptada ? '#27ae60' : '#e74c3c'};">
             <p style="margin: 5px 0;"><strong>Banquete:</strong> ${banqueteNombre}</p>
-            <p style="margin: 5px 0;"><strong>Fecha sugerida:</strong> ${new Date(fecha).toLocaleDateString()}</p>
+            <p style="margin: 5px 0;"><strong>Fecha sugerida:</strong> ${formatearFecha(fecha)}</p>
             <p style="margin: 5px 0;"><strong>Hora sugerida:</strong> ${hora}</p>
             <p style="margin: 5px 0;"><strong>Estado:</strong> <span style="text-transform: uppercase; font-weight: bold; color: ${esAceptada ? '#27ae60' : '#e74c3c'};">${estado === 'confirmada' ? 'ACEPTADA' : 'RECHAZADA'}</span></p>
             ${!esAceptada && motivo_rechazo ? `<p style="margin: 5px 0; color: #e74c3c;"><strong>Motivo:</strong> ${motivo_rechazo}</p>` : ""}

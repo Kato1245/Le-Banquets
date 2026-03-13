@@ -6,6 +6,14 @@ import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
 import { getImageUrl } from "../../../shared/utils/imageUtils";
 
+// Parsea fecha ISO de MongoDB en hora LOCAL (evita desfase UTC → local).
+const parseFechaLocal = (fechaISO) => {
+  if (!fechaISO) return new Date();
+  const [year, month, day] = new Date(fechaISO).toISOString().split("T")[0].split("-").map(Number);
+  return new Date(year, month - 1, day);
+};
+
+
 const MisEventos = () => {
   const { user, token } = useAuth();
   const [activeTab, setActiveTab] = useState("proximos");
@@ -205,7 +213,7 @@ const MisEventos = () => {
                             <span className="opacity-40 uppercase text-[10px] font-black mr-2">
                               Fecha:
                             </span>
-                            {new Date(evento.fecha).toLocaleDateString(
+                            {parseFechaLocal(evento.fecha).toLocaleDateString(
                               "es-ES",
                               {
                                 day: "numeric",
@@ -396,7 +404,7 @@ const MisEventos = () => {
                       Fecha Citada
                     </p>
                     <p className="font-bold text-sm">
-                      {new Date(selectedEvent.fecha).toLocaleDateString(
+                      {parseFechaLocal(selectedEvent.fecha).toLocaleDateString(
                         "es-ES",
                         {
                           weekday: "long",
