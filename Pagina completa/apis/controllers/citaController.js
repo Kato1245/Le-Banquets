@@ -5,6 +5,15 @@ const Usuario = require("../models/Usuario");
 const NotificacionController = require("./notificacionController");
 const { sendAppointmentStatusEmail } = require("../config/mailer");
 
+// Helper: formatea una fecha de MongoDB (Date) sin desfase de zona horaria.
+// Extrae año/mes/día directamente del ISO string para evitar la conversión UTC → local.
+const formatearFecha = (fecha) => {
+  if (!fecha) return "fecha no disponible";
+  const iso = new Date(fecha).toISOString(); // ej. "2025-03-15T00:00:00.000Z"
+  const [year, month, day] = iso.split("T")[0].split("-");
+  return `${day}/${month}/${year}`;
+};
+
 class CitaController {
   // Crear una nueva solicitud de cita
   static async create(req, res) {
@@ -38,7 +47,7 @@ class CitaController {
       await NotificacionController.create({
         destinatario_id: propietario_id,
         onModel: "Propietario",
-        mensaje: `Nueva solicitud de cita para "${banquete.nombre}" el ${new Date(fecha_sugerida).toLocaleDateString()}`,
+        mensaje: `Nueva solicitud de cita para "${banquete.nombre}" el ${formatearFecha(fecha_sugerida)}`,
         tipo: "cita",
         referencia_id: nuevaCita._id,
       });
@@ -127,7 +136,7 @@ class CitaController {
             // Notificar al usuario sobre el cambio (interna)
             let mensajeNotif = "";
             if (estado === "confirmada") {
-                mensajeNotif = `¡Tu cita para "${cita.banquete_id.nombre}" ha sido aceptada! Te esperamos el ${new Date(cita.fecha_sugerida).toLocaleDateString()}.`;
+                mensajeNotif = `¡Tu cita para "${cita.banquete_id.nombre}" ha sido aceptada! Te esperamos el ${formatearFecha(cita.fecha_sugerida)}.`;
             } else if (estado === "cancelada") {
                 mensajeNotif = `Tu solicitud para "${cita.banquete_id.nombre}" fue rechazada. Motivo: ${motivo_rechazo || "No especificado"}.`;
             }

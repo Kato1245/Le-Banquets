@@ -5,6 +5,14 @@ const Usuario = require("../models/Usuario");
 const NotificacionController = require("./notificacionController");
 const { sendReservationRequestEmail } = require("../config/mailer");
 
+// Helper: formatea una fecha de MongoDB (Date) sin desfase de zona horaria.
+const formatearFecha = (fecha) => {
+  if (!fecha) return "fecha no disponible";
+  const iso = new Date(fecha).toISOString();
+  const [year, month, day] = iso.split("T")[0].split("-");
+  return `${day}/${month}/${year}`;
+};
+
 class ReservaController {
     // Crear reserva
     static async create(req, res) {
@@ -35,7 +43,7 @@ class ReservaController {
             await NotificacionController.create({
                 destinatario_id: propietario_id,
                 onModel: "Propietario",
-                mensaje: `Nueva reserva confirmada para "${banquete.nombre}" el ${new Date(fecha).toLocaleDateString()}`,
+                mensaje: `Nueva reserva confirmada para "${banquete.nombre}" el ${formatearFecha(fecha)}`,
                 tipo: "reserva",
                 referencia_id: nuevaReserva._id,
             });
