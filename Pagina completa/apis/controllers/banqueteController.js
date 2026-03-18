@@ -15,6 +15,7 @@ class BanqueteController {
         precio_base,
         equipamento,
         servicios,
+        eventos_que_ofrece,
       } = req.body;
 
       // req.user viene del middleware authenticateToken y contiene el documento Mongoose del usuario
@@ -48,6 +49,7 @@ class BanqueteController {
         precio_base,
         equipamento,
         servicios,
+        eventos_que_ofrece: eventos_que_ofrece ? JSON.parse(eventos_que_ofrece) : [],
         propietario_id,
         imagenes,
       });
@@ -132,6 +134,7 @@ class BanqueteController {
         precio_base,
         equipamento,
         servicios,
+        eventos_que_ofrece,
         imagenes_existentes,
       } = req.body;
 
@@ -154,6 +157,7 @@ class BanqueteController {
       if (precio_base !== undefined) banquete.precio_base = precio_base;
       if (equipamento !== undefined) banquete.equipamento = equipamento;
       if (servicios !== undefined) banquete.servicios = servicios;
+      if (eventos_que_ofrece !== undefined) banquete.eventos_que_ofrece = JSON.parse(eventos_que_ofrece);
 
       // Manejar imágenes: conservar las existentes que el usuario no eliminó
       let imagenesFinales = [];
