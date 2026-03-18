@@ -11,6 +11,12 @@ const parseFechaLocal = (fechaISO) => {
   return new Date(year, month - 1, day); // mes es 0-indexado
 };
 
+const getEventColor = (estado) => {
+  if (estado === "confirmada") return "bg-success"; // Verde para aprobado
+  if (estado === "cancelada") return "bg-error"; // Rojo para rechazado
+  return "bg-[#9333ea]"; // Morado para pendiente
+};
+
 
 const OwnerCalendar = () => {
   const [events, setEvents] = useState([]);
@@ -40,7 +46,7 @@ const OwnerCalendar = () => {
         date: parseFechaLocal(r.fecha),
         hora: r.hora,
         type: "reserva",
-        color: "bg-error", // Rojo para reservas
+        color: getEventColor(r.estado), // Color según estado
         user: r.usuario_id?.nombre,
         email: r.usuario_id?.email,
         telefono: r.usuario_id?.telefono || "No provisto",
@@ -61,7 +67,7 @@ const OwnerCalendar = () => {
         date: parseFechaLocal(c.fecha_sugerida),
         hora: c.hora_sugerida,
         type: "cita",
-        color: "bg-info", // Azul para citas
+        color: getEventColor(c.estado), // Color según estado
         user: c.usuario_id?.nombre,
         email: c.usuario_id?.email,
         telefono: "No provisto",
@@ -213,21 +219,57 @@ const OwnerCalendar = () => {
               e.date.getFullYear() === currentDate.getFullYear(),
           );
 
+          // Si hay una reserva confirmada, anula visualmente las demás cosas ese día
+          const confirmedReserva = dayEvents.find(e => e.type === "reserva" && e.estado === "confirmada");
+
+          if (confirmedReserva) {
+            return (
+              <div
+                key={day}
+                className="bg-success text-success-content min-h-[120px] p-2 hover:brightness-110 transition-all border-t border-l border-base-300 relative cursor-pointer flex flex-col items-center justify-center overflow-hidden group shadow-inner"
+                onClick={() => setSelectedEvent(confirmedReserva)}
+                title={`Reserva Confirmada: ${confirmedReserva.banquete} - ${confirmedReserva.user}`}
+              >
+                <div className="absolute top-2 left-2 text-[10px] font-black opacity-50 z-10">{day}</div>
+                <div className="absolute inset-0 bg-black/10 scale-0 group-hover:scale-100 transition-transform rounded-full origin-center opacity-0 group-hover:opacity-100 duration-500"></div>
+                <span className="text-3xl mb-1 drop-shadow-sm z-10">🎉</span>
+                <span className="text-[10px] font-black uppercase tracking-widest text-center leading-tight z-10 w-full px-1 truncate">
+                  Reservado
+                </span>
+                <span className="text-[8px] font-bold uppercase opacity-80 mt-1 truncate w-full text-center z-10 px-1">
+                  {confirmedReserva.user}
+                </span>
+              </div>
+            );
+          }
+
           return (
             <div
               key={day}
-              className="bg-base-100 min-h-[120px] p-2 hover:bg-base-200/50 transition-colors border-t border-l border-base-300"
+              className="bg-base-100 min-h-[120px] p-2 flex flex-col hover:bg-base-200/50 transition-colors border-t border-l border-base-300"
             >
-              <span className="text-xs font-bold opacity-30">{day}</span>
-              <div className="mt-1 space-y-1">
+              <div className="text-xs font-bold opacity-30 mb-1">{day}</div>
+              <div className="flex-1 space-y-1">
                 {dayEvents.map((evt) => (
                   <div
                     key={evt.id}
-                    className={`${evt.color} text-white text-[8px] p-2 rounded-lg font-black uppercase tracking-tighter truncate cursor-pointer hover:scale-105 transition-transform`}
+                    className={`${evt.color} text-white p-2 rounded-lg cursor-pointer hover:scale-[1.02] active:scale-95 transition-all shadow-sm flex items-center gap-2 min-w-0 ${
+                      evt.type === "reserva" 
+                        ? "border-l-[3px] border-l-white/40 opacity-100" 
+                        : "opacity-80 border-dashed border border-base-100/30"
+                    }`}
                     onClick={() => setSelectedEvent(evt)}
                     title={`${evt.title} - ${evt.user}`}
                   >
-                    {evt.title}
+                    <span className="text-sm shrink-0 drop-shadow-sm">{evt.type === "reserva" ? "🎊" : "👤"}</span>
+                    <div className="flex flex-col min-w-0 flex-1">
+                      <span className="text-[9px] font-black uppercase tracking-tighter leading-none truncate">
+                        {evt.title.replace(/^(Reserva|Cita):\s*/i, "")}
+                      </span>
+                      <span className="text-[7px] font-bold opacity-80 truncate mt-1 tracking-widest uppercase">
+                        {evt.type === "reserva" ? "Reserva" : "Cita"}
+                      </span>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -236,18 +278,46 @@ const OwnerCalendar = () => {
         })}
       </div>
 
-      <div className="mt-8 flex gap-6">
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-info"></div>
-          <span className="text-[10px] font-black uppercase tracking-widest opacity-40">
-            Citas (Visitas)
-          </span>
+      <div className="mt-8 flex flex-wrap items-center gap-6 bg-base-200/40 p-4 rounded-3xl border border-base-content/5">
+        <div className="flex gap-6 border-r border-base-content/10 pr-6">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-success"></div>
+            <span className="text-[10px] font-black uppercase tracking-widest opacity-40">
+              Aprobados
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-error"></div>
+            <span className="text-[10px] font-black uppercase tracking-widest opacity-40">
+              Rechazados
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-[#9333ea]"></div>
+            <span className="text-[10px] font-black uppercase tracking-widest opacity-40">
+              Pendientes
+            </span>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-error"></div>
-          <span className="text-[10px] font-black uppercase tracking-widest opacity-40">
-            Reservas (Eventos)
-          </span>
+        <div className="flex gap-6">
+          <div className="flex items-center gap-2">
+            <span className="text-sm">🎊</span>
+            <span className="text-[10px] font-black uppercase tracking-widest opacity-40">
+              Reserva de Evento
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm">👤</span>
+            <span className="text-[10px] font-black uppercase tracking-widest opacity-40">
+              Visita / Cita
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm">🎉</span>
+            <span className="text-[10px] font-black uppercase tracking-widest opacity-40">
+              Día Finalizado / Completamente Reservado
+            </span>
+          </div>
         </div>
       </div>
 
