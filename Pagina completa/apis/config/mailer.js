@@ -106,30 +106,53 @@ const sendReservationRequestEmail = async (propietarioEmail, reservaData) => {
 const sendReservationStatusEmail = async (usuarioEmail, data) => {
   try {
     const { nombreUsuario, banqueteNombre, estado, motivo_rechazo, fecha, hora } = data;
-    const esAceptada = estado === "confirmada";
+    
+    let subject = "";
+    let headerColor = "";
+    let headerText = "";
+    let accentColor = "";
+
+    if (estado === "confirmada") {
+      subject = `Reserva Confirmada: ${banqueteNombre}`;
+      headerColor = "#27ae60";
+      headerText = "Tu Reserva ha sido Confirmada";
+      accentColor = "#27ae60";
+    } else if (estado === "cancelada") {
+      subject = `Reserva Cancelada: ${banqueteNombre}`;
+      headerColor = "#e74c3c";
+      headerText = "Tu Reserva ha sido Cancelada";
+      accentColor = "#e74c3c";
+    } else if (estado === "modificada") {
+      subject = `Reserva Modificada: ${banqueteNombre}`;
+      headerColor = "#f39c12"; // Naranja para advertencia/modificación
+      headerText = "Tu Reserva ha sido Modificada";
+      accentColor = "#f39c12";
+    }
 
     const mailOptions = {
       from: `"Le Banquets" <${process.env.EMAIL_USER}>`,
       to: usuarioEmail,
-      subject: `Actualización de tu reserva: ${esAceptada ? 'Confirmada' : 'Cancelada'} - Le Banquets`,
+      subject: `${subject} - Le Banquets`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
-          <h2 style="color: ${esAceptada ? '#27ae60' : '#e74c3c'}; text-align: center;">Tu Reserva ha sido ${esAceptada ? 'Confirmada' : 'Cancelada'}</h2>
+          <h2 style="color: ${headerColor}; text-align: center;">${headerText}</h2>
           <p>Hola <strong>${nombreUsuario}</strong>,</p>
           <p>Tenemos una actualización sobre tu reserva para <strong>"${banqueteNombre}"</strong>.</p>
           
-          <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid ${esAceptada ? '#27ae60' : '#e74c3c'};">
+          <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid ${accentColor};">
             <p style="margin: 5px 0;"><strong>Banquete:</strong> ${banqueteNombre}</p>
             <p style="margin: 5px 0;"><strong>Fecha:</strong> ${formatearFecha(fecha)}</p>
             <p style="margin: 5px 0;"><strong>Hora:</strong> ${hora}</p>
-            <p style="margin: 5px 0;"><strong>Estado:</strong> <span style="text-transform: uppercase; font-weight: bold; color: ${esAceptada ? '#27ae60' : '#e74c3c'};">${estado}</span></p>
-            ${!esAceptada && motivo_rechazo ? `<p style="margin: 5px 0; color: #e74c3c;"><strong>Motivo:</strong> ${motivo_rechazo}</p>` : ""}
+            <p style="margin: 5px 0;"><strong>Estado:</strong> <span style="text-transform: uppercase; font-weight: bold; color: ${accentColor};">${estado}</span></p>
+            ${estado === "cancelada" && motivo_rechazo ? `<p style="margin: 5px 0; color: #e74c3c;"><strong>Motivo:</strong> ${motivo_rechazo}</p>` : ""}
           </div>
           
-          <p>${esAceptada ? '¡Estamos listos para recibirte! Puedes ver los detalles en tu perfil.' : 'Lamentamos que tu reserva no haya podido ser procesada en esta ocasión.'}</p>
+          <p>${estado === "confirmada" ? '¡Estamos listos para recibirte! Puedes ver los detalles en tu perfil.' : 
+             estado === "modificada" ? 'El propietario ha ajustado los detalles de tu reserva. Por favor revísalos.' :
+             'Lamentamos que tu reserva no haya podido ser procesada en esta ocasión.'}</p>
           
           <div style="text-align: center; margin-top: 30px;">
-            <a href="${process.env.FRONTEND_URL}/perfil?tab=reservas" style="background-color: ${esAceptada ? '#27ae60' : '#e74c3c'}; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">Ver mis Reservas</a>
+            <a href="${process.env.FRONTEND_URL}/perfil?tab=reservas" style="background-color: ${accentColor}; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">Ver mis Reservas</a>
           </div>
           
           <hr style="border: 0; border-top: 1px solid #eeeeee; margin: 30px 0;">
@@ -141,6 +164,7 @@ const sendReservationStatusEmail = async (usuarioEmail, data) => {
     const info = await transporter.sendMail(mailOptions);
     console.log("Correo de estado de reserva enviado: %s", info.messageId);
     return { success: true };
+
   } catch (error) {
     console.error("Error enviando correo de estado de reserva:", error);
     return { success: false, error };

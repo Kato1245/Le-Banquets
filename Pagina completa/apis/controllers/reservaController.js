@@ -146,9 +146,9 @@ class ReservaController {
             const NotificacionController = require("./notificacionController");
             let mensajeNotif = "";
             if (estado === "confirmada") {
-                mensajeNotif = `¡Tu reserva para "${reserva.banquete_id.nombre}" ha sido confirmada!`;
+                mensajeNotif = `¡Tu reserva para "${reserva.banquete_id?.nombre || "el banquete"}" ha sido confirmada!`;
             } else if (estado === "cancelada") {
-                mensajeNotif = `Tu reserva para "${reserva.banquete_id.nombre}" fue rechazada. Motivo: ${motivo_rechazo || "No especificado"}.`;
+                mensajeNotif = `Tu reserva para "${reserva.banquete_id?.nombre || "el banquete"}" fue rechazada. Motivo: ${motivo_rechazo || "No especificado"}.`;
             }
 
             if (mensajeNotif) {
@@ -156,10 +156,11 @@ class ReservaController {
                     destinatario_id: reserva.usuario_id,
                     onModel: "Usuario",
                     mensaje: mensajeNotif,
-                    tipo: "evento",
+                    tipo: "reserva",
                     referencia_id: reserva._id,
                 });
             }
+
 
             // Notificar al usuario por correo si tiene la opción activa
             const usuario = await Usuario.findById(reserva.usuario_id);
@@ -167,8 +168,9 @@ class ReservaController {
                 const { sendReservationStatusEmail } = require("../config/mailer");
                 await sendReservationStatusEmail(usuario.email, {
                     nombreUsuario: usuario.nombre,
-                    banqueteNombre: reserva.banquete_id.nombre,
+                    banqueteNombre: reserva.banquete_id?.nombre || "Banquete",
                     estado: estado,
+
                     motivo_rechazo: motivo_rechazo,
                     fecha: reserva.fecha,
                     hora: reserva.hora,
@@ -209,23 +211,25 @@ class ReservaController {
 
             // Notificar al usuario del cambio
             const NotificacionController = require("./notificacionController");
-            let mensajeNotif = `El propietario ha modificado la fecha de tu reserva para "${reserva.banquete_id.nombre}" a ${formatearFecha(fecha)} a las ${hora}.`;
+            let mensajeNotif = `El propietario ha modificado la fecha de tu reserva para "${reserva.banquete_id?.nombre || "el banquete"}" a ${formatearFecha(fecha)} a las ${hora}.`;
 
             await NotificacionController.create({
                 destinatario_id: reserva.usuario_id,
                 onModel: "Usuario",
                 mensaje: mensajeNotif,
-                tipo: "evento",
+                tipo: "reserva",
                 referencia_id: reserva._id,
             });
+
 
             const usuario = await Usuario.findById(reserva.usuario_id);
             if (usuario && usuario.notificaciones?.email) {
                 const { sendReservationStatusEmail } = require("../config/mailer");
                 await sendReservationStatusEmail(usuario.email, {
                     nombreUsuario: usuario.nombre,
-                    banqueteNombre: reserva.banquete_id.nombre,
+                    banqueteNombre: reserva.banquete_id?.nombre || "Banquete",
                     estado: "modificada",
+
                     fecha: reserva.fecha,
                     hora: reserva.hora,
                 });
