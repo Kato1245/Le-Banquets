@@ -149,7 +149,7 @@ const BanqueteReservaModal = ({ banquete, isOpen, onClose }) => {
                 } else if (isOccupied) {
                   btnClass += "bg-error/10 text-error cursor-not-allowed line-through hover:bg-error/20";
                 } else if (isSelected) {
-                  btnClass += "bg-primary text-white shadow-lg scale-110";
+                  btnClass += "border-[3px] border-primary bg-primary/10 text-primary font-black shadow-lg scale-110";
                 } else {
                   btnClass += "bg-success/10 text-success hover:bg-success hover:text-white";
                 }

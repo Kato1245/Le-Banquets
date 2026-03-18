@@ -31,6 +31,7 @@ router.post(
 
 // Rutas públicas
 router.get("/:id/fechas-ocupadas", BanqueteController.getFechasOcupadas);
+router.get("/:id/disponibilidad-citas", BanqueteController.getDisponibilidadCitas);
 router.get("/", BanqueteController.getAll);
 router.get("/:id", BanqueteController.getById);
 

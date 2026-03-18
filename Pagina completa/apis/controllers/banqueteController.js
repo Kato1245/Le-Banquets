@@ -312,6 +312,47 @@ class BanqueteController {
     }
   }
 
+  // Obtener disponibilidad para citas (días ocupados + horas tomadas)
+  static async getDisponibilidadCitas(req, res) {
+    try {
+      const { id } = req.params;
+      const banquete = await Banquete.findById(id);
+      if (!banquete) {
+        return res.status(404).json({ success: false, message: "Banquete no encontrado" });
+      }
+
+      // Buscar reservas confirmadas o pendientes (bloquean todo el día)
+      const reservas = await Reserva.find({ banquete_id: id, estado: { $ne: "cancelada" } });
+      const fechasReservadas = reservas.map((r) => new Date(r.fecha).toISOString().split("T")[0]);
+
+      // Combinar fechas manuales y de reservas sin duplicados
+      const bloqueadas = banquete.fechas_bloqueadas || [];
+      const fechasOcupadasCompletas = [...new Set([...bloqueadas, ...fechasReservadas])];
+
+      // Buscar citas activas para marcar horas ocupadas
+      const Cita = require("../models/Cita");
+      const citas = await Cita.find({ banquete_id: id, estado: { $ne: "cancelada" } });
+      
+      const horasOcupadasPorDia = {};
+      citas.forEach(c => {
+        const dateStr = new Date(c.fecha_sugerida).toISOString().split("T")[0];
+        if (!horasOcupadasPorDia[dateStr]) horasOcupadasPorDia[dateStr] = [];
+        horasOcupadasPorDia[dateStr].push(c.hora_sugerida);
+      });
+
+      res.json({
+        success: true,
+        data: {
+          fechasOcupadasCompletas,
+          horasOcupadasPorDia
+        },
+      });
+    } catch (error) {
+      console.error("Error al obtener disponibilidad de citas:", error);
+      res.status(500).json({ success: false, message: "Error interno del servidor" });
+    }
+  }
+
   // Activar o desactivar bloqueo de una fecha (Propietario)
   static async toggleBloquearFecha(req, res) {
     try {

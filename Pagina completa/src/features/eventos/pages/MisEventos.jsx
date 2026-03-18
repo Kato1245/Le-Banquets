@@ -118,11 +118,11 @@ const MisEventos = () => {
   const getBadgeClass = (estado) => {
     switch (estado) {
       case "confirmada":
-        return "badge-success";
+        return "badge-success text-white border-transparent";
       case "pendiente":
-        return "badge-warning text-warning-content";
+        return "bg-[#9333ea] text-white border-transparent";
       case "cancelada":
-        return "badge-error";
+        return "badge-error text-white border-transparent";
       case "completado":
         return "badge-neutral text-white";
       default:
@@ -268,7 +268,7 @@ const MisEventos = () => {
                                 ? "bg-success shadow-[0_0_8px_rgba(34,197,94,0.4)]"
                                 : evento.estado === "cancelada"
                                   ? "bg-error shadow-[0_0_8px_rgba(239,68,68,0.4)]"
-                                  : "bg-warning shadow-[0_0_8px_rgba(234,179,8,0.4)]"
+                                  : "bg-[#9333ea] shadow-[0_0_8px_rgba(147,51,234,0.4)]"
                             }`}
                           ></span>
                           <p className="text-xs font-bold uppercase tracking-widest">

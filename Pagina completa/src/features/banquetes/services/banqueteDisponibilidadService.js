@@ -10,7 +10,13 @@ const toggleBloquearFecha = async (banqueteId, fecha) => {
   return response.data;
 };
 
+const getDisponibilidadCitas = async (banqueteId) => {
+  const response = await apiClient.get(`/banquetes/${banqueteId}/disponibilidad-citas`);
+  return response.data;
+};
+
 export default {
   getFechasOcupadas,
   toggleBloquearFecha,
+  getDisponibilidadCitas,
 };
