@@ -23,8 +23,14 @@ router.put(
   BanqueteController.update,
 );
 router.delete("/:id", authenticateToken, BanqueteController.delete);
+router.post(
+  "/:id/bloquear-fecha",
+  authenticateToken,
+  BanqueteController.toggleBloquearFecha
+);
 
 // Rutas públicas
+router.get("/:id/fechas-ocupadas", BanqueteController.getFechasOcupadas);
 router.get("/", BanqueteController.getAll);
 router.get("/:id", BanqueteController.getById);
 

@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Banquete = require("../models/Banquete");
+const Reserva = require("../models/Reserva");
 
 class BanqueteController {
   // Crear un nuevo banquete
@@ -277,6 +278,79 @@ class BanqueteController {
         success: false,
         message: "Error interno del servidor",
       });
+    }
+  }
+
+  // Obtener fechas ocupadas de un banquete
+  static async getFechasOcupadas(req, res) {
+    try {
+      const { id } = req.params;
+      const banquete = await Banquete.findById(id);
+      if (!banquete) {
+        return res.status(404).json({ success: false, message: "Banquete no encontrado" });
+      }
+
+      // Buscar reservas confirmadas o pendientes
+      const reservas = await Reserva.find({ banquete_id: id, estado: { $ne: "cancelada" } });
+      const fechasReservadas = reservas.map((r) => {
+        // Asegurarse de retornar YYYY-MM-DD
+        const date = new Date(r.fecha);
+        return date.toISOString().split("T")[0];
+      });
+
+      // Combinar fechas manuales y de reservas sin duplicados
+      const bloqueadas = banquete.fechas_bloqueadas || [];
+      const ocupadas = [...new Set([...bloqueadas, ...fechasReservadas])];
+
+      res.json({
+        success: true,
+        data: ocupadas,
+      });
+    } catch (error) {
+      console.error("Error al obtener fechas ocupadas:", error);
+      res.status(500).json({ success: false, message: "Error interno del servidor" });
+    }
+  }
+
+  // Activar o desactivar bloqueo de una fecha (Propietario)
+  static async toggleBloquearFecha(req, res) {
+    try {
+      const { id } = req.params;
+      const { fecha } = req.body;
+      const propietario_id = req.user._id;
+
+      const banquete = await Banquete.findOne({ _id: id, propietario_id });
+
+      if (!banquete) {
+        return res.status(404).json({
+          success: false,
+          message: "Banquete no encontrado o no tienes permiso",
+        });
+      }
+
+      if (!banquete.fechas_bloqueadas) {
+        banquete.fechas_bloqueadas = [];
+      }
+
+      const index = banquete.fechas_bloqueadas.indexOf(fecha);
+      if (index > -1) {
+        // Si ya está bloqueada, la desbloqueamos
+        banquete.fechas_bloqueadas.splice(index, 1);
+      } else {
+        // Si no está bloqueada, la bloqueamos
+        banquete.fechas_bloqueadas.push(fecha);
+      }
+
+      await banquete.save();
+
+      res.json({
+        success: true,
+        message: index > -1 ? "Fecha desbloqueada" : "Fecha bloqueada",
+        data: banquete.fechas_bloqueadas,
+      });
+    } catch (error) {
+      console.error("Error al actualizar disponibilidad:", error);
+      res.status(500).json({ success: false, message: "Error interno del servidor" });
     }
   }
 }
