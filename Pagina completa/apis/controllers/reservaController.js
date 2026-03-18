@@ -185,6 +185,62 @@ class ReservaController {
             res.status(500).json({ success: false, message: "Error interno del servidor" });
         }
     }
+
+    // Modificar fecha de reserva (Propietario)
+    static async modificarFecha(req, res) {
+        try {
+            const { id } = req.params;
+            const { fecha, hora } = req.body;
+            const propietario_id = req.user._id;
+
+            const reserva = await Reserva.findOne({ _id: id, propietario_id }).populate("banquete_id", "nombre");
+
+            if (!reserva) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Reserva no encontrada o no tienes permisos",
+                });
+            }
+
+            reserva.fecha = fecha;
+            reserva.hora = hora;
+            // Opcional: pasar a estado pendiente de nuevo o mantenerlo, lo dejamos igual por ahora.
+            await reserva.save();
+
+            // Notificar al usuario del cambio
+            const NotificacionController = require("./notificacionController");
+            let mensajeNotif = `El propietario ha modificado la fecha de tu reserva para "${reserva.banquete_id.nombre}" a ${formatearFecha(fecha)} a las ${hora}.`;
+
+            await NotificacionController.create({
+                destinatario_id: reserva.usuario_id,
+                onModel: "Usuario",
+                mensaje: mensajeNotif,
+                tipo: "evento",
+                referencia_id: reserva._id,
+            });
+
+            const usuario = await Usuario.findById(reserva.usuario_id);
+            if (usuario && usuario.notificaciones?.email) {
+                const { sendReservationStatusEmail } = require("../config/mailer");
+                await sendReservationStatusEmail(usuario.email, {
+                    nombreUsuario: usuario.nombre,
+                    banqueteNombre: reserva.banquete_id.nombre,
+                    estado: "modificada",
+                    fecha: reserva.fecha,
+                    hora: reserva.hora,
+                });
+            }
+
+            res.json({
+                success: true,
+                message: "Fecha de reserva modificada correctamente",
+                data: reserva,
+            });
+        } catch (error) {
+            console.error("Error al modificar fecha de reserva:", error);
+            res.status(500).json({ success: false, message: "Error interno del servidor" });
+        }
+    }
 }
 
 module.exports = ReservaController;

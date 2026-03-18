@@ -7,6 +7,7 @@ const banqueteRoutes = require("./routes/banqueteRoutes");
 const citaRoutes = require("./routes/citaRoutes");
 const reservaRoutes = require("./routes/reservaRoutes");
 const notificacionRoutes = require("./routes/notificacionRoutes");
+const reviewRoutes = require("./routes/reviewRoutes");
 const connectDB = require("./config/mongo");
 
 const fs = require("fs");
@@ -41,6 +42,7 @@ app.use("/api/banquetes", banqueteRoutes);
 app.use("/api/citas", citaRoutes);
 app.use("/api/reservas", reservaRoutes);
 app.use("/api/notificaciones", notificacionRoutes);
+app.use("/api/reviews", reviewRoutes);
 
 // Ruta de prueba
 app.get("/api/health", (req, res) => {

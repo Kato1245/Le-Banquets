@@ -19,6 +19,8 @@ const OwnerCalendar = () => {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [motivoRechazo, setMotivoRechazo] = useState("");
   const [isRejecting, setIsRejecting] = useState(false);
+  const [isEditingDate, setIsEditingDate] = useState(false);
+  const [editDateData, setEditDateData] = useState({ fecha: "", hora: "" });
 
   useEffect(() => {
     fetchAgenda();
@@ -109,6 +111,27 @@ const OwnerCalendar = () => {
       fetchAgenda();
     } catch (error) {
       toast.error("Error al actualizar el estado");
+    }
+  };
+
+  const handleUpdateDate = async () => {
+    if (!editDateData.fecha || !editDateData.hora) {
+      toast.error("Por favor completa la nueva fecha y hora.");
+      return;
+    }
+
+    try {
+      await reservasService.modificarFecha(
+        selectedEvent.id,
+        editDateData.fecha,
+        editDateData.hora
+      );
+      toast.success("Fecha de reserva modificada exitosamente");
+      setIsEditingDate(false);
+      setSelectedEvent(null);
+      fetchAgenda();
+    } catch (error) {
+      toast.error("Error al modificar la fecha");
     }
   };
 
@@ -251,8 +274,22 @@ const OwnerCalendar = () => {
                 </button>
               </div>
 
-              <h3 className="text-2xl font-black tracking-tight mb-2 uppercase italic">
-                {selectedEvent.banquete}
+              <h3 className="text-2xl font-black tracking-tight mb-2 uppercase italic flex justify-between items-center">
+                <span>{selectedEvent.banquete}</span>
+                {selectedEvent.type === "reserva" && !isEditingDate && !isRejecting && (
+                  <button
+                    onClick={() => {
+                      setIsEditingDate(true);
+                      setEditDateData({
+                        fecha: selectedEvent.date.toISOString().split("T")[0],
+                        hora: selectedEvent.hora || "",
+                      });
+                    }}
+                    className="btn btn-sm btn-ghost text-xs text-primary"
+                  >
+                    Reprogramar
+                  </button>
+                )}
               </h3>
 
               <div className="space-y-4 mb-8">
@@ -290,24 +327,46 @@ const OwnerCalendar = () => {
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-xl">📅</span>
-                  <div>
-                    <p className="text-[10px] uppercase font-black opacity-30 leading-none">
-                      Fecha y Hora
-                    </p>
-                    <p className="font-bold text-sm">
-                      {selectedEvent.date.toLocaleDateString("es-ES", {
-                        weekday: "long",
-                        day: "numeric",
-                        month: "long",
-                      })}
-                    </p>
-                    <p className="text-xs opacity-60 font-medium">
-                      A las {selectedEvent.hora}
-                    </p>
+                {isEditingDate ? (
+                  <div className="bg-primary/5 p-4 rounded-2xl border border-primary/20 space-y-3">
+                    <p className="text-[10px] uppercase font-black tracking-widest text-primary mb-2">Nueva Fecha y Hora</p>
+                    <input
+                      type="date"
+                      value={editDateData.fecha}
+                      onChange={(e) => setEditDateData({ ...editDateData, fecha: e.target.value })}
+                      className="input input-sm input-bordered w-full rounded-xl"
+                    />
+                    <input
+                      type="time"
+                      value={editDateData.hora}
+                      onChange={(e) => setEditDateData({ ...editDateData, hora: e.target.value })}
+                      className="input input-sm input-bordered w-full rounded-xl"
+                    />
+                    <div className="grid grid-cols-2 gap-2 mt-2">
+                      <button onClick={() => setIsEditingDate(false)} className="btn btn-xs btn-ghost rounded-lg">Cancelar</button>
+                      <button onClick={handleUpdateDate} className="btn btn-xs btn-primary rounded-lg text-[10px]">Guardar</button>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="flex items-center gap-3">
+                    <span className="text-xl">📅</span>
+                    <div>
+                      <p className="text-[10px] uppercase font-black opacity-30 leading-none">
+                        Fecha y Hora
+                      </p>
+                      <p className="font-bold text-sm">
+                        {selectedEvent.date.toLocaleDateString("es-ES", {
+                          weekday: "long",
+                          day: "numeric",
+                          month: "long",
+                        })}
+                      </p>
+                      <p className="text-xs opacity-60 font-medium">
+                        A las {selectedEvent.hora}
+                      </p>
+                    </div>
+                  </div>
+                )}
                 {selectedEvent.detalles && (
                   <div className="bg-base-200/50 p-4 rounded-2xl border border-base-content/5">
                     <p className="text-[10px] uppercase font-black opacity-30 mb-1">
@@ -342,7 +401,7 @@ const OwnerCalendar = () => {
                 </div>
               </div>
 
-              {selectedEvent.estado === "pendiente" && !isRejecting && (
+              {selectedEvent.estado === "pendiente" && !isRejecting && !isEditingDate && (
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     onClick={() => handleUpdateStatus("confirmada")}

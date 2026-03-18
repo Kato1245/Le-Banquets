@@ -59,6 +59,10 @@ const banqueteSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  fechas_bloqueadas: {
+    type: [String],
+    default: [],
+  },
 });
 
 module.exports = mongoose.model("Banquete", banqueteSchema);

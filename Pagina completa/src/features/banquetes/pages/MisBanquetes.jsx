@@ -7,6 +7,7 @@ import API_BASE_URL from "../../../config/api";
 import EmptyState from "../../../shared/components/EmptyState";
 import { getImageUrl } from "../../../shared/utils/imageUtils";
 import OwnerCalendar from "../components/OwnerCalendar";
+import BanqueteAvailabilityModal from "../components/BanqueteAvailabilityModal";
 
 // ─── Iconos SVG inline ────────────────────────────────────────────────────────
 const IconBanquet = () => (
@@ -689,7 +690,7 @@ const PerfilEmpresaPanel = ({ user }) => {
 };
 
 // ─── Tarjeta de Banquete ───────────────────────────────────────────────────────
-const BanqueteCard = ({ banquete, onDelete, onEdit }) => {
+const BanqueteCard = ({ banquete, onDelete, onEdit, onManageAvailability }) => {
   const [deleting, setDeleting] = useState(false);
 
   const handleDelete = async () => {
@@ -756,7 +757,14 @@ const BanqueteCard = ({ banquete, onDelete, onEdit }) => {
             )}
           </button>
           <button
-            className="btn btn-outline btn-primary btn-sm rounded-xl normal-case font-bold"
+            className="btn btn-outline btn-neutral btn-sm rounded-xl normal-case font-bold px-2"
+            onClick={() => onManageAvailability(banquete)}
+            title="Gestionar días bloqueados"
+          >
+            📅 Disponibilidad
+          </button>
+          <button
+            className="btn btn-primary btn-sm rounded-xl normal-case font-bold px-4"
             onClick={() => onEdit(banquete)}
           >
             Editar
@@ -806,6 +814,7 @@ const MisBanquetes = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [banqueteEdit, setBanqueteEdit] = useState(null);
+  const [availabilityModalData, setAvailabilityModalData] = useState({ isOpen: false, banquete: null });
 
   // Sincronizar la pestaña con el query param ?action=nuevo cuando cambia la URL
   useEffect(() => {
@@ -1000,6 +1009,7 @@ const MisBanquetes = () => {
                     banquete={b}
                     onDelete={handleDelete}
                     onEdit={handleEdit}
+                    onManageAvailability={(banquete) => setAvailabilityModalData({ isOpen: true, banquete })}
                   />
                 ))}
               </div>
@@ -1066,6 +1076,12 @@ const MisBanquetes = () => {
             <PerfilEmpresaPanel user={user} />
           </div>
         )}
+        {/* Modal de Disponibilidad para Propietarios */}
+        <BanqueteAvailabilityModal
+          isOpen={availabilityModalData.isOpen}
+          banquete={availabilityModalData.banquete}
+          onClose={() => setAvailabilityModalData({ isOpen: false, banquete: null })}
+        />
       </div>
     </div>
   );

@@ -3,7 +3,9 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import banquetesService from "../services/banquetesService";
 import BanqueteCarousel from "../components/BanqueteCarousel";
 import BanqueteCitaModal from "../components/BanqueteCitaModal";
+import BanqueteReservaModal from "../components/BanqueteReservaModal";
 import BanqueteGalleryModal from "../components/BanqueteGalleryModal";
+import ReviewsSection from "../components/ReviewsSection";
 import { useAuth } from "@/context/AuthContext";
 
 const BanqueteDetail = () => {
@@ -14,6 +16,7 @@ const BanqueteDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isCitaModalOpen, setIsCitaModalOpen] = useState(false);
+  const [isReservaModalOpen, setIsReservaModalOpen] = useState(false);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
 
   const handleAction = (type) => {
@@ -24,9 +27,8 @@ const BanqueteDetail = () => {
 
     if (type === "visita") {
       setIsCitaModalOpen(true);
-    } else {
-      // Lógica para reserva (se implementará después)
-      console.log(`Solicitando ${type} para ${id}`);
+    } else if (type === "reserva") {
+      setIsReservaModalOpen(true);
     }
   };
 
@@ -334,6 +336,10 @@ const BanqueteDetail = () => {
             </div>
           </div>
         </div>
+
+        {/* Reviews Section */}
+        <ReviewsSection banqueteId={banquete._id || banquete.id || id} />
+
       </div>
 
       {/* Footer Branding Area */}
@@ -353,6 +359,13 @@ const BanqueteDetail = () => {
         banquete={banquete}
         isOpen={isCitaModalOpen}
         onClose={() => setIsCitaModalOpen(false)}
+      />
+
+      {/* Modal para Solicitar Reserva (Calendario) */}
+      <BanqueteReservaModal
+        banquete={banquete}
+        isOpen={isReservaModalOpen}
+        onClose={() => setIsReservaModalOpen(false)}
       />
 
       {/* Modal para Galería de Imágenes */}

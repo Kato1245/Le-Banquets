@@ -7,5 +7,6 @@ router.post("/", authenticateToken, ReservaController.create);
 router.get("/agenda", authenticateToken, ReservaController.getCitasYReservasPropietario);
 router.get("/mis-reservas", authenticateToken, ReservaController.getMisReservas);
 router.patch("/:id/estado", authenticateToken, ReservaController.actualizarEstado);
+router.patch("/:id/fecha", authenticateToken, ReservaController.modificarFecha);
 
 module.exports = router;

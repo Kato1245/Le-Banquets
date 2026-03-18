@@ -15,8 +15,14 @@ const actualizarEstado = async (id, estado, motivo_rechazo) => {
     return response.data;
 };
 
+const modificarFecha = async (id, fecha, hora) => {
+    const response = await apiClient.patch(`/reservas/${id}/fecha`, { fecha, hora });
+    return response.data;
+};
+
 export default {
     createReserva,
     getAgendaPropietario,
     actualizarEstado,
+    modificarFecha,
 };

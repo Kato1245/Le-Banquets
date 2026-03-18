@@ -5,6 +5,7 @@ import API_BASE_URL from "../../../config/api";
 import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
 import { getImageUrl } from "../../../shared/utils/imageUtils";
+import ReviewModal from "../components/ReviewModal";
 
 // Parsea fecha ISO de MongoDB en hora LOCAL (evita desfase UTC → local).
 const parseFechaLocal = (fechaISO) => {
@@ -20,6 +21,7 @@ const MisEventos = () => {
   const [eventos, setEventos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [reviewModalData, setReviewModalData] = useState({ isOpen: false, banqueteId: null, banqueteNombre: "" });
   const navigate = useNavigate();
 
   const isPropietario =
@@ -50,6 +52,7 @@ const MisEventos = () => {
         const resData = await reservasRes.json();
         const formattedReservas = (resData.data || []).map((res) => ({
           id: res._id,
+          banquete_id: res.banquete_id?._id,
           nombre: res.banquete_id?.nombre || "Evento sin nombre",
           salon: res.banquete_id?.nombre || "N/A",
           fecha: res.fecha,
@@ -285,6 +288,14 @@ const MisEventos = () => {
                       </div>
 
                       <div className="flex gap-2 w-full lg:w-auto mt-4">
+                        {!isPropietario && evento.category === "reserva" && evento.estado === "completada" && (
+                          <button
+                            className="btn btn-warning btn-sm rounded-xl font-bold text-[10px] uppercase tracking-widest flex-1 lg:flex-none"
+                            onClick={(e) => { e.stopPropagation(); setReviewModalData({ isOpen: true, banqueteId: evento.banquete_id, banqueteNombre: evento.nombre }); }}
+                          >
+                            ★ Calificar
+                          </button>
+                        )}
                         <button
                           className="btn btn-primary btn-sm rounded-xl font-bold text-[10px] uppercase tracking-widest flex-1 lg:flex-none"
                           onClick={() => setSelectedEvent(evento)}
@@ -464,6 +475,14 @@ const MisEventos = () => {
           </div>
         </div>
       )}
+
+      {/* Modal de Calificación */}
+      <ReviewModal 
+        isOpen={reviewModalData.isOpen}
+        banqueteId={reviewModalData.banqueteId}
+        banqueteNombre={reviewModalData.banqueteNombre}
+        onClose={() => setReviewModalData({ isOpen: false, banqueteId: null, banqueteNombre: "" })}
+      />
     </div>
   );
 };
