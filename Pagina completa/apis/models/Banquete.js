@@ -19,6 +19,11 @@ const banqueteSchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
+  eventos_que_ofrece: {
+    type: [String],
+    enum: ["15 Años", "Bodas", "Eventos empresariales", "Otros"],
+    default: [],
+  },
   equipamento: {
     type: String,
     trim: true,

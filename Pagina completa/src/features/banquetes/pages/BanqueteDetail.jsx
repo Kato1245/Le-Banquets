@@ -223,6 +223,7 @@ const BanqueteDetail = () => {
               </button>
             </div>
 
+
             {/* Servicios Elite */}
             <div className="animate-in fade-in duration-1000 delay-500">
               <p className="text-[10px] font-black uppercase tracking-[0.4em] opacity-30 mb-8 ml-1">
@@ -295,62 +296,41 @@ const BanqueteDetail = () => {
                 </button>
               </div>
 
-              <div className="mt-10 pt-8 border-t border-base-content/5 space-y-6">
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary shrink-0">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                      />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-black uppercase tracking-widest mb-1">
-                      Seguridad Garantizada
-                    </p>
-                    <p className="text-xs opacity-50 font-medium">
-                      Su reserva está protegida por nuestros estándares de
-                      calidad y cumplimiento.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary shrink-0">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-black uppercase tracking-widest mb-1">
-                      Atención 24/7
-                    </p>
-                    <p className="text-xs opacity-50 font-medium">
-                      Asesoría personalizada para coordinar cada segundo de su
-                      celebración.
-                    </p>
+              {banquete.eventos_que_ofrece && banquete.eventos_que_ofrece.length > 0 && (
+                <div className="mt-10 pt-8 border-t border-base-content/5">
+                  <p className="text-[10px] font-black uppercase tracking-widest mb-6 opacity-40 text-left">
+                    Eventos Destacados
+                  </p>
+                  <div className="flex flex-col gap-3">
+                    {banquete.eventos_que_ofrece.map((evento, i) => (
+                      <div
+                        key={i}
+                        className="flex items-center gap-4 p-4 bg-base-200/50 rounded-2xl hover:bg-primary/5 transition-colors border border-base-300 hover:border-primary/20 group"
+                      >
+                        <div className="w-10 h-10 rounded-xl bg-base-100 flex items-center justify-center text-primary shadow-sm group-hover:bg-primary group-hover:text-white transition-colors shrink-0">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
+                            />
+                          </svg>
+                        </div>
+                        <span className="text-sm font-bold opacity-80 group-hover:opacity-100 transition-opacity uppercase tracking-wider">
+                          {evento}
+                        </span>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
