@@ -442,6 +442,15 @@ class AuthController {
         });
       }
 
+      // Nueva validación: la contraseña nueva no puede ser igual a la actual
+      const isSamePassword = await bcrypt.compare(nueva, user.contrasena);
+      if (isSamePassword) {
+        return res.status(400).json({
+          success: false,
+          message: "La nueva contraseña no puede ser igual a la anterior",
+        });
+      }
+
       const saltRounds = 10;
       const hashedPassword = await bcrypt.hash(nueva, saltRounds);
 
