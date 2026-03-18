@@ -44,7 +44,7 @@ class BanqueteController {
         dimensiones,
         tipo,
         capacidad,
-        descripcion,
+        descripcion: descripcion?.trim(),
         precio_base,
         equipamento,
         servicios,
@@ -150,7 +150,7 @@ class BanqueteController {
       if (dimensiones !== undefined) banquete.dimensiones = dimensiones;
       if (tipo !== undefined) banquete.tipo = tipo;
       if (capacidad !== undefined) banquete.capacidad = capacidad;
-      if (descripcion !== undefined) banquete.descripcion = descripcion;
+      if (descripcion !== undefined) banquete.descripcion = descripcion.trim();
       if (precio_base !== undefined) banquete.precio_base = precio_base;
       if (equipamento !== undefined) banquete.equipamento = equipamento;
       if (servicios !== undefined) banquete.servicios = servicios;

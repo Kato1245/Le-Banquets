@@ -34,6 +34,7 @@ const banqueteSchema = new mongoose.Schema({
   descripcion: {
     type: String,
     required: true,
+    trim: true,
   },
   precio_base: {
     type: Number,
