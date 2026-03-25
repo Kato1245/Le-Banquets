@@ -2,6 +2,7 @@
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import NotificationBell from "./NotificationBell";
+import ThemeToggle from "./ThemeToggle";
 
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -14,10 +15,11 @@ const Navbar = () => {
 
   return (
     <div className="navbar bg-base-100 shadow-sm sticky top-0 z-50 px-4 md:px-8">
-      <div className="flex-1">
-        <Link to="/" className="btn btn-ghost text-xl text-primary font-bold">
+      <div className="flex-1 flex items-center gap-1 sm:gap-2">
+        <Link to="/" className="btn btn-ghost text-xl text-primary font-bold px-2 sm:px-4">
           Le Banquets
         </Link>
+        <ThemeToggle />
       </div>
 
       {/* Navegación central */}
