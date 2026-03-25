@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
 import { getImageUrl } from "../../../shared/utils/imageUtils";
 import ReviewModal from "../components/ReviewModal";
+import ClinkingGlasses from "../../../shared/components/ClinkingGlasses";
 
 // Parsea fecha ISO de MongoDB en hora LOCAL (evita desfase UTC → local).
 const parseFechaLocal = (fechaISO) => {
@@ -132,8 +133,9 @@ const MisEventos = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-base-100 flex items-center justify-center">
-        <span className="loading loading-spinner loading-lg text-primary"></span>
+      <div className="min-h-screen bg-base-100 flex flex-col items-center justify-center opacity-60">
+        <ClinkingGlasses size="lg" />
+        <p className="font-bold text-[10px] uppercase tracking-[0.3em] mt-8 animate-pulse text-primary">Sincronizando Agenda</p>
       </div>
     );
   }

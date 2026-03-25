@@ -4,6 +4,8 @@ import apiClient from "../../../shared/services/apiClient";
 import { Link } from "react-router-dom";
 import { getImageUrl } from "../../../shared/utils/imageUtils";
 
+import ClinkingGlasses from "../../../shared/components/ClinkingGlasses";
+
 const Salones = () => {
   const [selectedFilter, setSelectedFilter] = useState("todos");
   const [searchTerm, setSearchTerm] = useState("");
@@ -127,9 +129,9 @@ const Salones = () => {
 
         {/* Estados de Carga / Error */}
         {loading && (
-          <div className="flex flex-col items-center justify-center py-20 gap-4">
-            <span className="loading loading-spinner loading-lg text-primary"></span>
-            <p className="font-medium opacity-60">Preparando el catálogo...</p>
+          <div className="flex flex-col items-center justify-center py-20 opacity-60">
+            <ClinkingGlasses size="md" />
+            <p className="font-bold text-[10px] uppercase tracking-widest mt-6 animate-pulse">Preparando el catálogo</p>
           </div>
         )}
 
