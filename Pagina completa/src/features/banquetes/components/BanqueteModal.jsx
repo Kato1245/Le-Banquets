@@ -1,6 +1,8 @@
 import BanqueteCarousel from "./BanqueteCarousel";
+import { useAuth } from "../../../context/AuthContext";
 
 const BanqueteModal = ({ banquete, onClose }) => {
+  const { user } = useAuth();
   if (!banquete) return null;
 
   return (
@@ -98,14 +100,25 @@ const BanqueteModal = ({ banquete, onClose }) => {
             </div>
 
             <div className="modal-action mt-auto border-t pt-6 border-base-200">
-              <button
-                className="btn btn-primary btn-block flex-1"
-                onClick={() =>
-                  (window.location.href = `/banquetes/${banquete._id}`)
-                }
-              >
-                Ver todos los detalles y reservar
-              </button>
+              {!(user?.role?.toLowerCase() === "admin" || user?.isAdmin || user?.role === "propietario" || user?.userType === "propietario") ? (
+                <button
+                  className="btn btn-primary btn-block flex-1"
+                  onClick={() =>
+                    (window.location.href = `/banquetes/${banquete._id}`)
+                  }
+                >
+                  Ver todos los detalles y reservar
+                </button>
+              ) : (
+                <button
+                  className="btn btn-primary btn-block flex-1"
+                  onClick={() =>
+                    (window.location.href = `/banquetes/${banquete._id}`)
+                  }
+                >
+                  Ver todos los detalles
+                </button>
+              )}
             </div>
           </div>
         </div>
