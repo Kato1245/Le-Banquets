@@ -69,8 +69,8 @@ const BanqueteForm = ({ onSuccess, banqueteEdit }) => {
 
     if (form.precio_base === "" || parseFloat(form.precio_base) < 0)
       e.precio_base = "Ingresa un precio base válido (≥ 0).";
-    else if (form.precio_base.toString().length > 12)
-      e.precio_base = "El precio no puede exceder los 12 dígitos.";
+    else if (form.precio_base.toString().length > 9)
+      e.precio_base = "El precio no puede exceder los 9 dígitos.";
 
     const totalImages = existingImages.length + form.imagenes.length;
     if (totalImages === 0) {
