@@ -13,10 +13,11 @@ const RegistroPropietarioForm = () => {
     const password = useRef({});
     password.current = watch("password", "");
 
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [captchaValue, setCaptchaValue] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
 
-    // Nota: El SITE_KEY debería venir de env variables en producción
     const RECAPTCHA_SITE_KEY = "6LcLn78rAAAAAJvmvgAp8EuDFhKhVlNpnbWA3bHY";
 
     const onSubmit = async (data) => {
@@ -119,30 +120,70 @@ const RegistroPropietarioForm = () => {
                 <div className="hidden md:block"></div>
 
                 {/* Contraseña */}
-                <div className="form-control">
+                <div className="form-control relative">
                     <label className="label py-1"><span className={labelClasses}>Contraseña Segura *</span></label>
-                    <input
-                        {...register("password", {
-                            required: "Este campo es requerido",
-                            minLength: { value: 6, message: "Mínimo 6 caracteres" }
-                        })}
-                        type="password" placeholder="••••••••"
-                        className={inputClasses}
-                    />
+                    <div className="relative">
+                        <input
+                            {...register("password", {
+                                required: "Este campo es requerido",
+                                minLength: { value: 6, message: "Mínimo 6 caracteres" }
+                            })}
+                            type={showPassword ? "text" : "password"}
+                            placeholder="••••••••"
+                            className={`${inputClasses} pr-12`}
+                        />
+                        <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-base-content/40 hover:text-primary transition-colors focus:outline-none"
+                        >
+                            {showPassword ? (
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                            ) : (
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.97 9.97 0 011.563-3.04m4.066-1.56a10.048 10.048 0 014.138-1.04c4.478 0 8.268 2.943 9.542 7a10.059 10.059 0 01-2.015 3.558m-4.633-4.633a3 3 0 00-4.243-4.243m4.242 4.242L9.88 9.88" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3l18 18" />
+                                </svg>
+                            )}
+                        </button>
+                    </div>
                     {errors.password && <p className="text-error mt-1 text-xs font-bold">{errors.password.message}</p>}
                 </div>
 
                 {/* Confirmar Password */}
-                <div className="form-control">
+                <div className="form-control relative">
                     <label className="label py-1"><span className={labelClasses}>Confirmar Contraseña *</span></label>
-                    <input
-                        {...register("confirmPassword", {
-                            required: "Verifica tu contraseña",
-                            validate: (value) => value === password.current || "Las contraseñas no coinciden"
-                        })}
-                        type="password" placeholder="••••••••"
-                        className={inputClasses}
-                    />
+                    <div className="relative">
+                        <input
+                            {...register("confirmPassword", {
+                                required: "Verifica tu contraseña",
+                                validate: (value) => value === password.current || "Las contraseñas no coinciden"
+                            })}
+                            type={showConfirmPassword ? "text" : "password"}
+                            placeholder="••••••••"
+                            className={`${inputClasses} pr-12`}
+                        />
+                        <button
+                            type="button"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-base-content/40 hover:text-primary transition-colors focus:outline-none"
+                        >
+                            {showConfirmPassword ? (
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                            ) : (
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.97 9.97 0 011.563-3.04m4.066-1.56a10.048 10.048 0 014.138-1.04c4.478 0 8.268 2.943 9.542 7a10.059 10.059 0 01-2.015 3.558m-4.633-4.633a3 3 0 00-4.243-4.243m4.242 4.242L9.88 9.88" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3l18 18" />
+                                </svg>
+                            )}
+                        </button>
+                    </div>
                     {errors.confirmPassword && <p className="text-error mt-1 text-xs font-bold">{errors.confirmPassword.message}</p>}
                 </div>
             </div>

@@ -290,7 +290,7 @@ const MisEventos = () => {
                       </div>
 
                       <div className="flex gap-2 w-full lg:w-auto mt-4">
-                        {!isPropietario && evento.category === "reserva" && evento.estado === "completada" && (
+                        {!isPropietario && evento.category === "reserva" && (evento.estado === "completado" || evento.estado === "finalizada") && (
                           <button
                             className="btn btn-warning btn-sm rounded-xl font-bold text-[10px] uppercase tracking-widest flex-1 lg:flex-none"
                             onClick={(e) => { e.stopPropagation(); setReviewModalData({ isOpen: true, banqueteId: evento.banquete_id, banqueteNombre: evento.nombre }); }}

@@ -7,11 +7,12 @@ import BanqueteReservaModal from "../components/BanqueteReservaModal";
 import BanqueteGalleryModal from "../components/BanqueteGalleryModal";
 import ReviewsSection from "../components/ReviewsSection";
 import { useAuth } from "@/context/AuthContext";
+import toast from "react-hot-toast";
 
 const BanqueteDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [banquete, setBanquete] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -22,6 +23,12 @@ const BanqueteDetail = () => {
   const handleAction = (type) => {
     if (!isAuthenticated) {
       navigate("/login", { state: { from: `/banquetes/${id}` } });
+      return;
+    }
+
+    const isOwner = user?.role === "propietario" || user?.userType === "propietario";
+    if (isOwner) {
+      toast.error("Acceso restringido: Los propietarios no pueden realizar reservas ni solicitar citas.");
       return;
     }
 
