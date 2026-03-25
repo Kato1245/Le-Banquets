@@ -215,4 +215,55 @@ const sendAppointmentStatusEmail = async (usuarioEmail, data) => {
   }
 };
 
-module.exports = { sendResetEmail, sendReservationRequestEmail, sendReservationStatusEmail, sendAppointmentStatusEmail };
+const sendWelcomeEmail = async (email, nombre, isPropietario) => {
+  try {
+    const rolTexto = isPropietario ? "como Propietario" : "como Usuario";
+    const bienvenidaExtra = isPropietario 
+      ? "<p>Estamos emocionados de que unas tu negocio a nuestra plataforma. Ahora puedes empezar a publicar y gestionar tus banquetes.</p>" 
+      : "<p>Estamos emocionados de tenerte aquí. Ahora puedes explorar los mejores banquetes y reservar tus próximos eventos con facilidad.</p>";
+
+    const mailOptions = {
+      from: `"Le Banquets" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: `¡Bienvenido a Le Banquets! 🎉`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px; background-color: #ffffff;">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <h1 style="color: #4a90e2; margin: 0;">Le Banquets</h1>
+            <p style="color: #777; font-size: 14px; margin-top: 5px;">Tu plataforma de eventos</p>
+          </div>
+          
+          <h2 style="color: #333; text-align: center;">¡Hola ${nombre}!</h2>
+          
+          <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #4a90e2;">
+            <p style="font-size: 16px; line-height: 1.5; color: #555; margin: 0;">
+              Tu registro <strong>${rolTexto}</strong> se ha completado con éxito.
+            </p>
+          </div>
+          
+          <div style="font-size: 16px; line-height: 1.5; color: #555;">
+            ${bienvenidaExtra}
+          </div>
+          
+          <div style="text-align: center; margin-top: 30px;">
+            <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}" style="background-color: #4a90e2; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">Comenzar ahora</a>
+          </div>
+          
+          <hr style="border: 0; border-top: 1px solid #eeeeee; margin: 30px 0;">
+          <p style="font-size: 12px; color: #999; text-align: center;">
+            Este es un mensaje automático, por favor no respondas a este correo.
+          </p>
+        </div>
+      `,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log("Correo de bienvenida enviado: %s", info.messageId);
+    return { success: true };
+  } catch (error) {
+    console.error("Error enviando correo de bienvenida:", error);
+    return { success: false, error };
+  }
+};
+
+module.exports = { sendResetEmail, sendReservationRequestEmail, sendReservationStatusEmail, sendAppointmentStatusEmail, sendWelcomeEmail };

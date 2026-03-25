@@ -3,7 +3,7 @@ const Usuario = require("../models/Usuario");
 const Propietario = require("../models/Propietario");
 const jwt = require("jsonwebtoken");
 const { JWT_SECRET } = require("../middleware/auth");
-const { sendResetEmail } = require("../config/mailer");
+const { sendResetEmail, sendWelcomeEmail } = require("../config/mailer");
 const crypto = require("crypto");
 
 // Almacena intentos por IP (en memoria)
@@ -81,6 +81,11 @@ class AuthController {
       } else {
         result = await Usuario.create(userData);
       }
+
+      // Enviar el correo de bienvenida
+      sendWelcomeEmail(email, nombre, userType === "propietario").catch(err => 
+        console.error("No se pudo enviar el correo de bienvenida:", err)
+      );
 
       // Crear token JWT para auto-login
       const token = jwt.sign(
