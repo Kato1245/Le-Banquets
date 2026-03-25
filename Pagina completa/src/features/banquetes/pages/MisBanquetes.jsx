@@ -38,6 +38,8 @@ const TABS = [
   { id: "estadisticas", label: "Estadísticas", icon: <IconStats /> },
 ];
 
+import ClinkingGlasses from "../../../shared/components/ClinkingGlasses";
+
 const MisBanquetes = () => {
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -185,10 +187,16 @@ const MisBanquetes = () => {
             )}
 
             {loading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {[1, 2, 3].map((i) => (
-                  <BanqueteSkeleton key={i} />
-                ))}
+              <div className="animate-in fade-in duration-700">
+                <div className="flex flex-col items-center justify-center py-10 opacity-30">
+                  <ClinkingGlasses size="sm" />
+                  <p className="text-[9px] font-black uppercase tracking-[0.4em] mt-4">Actualizando Listado</p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {[1, 2, 3].map((i) => (
+                    <BanqueteSkeleton key={i} />
+                  ))}
+                </div>
               </div>
             ) : banquetes.length === 0 ? (
               <EmptyState

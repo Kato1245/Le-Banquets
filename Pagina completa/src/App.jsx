@@ -24,11 +24,15 @@ const AdminDashboard = lazy(() => import("./features/admin/pages/AdminDashboard"
 const ForgotPassword = lazy(() => import("./features/auth/pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./features/auth/pages/ResetPassword"));
 
+import ClinkingGlasses from "./shared/components/ClinkingGlasses";
+
 // Loading Component for Suspense
 const PageLoader = () => (
-  <div className="min-h-[30vh] flex flex-col items-center justify-center opacity-40">
-    <span className="loading loading-spinner loading-md text-primary mb-2"></span>
-    <p className="text-[10px] font-bold uppercase tracking-widest animate-pulse">Cargando</p>
+  <div className="min-h-[40vh] flex flex-col items-center justify-center opacity-80">
+    <ClinkingGlasses size="md" />
+    <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary/60 mt-4 animate-pulse">
+      Le Banquets
+    </p>
   </div>
 );
 
@@ -37,8 +41,12 @@ function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-base-100 flex items-center justify-center">
-        <span className="loading loading-spinner loading-md text-primary opacity-30"></span>
+      <div className="min-h-screen bg-base-100 flex flex-col items-center justify-center gap-6">
+        <ClinkingGlasses size="lg" />
+        <div className="flex flex-col items-center gap-1">
+          <h2 className="text-xl font-black tracking-tighter text-primary">Le Banquets</h2>
+          <span className="loading loading-dots loading-xs text-primary/30"></span>
+        </div>
       </div>
     );
   }
