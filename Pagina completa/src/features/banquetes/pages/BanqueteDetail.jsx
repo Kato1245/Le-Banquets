@@ -27,8 +27,10 @@ const BanqueteDetail = () => {
     }
 
     const isOwner = user?.role === "propietario" || user?.userType === "propietario";
-    if (isOwner) {
-      toast.error("Acceso restringido: Los propietarios no pueden realizar reservas ni solicitar citas.");
+    const isAdmin = user?.role?.toLowerCase() === "admin" || user?.isAdmin;
+
+    if (isOwner || isAdmin) {
+      toast.error(`Acceso restringido: Los ${isAdmin ? "administradores" : "propietarios"} no pueden realizar reservas ni solicitar citas.`);
       return;
     }
 
@@ -291,18 +293,31 @@ const BanqueteDetail = () => {
               </div>
 
               <div className="space-y-5">
-                <button
-                  onClick={() => handleAction("reserva")}
-                  className="btn btn-primary w-full h-20 rounded-[2rem] normal-case text-lg font-black shadow-2xl shadow-primary/20 hover:shadow-primary/40 transition-all hover:scale-[1.02] border-none"
-                >
-                  Confirmar Reserva Ahora
-                </button>
-                <button
-                  onClick={() => handleAction("visita")}
-                  className="btn btn-ghost bg-base-content/5 hover:bg-base-content/10 w-full h-16 rounded-[2rem] normal-case text-md font-black opacity-60 hover:opacity-100 transition-all"
-                >
-                  Solicitar Cita para Visita
-                </button>
+                {isAuthenticated && (user?.role?.toLowerCase() === "admin" || user?.isAdmin || user?.role === "propietario" || user?.userType === "propietario") ? (
+                  <div className="p-6 bg-base-200/50 rounded-3xl border border-dashed border-base-300 text-center">
+                    <p className="text-xs font-bold opacity-40 uppercase tracking-widest">
+                      Modo de Gestión
+                    </p>
+                    <p className="text-[10px] opacity-30 mt-1 italic">
+                      Las funciones de reserva están deshabilitadas para {user?.role === "propietario" || user?.userType === "propietario" ? "propietarios" : "administradores"}.
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => handleAction("reserva")}
+                      className="btn btn-primary w-full h-20 rounded-[2rem] normal-case text-lg font-black shadow-2xl shadow-primary/20 hover:shadow-primary/40 transition-all hover:scale-[1.02] border-none"
+                    >
+                      Confirmar Reserva Ahora
+                    </button>
+                    <button
+                      onClick={() => handleAction("visita")}
+                      className="btn btn-ghost bg-base-content/5 hover:bg-base-content/10 w-full h-16 rounded-[2rem] normal-case text-md font-black opacity-60 hover:opacity-100 transition-all"
+                    >
+                      Solicitar Cita para Visita
+                    </button>
+                  </>
+                )}
               </div>
 
               {banquete.eventos_que_ofrece && banquete.eventos_que_ofrece.length > 0 && (

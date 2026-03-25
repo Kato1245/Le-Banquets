@@ -7,7 +7,7 @@ import { getImageUrl } from "../../../shared/utils/imageUtils";
 
 const BanqueteCard = ({ banquete }) => {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [showModal, setShowModal] = useState(false);
 
   const handleReserve = () => {
@@ -15,6 +15,15 @@ const BanqueteCard = ({ banquete }) => {
       navigate("/login", { state: { from: `/banquetes/${banquete._id}` } });
       return;
     }
+
+    const isAdmin = user?.role?.toLowerCase() === "admin" || user?.isAdmin;
+    const isOwner = user?.role === "propietario" || user?.userType === "propietario";
+
+    if (isAdmin || isOwner) {
+      // Debería estar oculto, pero añadimos protección por si acaso
+      return;
+    }
+
     navigate(`/banquetes/${banquete._id}`);
   };
 
@@ -97,12 +106,14 @@ const BanqueteCard = ({ banquete }) => {
               Ver detalles
             </button>
 
-            <button
-              className="btn btn-primary btn-sm px-6"
-              onClick={handleReserve}
-            >
-              Reservar
-            </button>
+            {!(user?.role?.toLowerCase() === "admin" || user?.isAdmin || user?.role === "propietario" || user?.userType === "propietario") && (
+              <button
+                className="btn btn-primary btn-sm px-6"
+                onClick={handleReserve}
+              >
+                Reservar
+              </button>
+            )}
           </div>
         </div>
       </div>
