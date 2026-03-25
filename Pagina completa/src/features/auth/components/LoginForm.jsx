@@ -80,11 +80,18 @@ const LoginForm = () => {
 
             <div className="form-control mt-4">
                 <button
-                    className={`btn btn-primary w-full rounded-xl text-lg font-bold normal-case shadow-lg hover:scale-[1.02] active:scale-95 transition-all ${isLoading ? 'loading' : ''}`}
+                    className={`btn btn-primary w-full rounded-xl text-lg font-bold normal-case shadow-lg hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3`}
                     type="submit"
                     disabled={isLoading}
                 >
-                    {isLoading ? "Ingresando..." : "Entrar Ahora"}
+                    {isLoading ? (
+                        <>
+                            <span className="loading loading-spinner loading-sm opacity-50"></span>
+                            <span>Ingresando...</span>
+                        </>
+                    ) : (
+                        "Entrar Ahora"
+                    )}
                 </button>
             </div>
 

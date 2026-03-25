@@ -263,27 +263,27 @@ const BanqueteDetail = () => {
           {/* Sticky Booking Sidebar */}
           <div className="lg:col-span-1">
             <div className="sticky top-28 p-10 bg-base-100 border border-base-300 rounded-[3rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] animate-in slide-in-from-right-8 duration-1000">
-              <div className="mb-10 text-center lg:text-left">
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-30 mb-2">
+              <div className="mb-12 text-center lg:text-left">
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-30 mb-3">
                   Inversión Final Sugerida
                 </p>
-                <div className="flex items-baseline justify-center lg:justify-start gap-2">
-                  <span className="text-5xl font-black text-primary tracking-tighter">
+                <div className="flex items-baseline justify-center lg:justify-start gap-2 flex-wrap">
+                  <span className="text-4xl md:text-5xl font-black text-primary tracking-tighter transition-all">
                     $
                     {(banquete.precio_base || banquete.precio)?.toLocaleString(
                       "es-CO",
                     )}
                   </span>
-                  <span className="text-sm opacity-40 font-black uppercase">
+                  <span className="text-xs opacity-40 font-black uppercase mb-1">
                     COP
                   </span>
                 </div>
-                <p className="text-[10px] font-bold opacity-30 mt-2 italic">
+                <p className="text-[10px] font-bold opacity-30 mt-3 italic">
                   * Precios base sujetos a personalización
                 </p>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-5">
                 <button
                   onClick={() => handleAction("reserva")}
                   className="btn btn-primary w-full h-20 rounded-[2rem] normal-case text-lg font-black shadow-2xl shadow-primary/20 hover:shadow-primary/40 transition-all hover:scale-[1.02] border-none"
@@ -292,7 +292,7 @@ const BanqueteDetail = () => {
                 </button>
                 <button
                   onClick={() => handleAction("visita")}
-                  className="btn btn-ghost bg-base-200/50 hover:bg-base-200 w-full h-16 rounded-[2rem] normal-case text-md font-black opacity-60 hover:opacity-100 transition-all"
+                  className="btn btn-ghost bg-base-content/5 hover:bg-base-content/10 w-full h-16 rounded-[2rem] normal-case text-md font-black opacity-60 hover:opacity-100 transition-all"
                 >
                   Solicitar Cita para Visita
                 </button>

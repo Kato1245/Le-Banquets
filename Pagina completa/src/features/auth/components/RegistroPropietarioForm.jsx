@@ -56,8 +56,8 @@ const RegistroPropietarioForm = () => {
     const labelClasses = "label-text font-bold opacity-70 mb-1 block pl-1";
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-            <div className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
                 {/* Nombre */}
                 <div className="form-control">
                     <label className="label py-1"><span className={labelClasses}>Nombre Completo *</span></label>
@@ -115,6 +115,8 @@ const RegistroPropietarioForm = () => {
                         className={inputClasses}
                     />
                 </div>
+
+                <div className="hidden md:block"></div>
 
                 {/* Contraseña */}
                 <div className="form-control">
