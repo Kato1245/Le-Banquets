@@ -1,6 +1,6 @@
 // src/features/banquetes/pages/Salones.jsx
 import { useState, useEffect } from "react";
-import API_BASE_URL from "../../../config/api";
+import apiClient from "../../../shared/services/apiClient";
 import { Link } from "react-router-dom";
 import { getImageUrl } from "../../../shared/utils/imageUtils";
 
@@ -20,11 +20,8 @@ const Salones = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch(`${API_BASE_URL}/banquetes`);
-      if (!response.ok) throw new Error("Error al conectar con el servidor");
-      const data = await response.json();
-
-      const rawSalones = data.data || data || [];
+      const response = await apiClient.get("/banquetes");
+      const rawSalones = response.data.data || response.data || [];
       const salonesFormateados = rawSalones.map((salon) => ({
         id: salon._id || salon.id,
         nombre: salon.nombre,
@@ -34,14 +31,14 @@ const Salones = () => {
         capacidad: salon.capacidad || 0,
         precio: salon.precio_base || salon.precio || 0,
         direccion:
-          salon.direccion || salon.direccion || "Dirección no especificada",
+          salon.direccion || "Dirección no especificada",
         servicios: salon.servicios || [],
       }));
       setSalones(salonesFormateados);
     } catch (err) {
       console.error("Fetch error:", err);
       setError(
-        "No pudimos cargar el catálogo de banquetes. Por favor, intenta de nuevo más tarde.",
+        err.friendlyMessage || "No pudimos cargar el catálogo de banquetes. Por favor, intenta de nuevo más tarde.",
       );
     } finally {
       setLoading(false);

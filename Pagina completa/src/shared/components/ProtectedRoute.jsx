@@ -15,8 +15,8 @@ const ProtectedRoute = ({ children, requiredRole }) => {
 
   // Mientras carga la sesión, mostrar algo neutral
   if (loading) return (
-    <div className="min-h-[50vh] flex items-center justify-center">
-      <span className="loading loading-spinner text-primary"></span>
+    <div className="min-h-[30vh] flex items-center justify-center">
+      <span className="loading loading-spinner loading-md text-primary opacity-30"></span>
     </div>
   );
 

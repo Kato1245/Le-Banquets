@@ -113,35 +113,35 @@ const BanqueteCitaModal = ({ banquete, isOpen, onClose }) => {
 
   return (
     <dialog open className="modal modal-open items-center justify-center p-4 z-[200]">
-      <div className="modal-box max-w-6xl p-0 overflow-hidden bg-base-100 rounded-[3rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] border border-white/5 flex flex-col lg:flex-row min-h-[650px] animate-in zoom-in-95 duration-300">
+      <div className="modal-box max-w-7xl p-0 overflow-hidden bg-base-100 rounded-[2.5rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] border border-primary/10 flex flex-col lg:flex-row min-h-[550px] animate-in zoom-in-95 duration-300">
         
         {/* Lado Izquierdo: Calendario Interactivo */}
-        <div className="lg:w-5/12 relative hidden lg:flex flex-col bg-neutral/5 border-r border-base-content/5 p-8">
-          <div className="mb-6">
-            <h3 className="text-2xl font-black tracking-tighter uppercase leading-none mb-1">
+        <div className="lg:w-[55%] relative hidden lg:flex flex-col bg-neutral/5 border-r border-base-content/5 p-12">
+          <div className="mb-8">
+            <h3 className="text-3xl font-black tracking-tighter uppercase leading-none mb-2 text-base-content">
               Disponibilidad
             </h3>
-            <p className="text-[10px] opacity-40 font-bold tracking-widest uppercase">
-              Selecciona una fecha verde
+            <p className="text-[10px] opacity-50 font-bold tracking-widest uppercase">
+              Selecciona una fecha disponible (verde)
             </p>
           </div>
 
-          <div className="bg-base-100 rounded-3xl p-6 shadow-xl border border-base-content/5 flex-1 flex flex-col">
-            <header className="flex justify-between items-center mb-6">
-              <button type="button" onClick={prevMonth} className="btn btn-circle btn-ghost btn-sm">←</button>
-              <h4 className="text-sm font-black uppercase tracking-widest">
+          <div className="bg-base-100 rounded-[2rem] p-8 shadow-xl border border-base-content/5 flex-1 flex flex-col">
+            <header className="flex justify-between items-center mb-8">
+              <button type="button" onClick={prevMonth} className="btn btn-circle btn-ghost btn-sm transition-all hover:bg-primary/10 hover:text-primary">←</button>
+              <h4 className="text-sm font-black uppercase tracking-widest text-primary">
                 {currentMonth.toLocaleString("es-ES", { month: "long", year: "numeric" })}
               </h4>
-              <button type="button" onClick={nextMonth} className="btn btn-circle btn-ghost btn-sm">→</button>
+              <button type="button" onClick={nextMonth} className="btn btn-circle btn-ghost btn-sm transition-all hover:bg-primary/10 hover:text-primary">→</button>
             </header>
 
-            <div className="grid grid-cols-7 gap-1 text-center mb-2">
+            <div className="grid grid-cols-7 gap-3 text-center mb-6">
               {["Do", "Lu", "Ma", "Mi", "Ju", "Vi", "Sa"].map(d => (
-                <div key={d} className="text-[9px] font-black uppercase opacity-40">{d}</div>
+                <div key={d} className="text-[11px] font-black uppercase opacity-30 tracking-widest">{d}</div>
               ))}
             </div>
 
-            <div className="grid grid-cols-7 gap-1 flex-1">
+            <div className="grid grid-cols-7 gap-3 flex-1">
               {[...Array(firstDay)].map((_, i) => (
                 <div key={`empty-${i}`} className="p-2"></div>
               ))}
@@ -155,16 +155,16 @@ const BanqueteCitaModal = ({ banquete, isOpen, onClose }) => {
                 const isOccupied = disponibilidad.fechasOcupadasCompletas.includes(dateStr);
                 const isSelected = formData.fecha_sugerida === dateStr;
 
-                let btnClass = "btn btn-ghost btn-sm btn-circle w-full h-full text-xs font-bold transition-all ";
+                let btnClass = "btn btn-ghost btn-md btn-circle w-full h-12 md:h-14 text-sm font-bold transition-all ";
                 
                 if (isPast) {
                   btnClass += "opacity-20 cursor-not-allowed";
                 } else if (isOccupied) {
                   btnClass += "bg-error/10 text-error cursor-not-allowed line-through hover:bg-error/20";
                 } else if (isSelected) {
-                  btnClass += "border-[3px] border-primary bg-primary/10 text-primary font-black shadow-lg scale-110";
+                  btnClass += "bg-primary text-primary-content font-black shadow-xl scale-110 border-none ring-4 ring-primary/20";
                 } else {
-                  btnClass += "bg-success/10 text-success hover:bg-success hover:text-white";
+                  btnClass += "bg-success/5 text-success hover:bg-success hover:text-white border border-success/20";
                 }
 
                 return (
@@ -182,71 +182,86 @@ const BanqueteCitaModal = ({ banquete, isOpen, onClose }) => {
               })}
             </div>
 
-            <div className="mt-6 flex justify-between items-center px-2">
+            <div className="mt-8 flex flex-wrap gap-4 justify-center items-center px-2">
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-success"></div>
+                <div className="w-2 h-2 rounded-full bg-success ring-4 ring-success/20"></div>
                 <span className="text-[9px] font-black uppercase opacity-40">Libre</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-error"></div>
-                <span className="text-[9px] font-black uppercase opacity-40">Día Reservado / Bloqueado</span>
+                <div className="w-2 h-2 rounded-full bg-error ring-4 ring-error/20"></div>
+                <span className="text-[9px] font-black uppercase opacity-40">Ocupado</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* Lado Derecho: Formulario */}
-        <div className="flex-1 p-8 md:p-14 relative bg-base-100 flex flex-col overflow-y-auto">
+        <div className="flex-1 p-8 md:p-12 lg:p-14 relative bg-base-100 flex flex-col overflow-y-auto max-h-[90vh]">
           <button
             onClick={onClose}
-            className="btn btn-sm btn-circle btn-ghost absolute right-8 top-8 z-50 hover:bg-base-200 transition-colors"
+            className="btn btn-sm btn-circle btn-ghost absolute right-8 top-8 z-50 hover:bg-base-200 transition-all hover:scale-110"
           >
             ✕
           </button>
 
-          <header className="mb-10">
-            <div className="badge badge-outline border-base-content/20 py-3 px-4 rounded-xl mb-4 font-black uppercase tracking-[0.2em] text-[9px] shadow-sm">
+          <header className="mb-8">
+            <div className="inline-flex items-center gap-2 badge badge-primary bg-primary/10 text-primary py-4 px-5 rounded-xl mb-4 font-black uppercase tracking-[0.2em] text-[10px] shadow-sm border-none">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
               Visita Guiada
             </div>
-            <h2 className="text-4xl font-black tracking-tighter uppercase mb-2">
+            <h2 className="text-4xl font-black tracking-tighter uppercase mb-2 text-base-content">
               Agendar Encuentro
             </h2>
-            <p className="text-sm opacity-40 font-bold tracking-widest uppercase">
-              Para conocer: {banquete.nombre}
+            <p className="text-sm opacity-50 font-bold tracking-widest uppercase flex items-center gap-2">
+              <span className="w-6 h-px bg-base-content/20"></span>
+              {banquete.nombre}
             </p>
           </header>
 
           <form
             onSubmit={handleSubmit}
-            className="space-y-4 flex flex-col flex-1"
+            className="space-y-6 flex flex-col flex-1"
           >
-            {/* Si no ha seleccionado fecha en desktop, mensaje. En móvil mostramos el input */}
-            <div className="form-control">
-              <label className="label py-1"><span className="label-text text-[10px] font-black uppercase opacity-40 tracking-widest">Fecha Elegida</span></label>
-              <div className="relative group">
-                <span className="absolute left-5 top-1/2 -translate-y-1/2 text-primary font-bold z-10 transition-transform">📅</span>
-                <input
-                  type="date"
-                  name="fecha_sugerida"
-                  required
-                  className="input input-bordered w-full h-14 pl-14 rounded-2xl bg-base-200/50 border-base-300 focus:input-primary font-black uppercase text-[10px] tracking-widest transition-all lg:pointer-events-none lg:opacity-70"
-                  value={formData.fecha_sugerida}
-                  onChange={handleChange}
-                  min={new Date().toISOString().split("T")[0]}
-                  readOnly
-                />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="form-control">
+                <label className="label py-1"><span className="label-text text-[10px] font-black uppercase opacity-40 tracking-widest">Fecha Elegida</span></label>
+                <div className="relative group">
+                  <span className="absolute left-5 top-1/2 -translate-y-1/2 text-primary font-bold z-10 transition-transform">📅</span>
+                  <input
+                    type="date"
+                    name="fecha_sugerida"
+                    required
+                    className="input input-bordered w-full h-14 pl-14 rounded-2xl bg-base-200/50 border-base-300 focus:input-primary font-black uppercase text-[11px] tracking-widest transition-all lg:pointer-events-none lg:opacity-70"
+                    value={formData.fecha_sugerida}
+                    onChange={handleChange}
+                    readOnly
+                  />
+                </div>
               </div>
-              <span className="text-[9px] text-error mt-1 italic ml-2 lg:hidden">* Usa un dispositivo más grande para ver el mapa de disponibilidad completo.</span>
+
+              <div className="form-control">
+                <label className="label py-1"><span className="label-text text-[10px] font-black uppercase opacity-40 tracking-widest">Inversión Base</span></label>
+                <div className="relative group">
+                  <span className="absolute left-5 top-1/2 -translate-y-1/2 text-primary font-bold z-10">💰</span>
+                  <input
+                    type="text"
+                    readOnly
+                    className="input input-bordered w-full h-14 pl-14 rounded-2xl bg-base-200/10 border-base-200 text-primary font-black text-[14px] tracking-widest opacity-80"
+                    value={`$${(banquete.precio_base || banquete.precio)?.toLocaleString("es-CO")}`}
+                  />
+                </div>
+              </div>
             </div>
 
             <div className="form-control">
               <label className="label py-1"><span className="label-text text-[10px] font-black uppercase opacity-40 tracking-widest">Horarios Disponibles</span></label>
               {!formData.fecha_sugerida ? (
-                <div className="p-6 bg-base-200/30 rounded-2xl border border-dashed border-base-300 text-center">
-                  <p className="text-xs font-bold opacity-40 uppercase tracking-widest">Selecciona una fecha en el calendario para ver horarios</p>
+                <div className="p-8 bg-base-200/20 rounded-2xl border-2 border-dashed border-base-300 flex flex-col items-center justify-center text-center group transition-all hover:border-primary/30">
+                  <div className="w-10 h-10 rounded-full bg-base-300 flex items-center justify-center mb-3 opacity-50 group-hover:scale-110 transition-transform">📍</div>
+                  <p className="text-[10px] font-bold opacity-40 uppercase tracking-widest max-w-[200px]">Selecciona una fecha en el calendario para ver horarios</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-5 gap-2">
+                <div className="grid grid-cols-4 gap-3">
                   {HORARIOS.map((h) => {
                     const isOccupied = horasOcupadasHoy.includes(h);
                     const isSelected = formData.hora_sugerida === h;
@@ -255,13 +270,12 @@ const BanqueteCitaModal = ({ banquete, isOpen, onClose }) => {
                         key={h}
                         type="button"
                         disabled={isOccupied}
-                        className={`btn btn-sm rounded-xl h-10 font-black text-[10px] transition-all
-                          ${isOccupied ? "btn-disabled bg-error/10 text-error opacity-40 cursor-not-allowed line-through" : ""}
-                          ${isSelected ? "bg-primary text-primary-content shadow-lg scale-[1.05]" : ""}
-                          ${!isOccupied && !isSelected ? "btn-outline border-base-300 hover:border-primary hover:text-primary" : ""}
+                        className={`btn btn-sm rounded-xl h-12 font-black text-[11px] tracking-tighter transition-all
+                          ${isOccupied ? "btn-disabled bg-error/5 text-error opacity-30 cursor-not-allowed line-through" : ""}
+                          ${isSelected ? "bg-primary text-primary-content shadow-xl scale-[1.05] border-none ring-4 ring-primary/20" : ""}
+                          ${!isOccupied && !isSelected ? "bg-base-200/50 border-base-300 hover:border-primary hover:text-primary hover:scale-105" : ""}
                         `}
                         onClick={() => setFormData(p => ({...p, hora_sugerida: h}))}
-                        title={isOccupied ? "Hora ocupada por otra cita" : "Disponible"}
                       >
                         {h}
                       </button>
@@ -271,22 +285,22 @@ const BanqueteCitaModal = ({ banquete, isOpen, onClose }) => {
               )}
             </div>
 
-            <div className="form-control mt-2">
-              <label className="label py-1"><span className="label-text text-[10px] font-black uppercase opacity-40 tracking-widest">Detalles Adicionales (Opcional)</span></label>
+            <div className="form-control">
+              <label className="label py-1"><span className="label-text text-[10px] font-black uppercase opacity-40 tracking-widest">Detalles Adicionales</span></label>
               <textarea
                 name="mensaje"
-                className="textarea textarea-bordered w-full h-28 rounded-[2rem] bg-base-200/30 border-base-300 focus:textarea-primary font-medium px-6 py-4 leading-relaxed resize-none transition-all placeholder:opacity-30 text-sm"
-                placeholder="Escribe aquí tu visión, dudas o requerimientos especiales antes de la visita..."
+                className="textarea textarea-bordered w-full h-32 rounded-3xl bg-base-200/30 border-base-300 focus:textarea-primary font-medium p-6 leading-relaxed resize-none transition-all placeholder:opacity-30 text-sm"
+                placeholder="Indica si deseas algún servicio especial o tienes requerimientos específicos para la visita..."
                 value={formData.mensaje}
                 onChange={handleChange}
               ></textarea>
             </div>
 
-            <div className="pt-4 mt-auto">
+            <div className="pt-6 mt-auto">
               <button
                 type="submit"
                 disabled={loading || !formData.fecha_sugerida || !formData.hora_sugerida}
-                className="btn btn-primary w-full h-16 rounded-[2rem] normal-case text-lg font-black shadow-[0_20px_40px_-10px_rgba(var(--p),0.3)] hover:shadow-[0_25px_50px_-12px_rgba(var(--p),0.5)] transition-all hover:scale-[1.01] active:scale-95 border-none group disabled:opacity-50 disabled:scale-100"
+                className="btn btn-primary w-full h-16 rounded-2xl normal-case text-lg font-black shadow-[0_20px_40px_-10px_rgba(var(--p),0.3)] hover:shadow-[0_25px_50px_-12px_rgba(var(--p),0.5)] transition-all hover:scale-[1.02] active:scale-95 border-none group disabled:opacity-50 disabled:scale-100"
               >
                 {loading ? (
                   <span className="loading loading-spinner text-white"></span>

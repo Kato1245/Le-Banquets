@@ -1,32 +1,44 @@
 // src/App.jsx
+import { lazy, Suspense } from "react";
 import { Route, Routes, Navigate } from "react-router-dom";
 import { Toaster } from 'react-hot-toast';
-import Home from "./features/home/pages/Home";
-import Login from "./features/auth/pages/Login";
-import Registro from "./features/auth/pages/Registro";
-import RegistroPropietario from "./features/auth/pages/RegistroPropietario";
 
-import Banquetes from "./features/banquetes/pages/Salones";
-import BanqueteDetail from "./features/banquetes/pages/BanqueteDetail";
-import MisEventos from "./features/eventos/pages/MisEventos";
-import Eventos from "./features/eventos/pages/Eventos";
-import MisBanquetes from "./features/banquetes/pages/MisBanquetes";
-import Configuracion from "./features/admin/pages/Configuracion";
-import AdminDashboard from "./features/admin/pages/AdminDashboard";
-import ForgotPassword from "./features/auth/pages/ForgotPassword";
-import ResetPassword from "./features/auth/pages/ResetPassword";
+// Core Components (Non-lazy)
 import Navbar from "./shared/components/Navbar";
 import ProtectedRoute from "./shared/components/ProtectedRoute";
 import TokenValidator from "./shared/components/TokenValidator";
 import { useAuth } from "./context/AuthContext";
+
+// Lazy Loaded Pages
+const Home = lazy(() => import("./features/home/pages/Home"));
+const Login = lazy(() => import("./features/auth/pages/Login"));
+const Registro = lazy(() => import("./features/auth/pages/Registro"));
+const RegistroPropietario = lazy(() => import("./features/auth/pages/RegistroPropietario"));
+const Banquetes = lazy(() => import("./features/banquetes/pages/Salones"));
+const BanqueteDetail = lazy(() => import("./features/banquetes/pages/BanqueteDetail"));
+const MisEventos = lazy(() => import("./features/eventos/pages/MisEventos"));
+const Eventos = lazy(() => import("./features/eventos/pages/Eventos"));
+const MisBanquetes = lazy(() => import("./features/banquetes/pages/MisBanquetes"));
+const Configuracion = lazy(() => import("./features/admin/pages/Configuracion"));
+const AdminDashboard = lazy(() => import("./features/admin/pages/AdminDashboard"));
+const ForgotPassword = lazy(() => import("./features/auth/pages/ForgotPassword"));
+const ResetPassword = lazy(() => import("./features/auth/pages/ResetPassword"));
+
+// Loading Component for Suspense
+const PageLoader = () => (
+  <div className="min-h-[30vh] flex flex-col items-center justify-center opacity-40">
+    <span className="loading loading-spinner loading-md text-primary mb-2"></span>
+    <p className="text-[10px] font-bold uppercase tracking-widest animate-pulse">Cargando</p>
+  </div>
+);
 
 function App() {
   const { loading, user } = useAuth();
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <span className="loading loading-spinner loading-lg text-primary"></span>
+      <div className="min-h-screen bg-base-100 flex items-center justify-center">
+        <span className="loading loading-spinner loading-md text-primary opacity-30"></span>
       </div>
     );
   }
@@ -34,55 +46,72 @@ function App() {
   return (
     <>
       <Toaster
-        position="top-right"
+        position="bottom-right"
         toastOptions={{
           duration: 4000,
-          style: { background: '#363636', color: '#fff' },
-          success: { duration: 3000, iconTheme: { primary: '#4ade80', secondary: '#fff' } },
-          error: { duration: 5000, iconTheme: { primary: '#ef4444', secondary: '#fff' } },
+          style: {
+            background: "#1e1e2e",
+            color: "#cdd6f4",
+            borderRadius: "1rem",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
+            padding: "1rem",
+            fontWeight: "600",
+            fontSize: "14px",
+            boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.3)",
+          },
+          success: {
+            duration: 3000,
+            iconTheme: { primary: "#a6e3a1", secondary: "#1e1e2e" },
+          },
+          error: {
+            duration: 5000,
+            iconTheme: { primary: "#f38ba8", secondary: "#1e1e2e" },
+          },
         }}
       />
       <TokenValidator />
       <Navbar />
 
-      <Routes>
-        {/* Página principal */}
-        <Route path="/" element={<Home />} />
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          {/* Página principal */}
+          <Route path="/" element={<Home />} />
 
-        {/* Rutas de autenticación — solo accesibles sin sesión */}
-        <Route path="/login" element={!user ? <Login /> : <Navigate to="/" replace />} />
-        <Route path="/registro" element={!user ? <Registro /> : <Navigate to="/" replace />} />
-        <Route path="/registro-propietario" element={!user ? <RegistroPropietario /> : <Navigate to="/" replace />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
+          {/* Rutas de autenticación — solo accesibles sin sesión */}
+          <Route path="/login" element={!user ? <Login /> : <Navigate to="/" replace />} />
+          <Route path="/registro" element={!user ? <Registro /> : <Navigate to="/" replace />} />
+          <Route path="/registro-propietario" element={!user ? <RegistroPropietario /> : <Navigate to="/" replace />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
 
-        {/* Rutas públicas */}
-        <Route path="/banquetes" element={<Banquetes />} />
-        <Route path="/banquetes/:id" element={<BanqueteDetail />} />
-        <Route path="/eventos" element={<Eventos />} />
+          {/* Rutas públicas */}
+          <Route path="/banquetes" element={<Banquetes />} />
+          <Route path="/banquetes/:id" element={<BanqueteDetail />} />
+          <Route path="/eventos" element={<Eventos />} />
 
-        {/* Rutas protegidas — requieren login */}
+          {/* Rutas protegidas — requieren login */}
 
-        <Route path="/mis-eventos" element={
-          <ProtectedRoute><MisEventos /></ProtectedRoute>
-        } />
-        <Route path="/configuracion" element={
-          <ProtectedRoute><Configuracion /></ProtectedRoute>
-        } />
+          <Route path="/mis-eventos" element={
+            <ProtectedRoute><MisEventos /></ProtectedRoute>
+          } />
+          <Route path="/configuracion" element={
+            <ProtectedRoute><Configuracion /></ProtectedRoute>
+          } />
 
-        {/* Ruta exclusiva para propietarios */}
-        <Route path="/mis-banquetes" element={
-          <ProtectedRoute requiredRole="propietario"><MisBanquetes /></ProtectedRoute>
-        } />
+          {/* Ruta exclusiva para propietarios */}
+          <Route path="/mis-banquetes" element={
+            <ProtectedRoute requiredRole="propietario"><MisBanquetes /></ProtectedRoute>
+          } />
 
-        {/* Ruta exclusiva para administradores */}
-        <Route path="/admin" element={
-          <ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>
-        } />
+          {/* Ruta exclusiva para administradores */}
+          <Route path="/admin" element={
+            <ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>
+          } />
 
-        {/* Cualquier ruta no definida → inicio */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+          {/* Cualquier ruta no definida → inicio */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
     </>
   );
 }

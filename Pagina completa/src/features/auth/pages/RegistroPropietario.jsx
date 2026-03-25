@@ -16,7 +16,7 @@ const RegistroPropietario = () => {
             </div>
 
             {/* Content Container */}
-            <div className="relative z-10 w-full max-w-xl animate-in fade-in slide-in-from-bottom-5 duration-700">
+            <div className="relative z-10 w-full max-w-3xl animate-in fade-in slide-in-from-bottom-5 duration-700">
                 <div className="bg-base-100/95 backdrop-blur-3xl p-10 md:p-14 rounded-[2.5rem] shadow-2xl border border-white/20">
                     <div className="text-center mb-10">
                         <div className="badge badge-primary py-4 px-8 rounded-full mb-6 font-black uppercase tracking-[0.4em] text-[10px] border-2">
