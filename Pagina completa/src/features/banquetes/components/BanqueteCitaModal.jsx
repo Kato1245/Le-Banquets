@@ -4,7 +4,7 @@ import banqueteDisponibilidadService from "../services/banqueteDisponibilidadSer
 import citasService from "../services/citasService";
 
 const HORARIOS = [
-  "09:00", "10:00", "11:00", "12:00", "13:00", 
+  "09:00", "10:00", "11:00", "12:00", "13:00",
   "14:00", "15:00", "16:00", "17:00", "18:00"
 ];
 
@@ -15,11 +15,12 @@ const BanqueteCitaModal = ({ banquete, isOpen, onClose }) => {
     horasOcupadasPorDia: {},
   });
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  
+
   const [formData, setFormData] = useState({
     fecha_sugerida: "",
     hora_sugerida: "",
     mensaje: "",
+    tipo_evento: "",
   });
 
   useEffect(() => {
@@ -30,6 +31,7 @@ const BanqueteCitaModal = ({ banquete, isOpen, onClose }) => {
         fecha_sugerida: "",
         hora_sugerida: "",
         mensaje: "",
+        tipo_evento: "",
       });
     }
   }, [isOpen, banquete]);
@@ -56,7 +58,7 @@ const BanqueteCitaModal = ({ banquete, isOpen, onClose }) => {
     if (disponibilidad.fechasOcupadasCompletas.includes(dateStr)) return; // bloqueado
     const selected = new Date(dateStr);
     const today = new Date();
-    today.setHours(0,0,0,0);
+    today.setHours(0, 0, 0, 0);
     // Para que compare bien horas locales
     const selLocal = new Date(selected.getTime() + selected.getTimezoneOffset() * 60000);
     if (selLocal < today) return; // pasado
@@ -107,18 +109,25 @@ const BanqueteCitaModal = ({ banquete, isOpen, onClose }) => {
   };
 
   const todayStr = new Date().toISOString().split("T")[0];
-  const horasOcupadasHoy = formData.fecha_sugerida 
-    ? (disponibilidad.horasOcupadasPorDia[formData.fecha_sugerida] || []) 
+  const horasOcupadasHoy = formData.fecha_sugerida
+    ? (disponibilidad.horasOcupadasPorDia[formData.fecha_sugerida] || [])
     : [];
 
   return (
-    <dialog open className="modal modal-open items-center justify-center p-4 z-[200]">
-      <div className="modal-box max-w-7xl p-0 overflow-hidden bg-base-100 rounded-[2.5rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] border border-primary/10 flex flex-col lg:flex-row min-h-[550px] animate-in zoom-in-95 duration-300">
+    <dialog open className="modal modal-open items-end sm:items-center justify-center p-0 sm:p-4 z-[200]">
+      <div className="modal-box relative w-full sm:w-11/12 max-w-7xl h-auto max-h-[96vh] sm:max-h-[90vh] p-0 mx-auto overflow-y-auto lg:overflow-hidden bg-base-100 rounded-t-[2rem] sm:rounded-[2.5rem] shadow-2xl flex flex-col lg:flex-row lg:min-h-[550px] animate-in slide-in-from-bottom-10 sm:zoom-in-95 duration-300">
         
+        <button
+          onClick={onClose}
+          className="btn btn-sm btn-circle btn-ghost absolute right-4 top-4 lg:right-8 lg:top-8 z-50 hover:bg-base-200 transition-all hover:scale-110"
+        >
+          ✕
+        </button>
+
         {/* Lado Izquierdo: Calendario Interactivo */}
-        <div className="lg:w-[55%] relative hidden lg:flex flex-col bg-neutral/5 border-r border-base-content/5 p-12">
-          <div className="mb-8">
-            <h3 className="text-3xl font-black tracking-tighter uppercase leading-none mb-2 text-base-content">
+        <div className="w-full lg:w-[55%] flex-none relative flex flex-col bg-neutral/5 border-b lg:border-b-0 lg:border-r border-base-content/5 p-4 sm:p-6 lg:p-12 items-center sm:items-stretch overflow-x-hidden">
+          <div className="mb-4 lg:mb-8 text-center sm:text-left w-full px-4">
+            <h3 className="text-xl sm:text-3xl font-black tracking-tighter uppercase leading-none mb-2 text-base-content">
               Disponibilidad
             </h3>
             <p className="text-[10px] opacity-50 font-bold tracking-widest uppercase">
@@ -126,8 +135,8 @@ const BanqueteCitaModal = ({ banquete, isOpen, onClose }) => {
             </p>
           </div>
 
-          <div className="bg-base-100 rounded-[2rem] p-8 shadow-xl border border-base-content/5 flex-1 flex flex-col">
-            <header className="flex justify-between items-center mb-8">
+          <div className="bg-base-100 rounded-2xl sm:rounded-[2rem] p-2 sm:p-6 lg:p-8 shadow-xl border border-base-content/5 flex-1 flex flex-col w-full max-w-[325px] sm:max-w-none mx-auto">
+            <header className="flex justify-between items-center mb-4 lg:mb-8">
               <button type="button" onClick={prevMonth} className="btn btn-circle btn-ghost btn-sm transition-all hover:bg-primary/10 hover:text-primary">←</button>
               <h4 className="text-sm font-black uppercase tracking-widest text-primary">
                 {currentMonth.toLocaleString("es-ES", { month: "long", year: "numeric" })}
@@ -135,13 +144,13 @@ const BanqueteCitaModal = ({ banquete, isOpen, onClose }) => {
               <button type="button" onClick={nextMonth} className="btn btn-circle btn-ghost btn-sm transition-all hover:bg-primary/10 hover:text-primary">→</button>
             </header>
 
-            <div className="grid grid-cols-7 gap-3 text-center mb-6">
+            <div className="grid grid-cols-7 gap-1 sm:gap-2 md:gap-3 text-center mb-4 lg:mb-6 w-full">
               {["Do", "Lu", "Ma", "Mi", "Ju", "Vi", "Sa"].map(d => (
-                <div key={d} className="text-[11px] font-black uppercase opacity-30 tracking-widest">{d}</div>
+                <div key={d} className="text-[10px] sm:text-[11px] font-black uppercase opacity-70 tracking-widest truncate">{d}</div>
               ))}
             </div>
 
-            <div className="grid grid-cols-7 gap-3 flex-1">
+            <div className="grid grid-cols-7 gap-1 sm:gap-2 md:gap-3 flex-1 justify-items-center w-full">
               {[...Array(firstDay)].map((_, i) => (
                 <div key={`empty-${i}`} className="p-2"></div>
               ))}
@@ -150,21 +159,21 @@ const BanqueteCitaModal = ({ banquete, isOpen, onClose }) => {
                 const dDate = new Date(year, month, day);
                 const dDateLocal = new Date(dDate.getTime() - dDate.getTimezoneOffset() * 60000);
                 const dateStr = dDateLocal.toISOString().split("T")[0];
-                
+
                 const isPast = dateStr < todayStr;
                 const isOccupied = disponibilidad.fechasOcupadasCompletas.includes(dateStr);
                 const isSelected = formData.fecha_sugerida === dateStr;
 
-                let btnClass = "btn btn-ghost btn-md btn-circle w-full h-12 md:h-14 text-sm font-bold transition-all ";
-                
+                let btnClass = "flex items-center justify-center w-8 h-8 sm:w-full aspect-square text-[10px] sm:text-sm lg:text-base font-black rounded-[50%] transition-all select-none ";
+
                 if (isPast) {
-                  btnClass += "opacity-20 cursor-not-allowed";
+                  btnClass += "text-gray-500 bg-base-200 opacity-60 cursor-not-allowed";
                 } else if (isOccupied) {
-                  btnClass += "bg-error/10 text-error cursor-not-allowed line-through hover:bg-error/20";
+                  btnClass += "bg-error/20 text-black dark:text-error cursor-not-allowed line-through hover:bg-error/30";
                 } else if (isSelected) {
-                  btnClass += "bg-primary text-primary-content font-black shadow-xl scale-110 border-none ring-4 ring-primary/20";
+                  btnClass += "bg-primary text-primary-content shadow-xl scale-110 ring-4 ring-primary/20";
                 } else {
-                  btnClass += "bg-success/5 text-success hover:bg-success hover:text-white border border-success/20";
+                  btnClass += "bg-success/20 text-black dark:text-white hover:bg-success hover:text-white border-2 border-success/30 shadow-sm cursor-pointer";
                 }
 
                 return (
@@ -185,26 +194,19 @@ const BanqueteCitaModal = ({ banquete, isOpen, onClose }) => {
             <div className="mt-8 flex flex-wrap gap-4 justify-center items-center px-2">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-success ring-4 ring-success/20"></div>
-                <span className="text-[9px] font-black uppercase opacity-40">Libre</span>
+                <span className="text-[9px] font-black uppercase opacity-80">Libre</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-error ring-4 ring-error/20"></div>
-                <span className="text-[9px] font-black uppercase opacity-40">Ocupado</span>
+                <span className="text-[9px] font-black uppercase opacity-80">Ocupado</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* Lado Derecho: Formulario */}
-        <div className="flex-1 p-8 md:p-12 lg:p-14 relative bg-base-100 flex flex-col overflow-y-auto max-h-[90vh]">
-          <button
-            onClick={onClose}
-            className="btn btn-sm btn-circle btn-ghost absolute right-8 top-8 z-50 hover:bg-base-200 transition-all hover:scale-110"
-          >
-            ✕
-          </button>
-
-          <header className="mb-8">
+        <div className="flex-1 p-6 sm:p-8 md:p-12 lg:p-14 relative bg-base-100 flex flex-col lg:overflow-y-auto lg:max-h-[90vh]">
+          <header className="mb-8 mt-4 lg:mt-0">
             <div className="inline-flex items-center gap-2 badge badge-primary bg-primary/10 text-primary py-4 px-5 rounded-xl mb-4 font-black uppercase tracking-[0.2em] text-[10px] shadow-sm border-none">
               <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
               Visita Guiada
@@ -240,15 +242,21 @@ const BanqueteCitaModal = ({ banquete, isOpen, onClose }) => {
               </div>
 
               <div className="form-control">
-                <label className="label py-1"><span className="label-text text-[10px] font-black uppercase opacity-40 tracking-widest">Inversión Base</span></label>
+                <label className="label py-1"><span className="label-text text-[10px] font-black uppercase opacity-40 tracking-widest">Tipo de Evento</span></label>
                 <div className="relative group">
-                  <span className="absolute left-5 top-1/2 -translate-y-1/2 text-primary font-bold z-10">💰</span>
-                  <input
-                    type="text"
-                    readOnly
-                    className="input input-bordered w-full h-14 pl-14 rounded-2xl bg-base-200/10 border-base-200 text-primary font-black text-[14px] tracking-widest opacity-80"
-                    value={`$${(banquete.precio_base || banquete.precio)?.toLocaleString("es-CO")}`}
-                  />
+                  <span className="absolute left-5 top-1/2 -translate-y-1/2 text-primary font-bold z-10">✨</span>
+                  <select
+                    name="tipo_evento"
+                    required
+                    className="select select-bordered w-full h-14 pl-14 rounded-2xl bg-base-200/50 border-base-300 focus:select-primary font-black uppercase text-[11px] tracking-widest transition-all appearance-none"
+                    value={formData.tipo_evento}
+                    onChange={handleChange}
+                  >
+                    <option value="" disabled>Seleccionar evento</option>
+                    {banquete.eventos_que_ofrece?.map((evento, idx) => (
+                      <option key={idx} value={evento}>{evento}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
             </div>
@@ -261,7 +269,7 @@ const BanqueteCitaModal = ({ banquete, isOpen, onClose }) => {
                   <p className="text-[10px] font-bold opacity-40 uppercase tracking-widest max-w-[200px]">Selecciona una fecha en el calendario para ver horarios</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-4 gap-3">
+                <div className="grid grid-cols-4 gap-2 sm:gap-3">
                   {HORARIOS.map((h) => {
                     const isOccupied = horasOcupadasHoy.includes(h);
                     const isSelected = formData.hora_sugerida === h;
@@ -270,12 +278,12 @@ const BanqueteCitaModal = ({ banquete, isOpen, onClose }) => {
                         key={h}
                         type="button"
                         disabled={isOccupied}
-                        className={`btn btn-sm rounded-xl h-12 font-black text-[11px] tracking-tighter transition-all
-                          ${isOccupied ? "btn-disabled bg-error/5 text-error opacity-30 cursor-not-allowed line-through" : ""}
+                        className={`btn btn-sm px-1 rounded-xl h-10 sm:h-12 font-black text-[10px] sm:text-[11px] tracking-tighter transition-all
+                          ${isOccupied ? "btn-disabled bg-error/10 text-red-700 dark:text-error opacity-60 cursor-not-allowed line-through" : ""}
                           ${isSelected ? "bg-primary text-primary-content shadow-xl scale-[1.05] border-none ring-4 ring-primary/20" : ""}
                           ${!isOccupied && !isSelected ? "bg-base-200/50 border-base-300 hover:border-primary hover:text-primary hover:scale-105" : ""}
                         `}
-                        onClick={() => setFormData(p => ({...p, hora_sugerida: h}))}
+                        onClick={() => setFormData(p => ({ ...p, hora_sugerida: h }))}
                       >
                         {h}
                       </button>

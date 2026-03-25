@@ -107,10 +107,10 @@ const BanqueteDetail = () => {
           <div className="badge badge-primary py-4 px-8 rounded-full mb-6 font-black uppercase tracking-[0.4em] text-[10px] shadow-2xl border-none">
             Espacio Exclusivo
           </div>
-          <h1 className="text-6xl md:text-8xl font-black text-white tracking-tighter uppercase leading-[0.8] mb-4 break-words">
+          <h1 className="text-4xl md:text-8xl font-black text-primary tracking-tighter uppercase leading-[0.8] mb-4 break-words">
             {banquete.nombre}
           </h1>
-          <p className="flex items-center gap-3 text-white/80 font-bold text-sm tracking-widest uppercase">
+          <p className="flex items-center gap-3 text-black/80 font-bold text-sm tracking-widest uppercase">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-5 w-5 text-primary"
@@ -140,14 +140,14 @@ const BanqueteDetail = () => {
                 <span className="w-10 h-px bg-current opacity-20"></span>
                 Inspiración del Espacio
               </p>
-              <h2 className="text-4xl font-black tracking-tighter uppercase mb-8">
+              <h2 className="text-2xl md:text-4xl font-black tracking-tighter uppercase mb-8">
                 Un entorno donde los{" "}
                 <span className="text-primary italic serif lowercase">
                   sueños
                 </span>{" "}
                 cobran vida
               </h2>
-              <p className="text-2xl opacity-70 leading-relaxed font-medium serif italic break-words whitespace-pre-line">
+              <p className="text-lg md:text-2xl opacity-70 leading-relaxed font-medium serif italic break-words whitespace-pre-line">
                 {banquete.descripcion ||
                   "Este majestuoso salón ha sido concebido para quienes buscan la perfección en cada detalle. Arquitectura atemporal, iluminación de vanguardia y un servicio que redefine la hospitalidad de lujo."}
               </p>
@@ -367,7 +367,7 @@ const BanqueteDetail = () => {
       {/* Footer Branding Area */}
       <div className="bg-base-200 mt-20 py-20">
         <div className="max-w-7xl mx-auto px-4 text-center">
-          <h3 className="text-8xl font-black opacity-5 tracking-[0.2em] mb-4 uppercase">
+          <h3 className="text-4xl md:text-8xl font-black opacity-5 tracking-[0.2em] mb-4 uppercase">
             Le Banquets
           </h3>
           <p className="text-xs font-black uppercase tracking-[0.5em] opacity-20 italic">
