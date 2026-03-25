@@ -42,3 +42,10 @@
 .btn:hover {
   transform: translateY(-2px);
 }
+
+/* Mejora de contraste de textos pequeños (descripciones) en el tema claro */
+[data-theme="winter"] .text-base-content\/70,
+[data-theme="winter"] .text-base-content\/60,
+[data-theme="winter"] .text-base-content\/50 {
+  color: #111827 !important; /* Negro/Gris muy oscuro para máxima legibilidad */
+}
