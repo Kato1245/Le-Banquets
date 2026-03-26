@@ -67,7 +67,7 @@ const sendReservationRequestEmail = async (propietarioEmail, reservaData) => {
     const mailOptions = {
       from: `"Le Banquets" <${process.env.EMAIL_USER}>`,
       to: propietarioEmail,
-      subject: "Nueva solicitud de reserva - Le Banquets",
+      subject: "Tienes una nueva reserva pendiente - Le Banquets",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
           <h2 style="color: #4a90e2; text-align: center;">Nueva Solicitud de Reserva</h2>
@@ -99,6 +99,47 @@ const sendReservationRequestEmail = async (propietarioEmail, reservaData) => {
     return { success: true };
   } catch (error) {
     console.error("Error enviando correo de reserva:", error);
+    return { success: false, error };
+  }
+};
+
+const sendAppointmentRequestEmail = async (propietarioEmail, citaData) => {
+  try {
+    const { banqueteNombre, clienteNombre, fecha, hora, mensaje } = citaData;
+    const mailOptions = {
+      from: `"Le Banquets" <${process.env.EMAIL_USER}>`,
+      to: propietarioEmail,
+      subject: "Tienes una nueva solicitud de cita - Le Banquets",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
+          <h2 style="color: #4a90e2; text-align: center;">Nueva Solicitud de Cita</h2>
+          <p>Hola,</p>
+          <p>Has recibido una nueva solicitud de cita/visita para tu banquete <strong>"${banqueteNombre}"</strong>.</p>
+          
+          <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #4a90e2;">
+            <p style="margin: 5px 0;"><strong>Cliente:</strong> ${clienteNombre}</p>
+            <p style="margin: 5px 0;"><strong>Fecha sugerida:</strong> ${formatearFecha(fecha)}</p>
+            <p style="margin: 5px 0;"><strong>Hora sugerida:</strong> ${hora}</p>
+            ${mensaje ? `<p style="margin: 5px 0;"><strong>Mensaje:</strong> ${mensaje}</p>` : ""}
+          </div>
+          
+          <p>Por favor, ingresa a tu panel de propietario para confirmar o rechazar esta solicitud en la sección de citas.</p>
+          
+          <div style="text-align: center; margin-top: 30px;">
+            <a href="${process.env.FRONTEND_URL}/perfil?tab=citas" style="background-color: #4a90e2; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">Ver Citas</a>
+          </div>
+          
+          <hr style="border: 0; border-top: 1px solid #eeeeee; margin: 30px 0;">
+          <p style="font-size: 12px; color: #777; text-align: center;">Este es un mensaje automático de Le Banquets.</p>
+        </div>
+      `,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log("Correo de cita enviado: %s", info.messageId);
+    return { success: true };
+  } catch (error) {
+    console.error("Error enviando correo de cita:", error);
     return { success: false, error };
   }
 };
@@ -266,4 +307,4 @@ const sendWelcomeEmail = async (email, nombre, isPropietario) => {
   }
 };
 
-module.exports = { sendResetEmail, sendReservationRequestEmail, sendReservationStatusEmail, sendAppointmentStatusEmail, sendWelcomeEmail };
+module.exports = { sendResetEmail, sendReservationRequestEmail, sendAppointmentRequestEmail, sendReservationStatusEmail, sendAppointmentStatusEmail, sendWelcomeEmail };

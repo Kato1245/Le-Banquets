@@ -3,7 +3,7 @@ const Banquete = require("../models/Banquete");
 const Propietario = require("../models/Propietario");
 const Usuario = require("../models/Usuario");
 const NotificacionController = require("./notificacionController");
-const { sendAppointmentStatusEmail } = require("../config/mailer");
+const { sendAppointmentStatusEmail, sendAppointmentRequestEmail } = require("../config/mailer");
 
 // Helper: formatea una fecha de MongoDB (Date) sin desfase de zona horaria.
 // Extrae año/mes/día directamente del ISO string para evitar la conversión UTC → local.
@@ -51,6 +51,22 @@ class CitaController {
         tipo: "cita",
         referencia_id: nuevaCita._id,
       });
+
+      // Notificar al propietario por correo si tiene la opción activa
+      const propietario = await Propietario.findById(propietario_id);
+      const mailHabilitado = propietario && (propietario.notificaciones?.email !== false);
+
+      if (mailHabilitado) {
+        const cliente = await Usuario.findById(usuario_id);
+        console.log(`Enviando correo de solicitud de cita a propietario: ${propietario.email}`);
+        await sendAppointmentRequestEmail(propietario.email, {
+          banqueteNombre: banquete.nombre,
+          clienteNombre: cliente?.nombre || "Un cliente",
+          fecha: fecha_sugerida,
+          hora: hora_sugerida,
+          mensaje,
+        });
+      }
 
       res.status(201).json({
         success: true,

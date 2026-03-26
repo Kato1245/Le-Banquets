@@ -9,6 +9,26 @@ import ReviewsSection from "../components/ReviewsSection";
 import { useAuth } from "@/context/AuthContext";
 import toast from "react-hot-toast";
 
+// Imágenes para los tipos de eventos
+import quinceAnosImg from "../../../images/15Años.jfif";
+import bodasImg from "../../../images/bodas.jfif";
+import empresarialesImg from "../../../images/empresariales.jfif";
+import otrosImg from "../../../images/otros.jfif";
+
+const EVENT_IMAGES = {
+  "15 Años": quinceAnosImg,
+  "Bodas": bodasImg,
+  "Eventos empresariales": empresarialesImg,
+  "Otros": otrosImg
+};
+
+const EVENT_DESCRIPTIONS = {
+  "15 Años": "Imagina una noche donde la elegancia y la energía se fusionan para celebrar tu gran debut: una producción de alto nivel que inicia con una entrada triunfal bajo luces robóticas, seguida de momentos emotivos como el vals de gala y el cambio de zapatilla. El evento alcanza su clímax con una coreografía profesional digna de un concierto y un cierre explosivo con DJ y efectos visuales, convirtiendo tu transición en una experiencia cinematográfica inolvidable para todos tus invitados.",
+  "Bodas": "Imagina una producción cinematográfica diseñada exclusivamente para celebrar el inicio de su legado: una gala donde la ceremonia es el preludio perfecto para una recepción de alto nivel, fusionando un banquete de autor con una puesta en escena spectacular. Desde el primer baile bajo una lluvia de efectos visuales hasta una fiesta de gala con una curaduría musical impecable y coctelería premium, cada detalle está orquestado para que ustedes y sus invitados vivan una experiencia sensorial, elegante y profundamente emotiva que se convertirá en el estándar de oro de las celebraciones.",
+  "Eventos empresariales": "Imagina una experiencia de alto impacto diseñada para elevar el prestigio de tu marca y consolidar el liderazgo de tu equipo en un entorno de pura sofisticación. Desde un networking de élite con coctelería de autor hasta una puesta en escena tecnológica de vanguardia, cada detalle está orquestado para proyectar innovación, éxito y solidez. Es el escenario perfecto para lanzamientos memorables o galas de reconocimiento, donde la excelencia operativa y una curaduría gastronómica impecable garantizan que tu mensaje no solo se escuche, sino que se convierta en el referente indiscutible de la industria.",
+  "Otros": "Más allá de las grandes galas, nuestra maestría en la creación de experiencias se extiende a cualquier visión que desees materializar, desde la intimidad de un cóctel privado de lujo hasta la energía vibrante de conciertos y festivales de gran escala. Nos especializamos en curar lanzamientos de productos con impacto mediático, con cenas de gala temáticas que desafían lo convencional y retiros de bienestar que priorizan el equilibrio y la exclusividad. Sea cual sea el formato, transformamos un simple punto de encuentro en un ecosistema de diseño, tecnología y hospitalidad de primer nivel donde cada detalle respira la identidad única de tu visión."
+};
+
 const BanqueteDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -19,6 +39,7 @@ const BanqueteDetail = () => {
   const [isCitaModalOpen, setIsCitaModalOpen] = useState(false);
   const [isReservaModalOpen, setIsReservaModalOpen] = useState(false);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+  const [selectedEventLegend, setSelectedEventLegend] = useState(null);
 
   const handleAction = (type) => {
     if (!isAuthenticated) {
@@ -235,21 +256,64 @@ const BanqueteDetail = () => {
             </div>
 
 
-            {/* Servicios Elite */}
+            {/* Especialidades del Espacio (Eventos) */}
             <div className="animate-in fade-in duration-1000 delay-500">
               <p className="text-[10px] font-black uppercase tracking-[0.4em] opacity-30 mb-8 ml-1">
-                Servicios de Élite Incluidos
+                Especialistas en Grandes Momentos
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {banquete.servicios?.map((s, i) => (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                {banquete.eventos_que_ofrece?.map((evento, i) => (
                   <div
                     key={i}
-                    className="flex items-center gap-4 p-6 bg-base-100 border border-base-300 rounded-[1.8rem] hover:bg-base-200/50 transition-colors"
+                    role="button"
+                    onClick={() => setSelectedEventLegend(evento)}
+                    className="group relative h-80 overflow-hidden rounded-[2.5rem] border border-base-300 bg-base-100 shadow-xl transition-all hover:border-primary/40 cursor-pointer active:scale-95"
                   >
-                    <div className="w-8 h-8 rounded-full bg-primary/5 flex items-center justify-center text-primary">
+                    {/* Imagen de fondo del evento */}
+                    <img 
+                      src={EVENT_IMAGES[evento] || otrosImg} 
+                      alt={evento}
+                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-70 group-hover:opacity-90"
+                    />
+                    
+                    {/* Overlay degradado */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
+                    
+                    {/* Contenido */}
+                    <div className="absolute inset-x-0 bottom-0 p-8">
+                      <div className="badge badge-primary py-3 mb-4 rounded-full font-black uppercase tracking-[0.2em] text-[8px] border-none shadow-lg">
+                        Tipo de Evento
+                      </div>
+                      <h3 className="text-3xl font-black text-white uppercase tracking-tighter leading-none mb-2">
+                        {evento}
+                      </h3>
+                      <div className="flex items-center gap-2 text-white/60 font-medium tracking-widest uppercase text-[9px]">
+                        <span>Saber más</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Servicios Élite (seccion secundaria) */}
+            {banquete.servicios && banquete.servicios.length > 0 && (
+              <div className="animate-in fade-in duration-1000 delay-700">
+                <p className="text-[10px] font-black uppercase tracking-[0.4em] opacity-30 mb-8 ml-1">
+                  Servicios de Élite Incluidos
+                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  {(Array.isArray(banquete.servicios) ? banquete.servicios : [banquete.servicios]).map((s, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-3 p-4 bg-base-200/50 border border-base-300 rounded-2xl hover:bg-primary/5 transition-colors"
+                    >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4"
+                        className="h-4 w-4 text-primary shrink-0"
                         viewBox="0 0 20 20"
                         fill="currentColor"
                       >
@@ -259,14 +323,14 @@ const BanqueteDetail = () => {
                           clipRule="evenodd"
                         />
                       </svg>
+                      <span className="font-bold text-[10px] tracking-wide opacity-80 uppercase leading-tight">
+                        {s}
+                      </span>
                     </div>
-                    <span className="font-bold text-sm tracking-wide opacity-80 uppercase">
-                      {s}
-                    </span>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Sticky Booking Sidebar */}
@@ -320,41 +384,6 @@ const BanqueteDetail = () => {
                 )}
               </div>
 
-              {banquete.eventos_que_ofrece && banquete.eventos_que_ofrece.length > 0 && (
-                <div className="mt-10 pt-8 border-t border-base-content/5">
-                  <p className="text-[10px] font-black uppercase tracking-widest mb-6 opacity-40 text-left">
-                    Eventos Destacados
-                  </p>
-                  <div className="flex flex-col gap-3">
-                    {banquete.eventos_que_ofrece.map((evento, i) => (
-                      <div
-                        key={i}
-                        className="flex items-center gap-4 p-4 bg-base-200/50 rounded-2xl hover:bg-primary/5 transition-colors border border-base-300 hover:border-primary/20 group"
-                      >
-                        <div className="w-10 h-10 rounded-xl bg-base-100 flex items-center justify-center text-primary shadow-sm group-hover:bg-primary group-hover:text-white transition-colors shrink-0">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-5 w-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
-                            />
-                          </svg>
-                        </div>
-                        <span className="text-sm font-bold opacity-80 group-hover:opacity-100 transition-opacity uppercase tracking-wider">
-                          {evento}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </div>
@@ -396,6 +425,49 @@ const BanqueteDetail = () => {
         isOpen={isGalleryOpen}
         onClose={() => setIsGalleryOpen(false)}
       />
+
+      {/* Modal para Leyenda de Evento */}
+      <dialog className={`modal ${selectedEventLegend ? 'modal-open' : ''} backdrop-blur-sm px-4`}>
+        <div className="modal-box max-w-xl p-0 overflow-visible rounded-3xl border border-white/20 bg-base-100 shadow-2xl max-h-[90vh]">
+          <div className="relative h-48 md:h-56 w-full shrink-0">
+            <img 
+              src={EVENT_IMAGES[selectedEventLegend] || otrosImg} 
+              alt={selectedEventLegend} 
+              className="w-full h-full object-cover object-top rounded-t-3xl"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-base-100 to-transparent"></div>
+            <button 
+              onClick={() => setSelectedEventLegend(null)}
+              className="absolute top-4 right-4 btn btn-circle btn-sm bg-black/20 backdrop-blur-md border-none text-white hover:bg-black/40 z-30"
+            >
+              ✕
+            </button>
+            <div className="absolute bottom-4 left-6 md:left-8">
+              <div className="badge badge-primary py-3 mb-2 rounded-full font-black uppercase tracking-[0.2em] text-[8px] border-none shadow-sm">
+                Conoce la experiencia
+              </div>
+              <h3 className="text-3xl md:text-4xl font-black uppercase tracking-tighter text-primary">{selectedEventLegend}</h3>
+            </div>
+          </div>
+          
+          <div className="p-6 md:p-8 overflow-y-auto">
+            <p className="text-sm md:text-base lg:text-lg opacity-80 leading-relaxed font-medium serif italic text-pretty">
+              {EVENT_DESCRIPTIONS[selectedEventLegend]}
+            </p>
+            <div className="mt-8 flex justify-end">
+              <button 
+                onClick={() => setSelectedEventLegend(null)}
+                className="btn btn-primary px-8 rounded-xl normal-case font-black tracking-widest text-[10px] h-12"
+              >
+                Cerrar Detalle
+              </button>
+            </div>
+          </div>
+        </div>
+        <form method="dialog" className="modal-backdrop">
+          <button onClick={() => setSelectedEventLegend(null)}>close</button>
+        </form>
+      </dialog>
     </div>
   );
 };
