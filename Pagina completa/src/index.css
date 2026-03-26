@@ -54,9 +54,76 @@ input::-webkit-calendar-picker-indicator {
   transform: translateY(-2px);
 }
 
-/* Mejora de contraste de textos pequeños (descripciones) en el tema claro */
+/* ==========================================================
+   REFINAMIENTO TEMA CLARO (winter) - OSCURECIMIENTO DE GRISES
+   ========================================================== */
+
+[data-theme="winter"] {
+  /* Color de texto principal: Negro total */
+  --bc: 0 0% 0% !important;
+
+  /* Fondos secundarios (base-200, base-300) mucho más oscuros y contrastados */
+  --b2: 240 5% 90% !important; /* Gris de soporte más definido */
+  --b3: 240 5% 82% !important; /* Gris de soporte/bordes más fuerte */
+}
+
+/* --- TEXTOS Y OPACIDADES --- */
+/* Forzamos que los textos tenues, descripciones y placeholders sean negros/muy oscuros */
 [data-theme="winter"] .text-base-content\/70,
 [data-theme="winter"] .text-base-content\/60,
-[data-theme="winter"] .text-base-content\/50 {
-  color: #111827 !important; /* Negro/Gris muy oscuro para máxima legibilidad */
+[data-theme="winter"] .text-base-content\/50,
+[data-theme="winter"] .text-base-content\/40,
+[data-theme="winter"] .text-base-content\/30,
+[data-theme="winter"] .text-black\/30,
+[data-theme="winter"] .text-black\/40,
+[data-theme="winter"] .text-black\/50,
+[data-theme="winter"] .text-black\/60,
+[data-theme="winter"] .text-black\/70,
+[data-theme="winter"] .text-gray-400,
+[data-theme="winter"] .text-gray-500,
+[data-theme="winter"] .text-gray-600,
+[data-theme="winter"] .opacity-30,
+[data-theme="winter"] .opacity-40,
+[data-theme="winter"] .opacity-50,
+[data-theme="winter"] .opacity-60,
+[data-theme="winter"] .opacity-70 {
+  color: #000000 !important;
+  opacity: 1 !important;
+}
+
+/* --- BORDES Y SEPARADORES --- */
+[data-theme="winter"] .border,
+[data-theme="winter"] .border-base-300,
+[data-theme="winter"] .border-gray-200,
+[data-theme="winter"] .border-gray-300,
+[data-theme="winter"] hr {
+  border-color: #9ca3af !important; /* Gris medio/fuerte para mejor definición */
+  opacity: 1 !important;
+}
+
+/* --- FONDOS SECUNDARIOS (UTILITIES) --- */
+[data-theme="winter"] .bg-gray-50, 
+[data-theme="winter"] .bg-gray-100, 
+[data-theme="winter"] .bg-base-200\/50 {
+  background-color: #f3f4f6 !important; /* Mantenemos el fondo pero aseguramos legibilidad */
+}
+
+[data-theme="winter"] .bg-gray-200, 
+[data-theme="winter"] .bg-gray-300,
+[data-theme="winter"] .bg-base-content\/5,
+[data-theme="winter"] .bg-base-content\/10 {
+  background-color: #e5e7eb !important; /* Gris más oscuro para hover/acentos */
+}
+
+/* --- FORMULARIOS --- */
+[data-theme="winter"] .input,
+[data-theme="winter"] .textarea,
+[data-theme="winter"] .select {
+  border-color: #6b7280 !important; /* Bordes de inputs más negros */
+  color: #000000 !important;
+}
+
+[data-theme="winter"] .input::placeholder,
+[data-theme="winter"] .textarea::placeholder {
+  color: #4b5563 !important;
 }
