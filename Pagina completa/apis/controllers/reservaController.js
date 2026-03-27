@@ -20,6 +20,19 @@ class ReservaController {
             const { banquete_id, fecha, hora, monto, detalles } = req.body;
             const usuario_id = req.user._id;
 
+            // Validar que la fecha+hora de la reserva no sea en el pasado
+            if (fecha && hora) {
+                const [hh, mm] = hora.split(":").map(Number);
+                const [yy, mo, dd] = fecha.split("T")[0].split("-").map(Number);
+                const fechaReserva = new Date(yy, mo - 1, dd, hh, mm, 0);
+                if (fechaReserva <= new Date()) {
+                    return res.status(400).json({
+                        success: false,
+                        message: "No puedes hacer una reserva en una fecha y hora que ya pasaron.",
+                    });
+                }
+            }
+
             const banquete = await Banquete.findById(banquete_id);
             if (!banquete) {
                 return res.status(404).json({ success: false, message: "Banquete no encontrado" });

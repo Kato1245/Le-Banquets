@@ -60,6 +60,16 @@ const BanqueteReservaModal = ({ banquete, isOpen, onClose }) => {
       toast.error("Seleccione una fecha y hora válidas.");
       return;
     }
+
+    // Validar que la fecha+hora seleccionada no sea en el pasado al momento de hacer submit
+    const [hh, mm] = formData.hora.split(":").map(Number);
+    const [yy, mo, dd] = formData.fecha.split("-").map(Number);
+    const fechaReserva = new Date(yy, mo - 1, dd, hh, mm, 0);
+    if (fechaReserva <= new Date()) {
+      toast.error("La fecha y hora seleccionadas ya pasaron. Por favor elige un nuevo horario.");
+      return;
+    }
+
     try {
       setLoading(true);
       const reservaData = {
