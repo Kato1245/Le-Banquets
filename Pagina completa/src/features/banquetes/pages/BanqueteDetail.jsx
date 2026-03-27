@@ -222,8 +222,7 @@ const BanqueteDetail = () => {
                   Dimensión
                 </p>
                 <p className="text-2xl font-black">
-                  {banquete.tamano || "750"}{" "}
-                  <span className="text-[10px]">M²</span>
+                  {banquete.dimensiones || "N/A"}
                 </p>
               </div>
               <button
