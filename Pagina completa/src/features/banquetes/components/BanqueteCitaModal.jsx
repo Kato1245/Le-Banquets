@@ -252,21 +252,46 @@ const BanqueteCitaModal = ({ banquete, isOpen, onClose }) => {
               </div>
 
               <div className="form-control">
-                <label className="label py-1"><span className="label-text text-[10px] font-black uppercase opacity-40 tracking-widest">Tipo de Evento</span></label>
-                <div className="relative group">
-                  <span className="absolute left-5 top-1/2 -translate-y-1/2 text-primary font-bold z-10">✨</span>
-                  <select
-                    name="tipo_evento"
-                    required
-                    className="select select-bordered w-full h-14 pl-14 rounded-2xl bg-base-200/50 border-base-300 focus:select-primary font-black uppercase text-[11px] tracking-widest transition-all appearance-none"
-                    value={formData.tipo_evento}
-                    onChange={handleChange}
+                <label className="label py-1">
+                  <span className="label-text text-[10px] font-black uppercase opacity-40 tracking-widest">
+                    Tipo de Evento
+                  </span>
+                </label>
+                <div className="dropdown w-full">
+                  <div
+                    tabIndex={0}
+                    role="button"
+                    className="btn btn-ghost w-full h-14 pl-14 pr-4 justify-start rounded-2xl bg-base-200/50 border border-base-300 hover:border-primary/50 hover:bg-base-200 transition-all font-black uppercase text-[11px] tracking-widest relative group"
                   >
-                    <option value="" disabled>Seleccionar evento</option>
+                    <span className="absolute left-5 top-1/2 -translate-y-1/2 text-primary font-bold z-10">
+                      ✨
+                    </span>
+                    <span className={formData.tipo_evento ? "text-base-content" : "opacity-30"}>
+                      {formData.tipo_evento || "Seleccionar evento"}
+                    </span>
+                    <span className="absolute right-5 top-1/2 -translate-y-1/2 opacity-20 group-hover:opacity-100 transition-opacity">
+                      ▼
+                    </span>
+                  </div>
+                  <ul
+                    tabIndex={0}
+                    className="dropdown-content z-[210] menu p-3 shadow-2xl bg-base-100 rounded-[1.5rem] w-full border border-base-content/10 mt-2 animate-in fade-in zoom-in-95 duration-200"
+                  >
                     {banquete.eventos_que_ofrece?.map((evento, idx) => (
-                      <option key={idx} value={evento}>{evento}</option>
+                      <li key={idx}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFormData(prev => ({ ...prev, tipo_evento: evento }));
+                            if (document.activeElement) document.activeElement.blur();
+                          }}
+                          className={`hover:bg-primary hover:text-primary-content font-black uppercase text-[10px] tracking-[0.2em] py-4 rounded-xl transition-all mb-1 ${formData.tipo_evento === evento ? "bg-primary/10 text-primary" : ""}`}
+                        >
+                          {evento}
+                        </button>
+                      </li>
                     ))}
-                  </select>
+                  </ul>
                 </div>
               </div>
             </div>

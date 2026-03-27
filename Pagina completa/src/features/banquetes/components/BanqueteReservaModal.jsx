@@ -2,11 +2,18 @@ import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import banqueteDisponibilidadService from "../services/banqueteDisponibilidadService";
 import reservasService from "../services/reservasService";
-import { getImageUrl } from "../../../shared/utils/imageUtils";
+
+const HORARIOS = [
+  "09:00", "10:00", "11:00", "12:00", "13:00",
+  "14:00", "15:00", "16:00", "17:00", "18:00"
+];
 
 const BanqueteReservaModal = ({ banquete, isOpen, onClose }) => {
   const [loading, setLoading] = useState(false);
-  const [fechasOcupadas, setFechasOcupadas] = useState([]);
+  const [disponibilidad, setDisponibilidad] = useState({
+    fechasOcupadasCompletas: [],
+    horasOcupadasPorDia: {},
+  });
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
   const [formData, setFormData] = useState({
@@ -19,19 +26,29 @@ const BanqueteReservaModal = ({ banquete, isOpen, onClose }) => {
 
   useEffect(() => {
     if (isOpen && banquete) {
-      fetchFechasOcupadas();
-      setFormData(prev => ({ ...prev, monto: banquete.precio_base || 0 }));
+      fetchDisponibilidad();
+      // Resetear al abrir
+      setFormData({
+        fecha: "",
+        hora: "",
+        detalles: "",
+        monto: banquete.precio_base || 0,
+        tipo_evento: "",
+      });
     }
   }, [isOpen, banquete]);
 
-  const fetchFechasOcupadas = async () => {
+  const fetchDisponibilidad = async () => {
     try {
-      const resp = await banqueteDisponibilidadService.getFechasOcupadas(banquete._id);
+      // Usamos el servicio de disponibilidad de citas que ya maneja horas, 
+      // o el de reservas si el backend lo soporta igual.
+      // Por ahora usamos getDisponibilidadCitas para obtener la estructura de horas.
+      const resp = await banqueteDisponibilidadService.getDisponibilidadCitas(banquete._id);
       if (resp.success) {
-        setFechasOcupadas(resp.data);
+        setDisponibilidad(resp.data);
       }
     } catch (error) {
-      console.error("Error al cargar disponibilidad", error);
+      console.error("Error al cargar disponibilidad de reserva", error);
     }
   };
 
@@ -43,7 +60,7 @@ const BanqueteReservaModal = ({ banquete, isOpen, onClose }) => {
   };
 
   const handleDateSelect = (dateStr) => {
-    if (fechasOcupadas.includes(dateStr)) return; // bloqueado
+    if (disponibilidad.fechasOcupadasCompletas.includes(dateStr)) return; // bloqueado
     const selected = new Date(dateStr);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -51,7 +68,7 @@ const BanqueteReservaModal = ({ banquete, isOpen, onClose }) => {
     const selLocal = new Date(selected.getTime() + selected.getTimezoneOffset() * 60000);
     if (selLocal < today) return; // pasado
 
-    setFormData(prev => ({ ...prev, fecha: dateStr }));
+    setFormData(prev => ({ ...prev, fecha: dateStr, hora: "" }));
   };
 
   const handleSubmit = async (e) => {
@@ -107,6 +124,9 @@ const BanqueteReservaModal = ({ banquete, isOpen, onClose }) => {
   };
 
   const todayStr = new Date().toISOString().split("T")[0];
+  const horasOcupadasHoy = formData.fecha
+    ? (disponibilidad.horasOcupadasPorDia[formData.fecha] || [])
+    : [];
 
   return (
     <dialog open className="modal modal-open items-end sm:items-center justify-center p-0 sm:p-4 z-[200]">
@@ -156,7 +176,7 @@ const BanqueteReservaModal = ({ banquete, isOpen, onClose }) => {
                 const dateStr = dDateLocal.toISOString().split("T")[0];
 
                 const isPast = dateStr < todayStr;
-                const isOccupied = fechasOcupadas.includes(dateStr);
+                const isOccupied = disponibilidad.fechasOcupadasCompletas.includes(dateStr);
                 const isSelected = formData.fecha === dateStr;
 
                 let btnClass = "flex items-center justify-center w-8 h-8 sm:w-full aspect-square text-[10px] sm:text-sm lg:text-base font-black rounded-[50%] transition-all select-none ";
@@ -219,61 +239,98 @@ const BanqueteReservaModal = ({ banquete, isOpen, onClose }) => {
             onSubmit={handleSubmit}
             className="space-y-6 flex flex-col flex-1"
           >
-            <div className="form-control">
-              <label className="label py-1"><span className="label-text text-[10px] font-black uppercase opacity-40 tracking-widest">Fecha Elegida</span></label>
-              <div className="relative group">
-                <span className="absolute left-5 top-1/2 -translate-y-1/2 text-primary font-bold z-10 transition-transform">📅</span>
-                <input
-                  type="date"
-                  name="fecha"
-                  required
-                  className="input input-bordered w-full h-14 pl-14 rounded-2xl bg-base-200/50 border-base-300 focus:input-primary font-black uppercase text-[11px] tracking-widest transition-all lg:pointer-events-none lg:opacity-70"
-                  value={formData.fecha}
-                  onChange={handleChange}
-                  readOnly
-                />
-              </div>
-            </div>
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="form-control">
-                <label className="label py-1"><span className="label-text text-[10px] font-black uppercase opacity-40 tracking-widest">Hora de Inicio</span></label>
+                <label className="label py-1"><span className="label-text text-[10px] font-black uppercase opacity-40 tracking-widest">Fecha Elegida</span></label>
                 <div className="relative group">
-                  <span 
-                    className="absolute left-5 top-1/2 -translate-y-1/2 text-primary font-bold z-10 cursor-pointer"
-                    onClick={() => document.querySelector('input[name="hora"]')?.showPicker()}
-                  >
-                    🕒
-                  </span>
+                  <span className="absolute left-5 top-1/2 -translate-y-1/2 text-primary font-bold z-10 transition-transform">📅</span>
                   <input
-                    type="time"
-                    name="hora"
+                    type="date"
+                    name="fecha"
                     required
-                    className="input input-bordered w-full h-14 pl-14 rounded-2xl bg-base-200/50 border-base-300 focus:input-primary font-black text-[13px] tracking-[0.2em] transition-all"
-                    value={formData.hora}
+                    className="input input-bordered w-full h-14 pl-14 rounded-2xl bg-base-200/50 border-base-300 focus:input-primary font-black uppercase text-[11px] tracking-widest transition-all lg:pointer-events-none lg:opacity-70"
+                    value={formData.fecha}
                     onChange={handleChange}
+                    readOnly
                   />
                 </div>
               </div>
 
               <div className="form-control">
-                <label className="label py-1"><span className="label-text text-[10px] font-black uppercase opacity-40 tracking-widest">Tipo de Evento</span></label>
-                <div className="relative group">
-                  <span className="absolute left-5 top-1/2 -translate-y-1/2 text-primary font-bold z-10">✨</span>
-                  <select
-                    name="tipo_evento"
-                    required
-                    className="select select-bordered w-full h-14 pl-14 rounded-2xl bg-base-200/50 border-base-300 focus:select-primary font-black uppercase text-[11px] tracking-widest transition-all appearance-none"
-                    value={formData.tipo_evento}
-                    onChange={handleChange}
+                <label className="label py-1">
+                  <span className="label-text text-[10px] font-black uppercase opacity-40 tracking-widest">
+                    Tipo de Evento
+                  </span>
+                </label>
+                <div className="dropdown w-full">
+                  <div
+                    tabIndex={0}
+                    role="button"
+                    className="btn btn-ghost w-full h-14 pl-14 pr-4 justify-start rounded-2xl bg-base-200/50 border border-base-300 hover:border-primary/50 hover:bg-base-200 transition-all font-black uppercase text-[11px] tracking-widest relative group"
                   >
-                    <option value="" disabled>Seleccionar evento</option>
+                    <span className="absolute left-5 top-1/2 -translate-y-1/2 text-primary font-bold z-10 transition-transform">
+                      ✨
+                    </span>
+                    <span className={formData.tipo_evento ? "text-base-content" : "opacity-30"}>
+                      {formData.tipo_evento || "Seleccionar evento"}
+                    </span>
+                    <span className="absolute right-5 top-1/2 -translate-y-1/2 opacity-20 group-hover:opacity-100 transition-opacity">
+                      ▼
+                    </span>
+                  </div>
+                  <ul
+                    tabIndex={0}
+                    className="dropdown-content z-[210] menu p-3 shadow-2xl bg-base-100 rounded-[1.5rem] w-full border border-base-content/10 mt-2 animate-in fade-in zoom-in-95 duration-200"
+                  >
                     {banquete.eventos_que_ofrece?.map((evento, idx) => (
-                      <option key={idx} value={evento}>{evento}</option>
+                      <li key={idx}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFormData(prev => ({ ...prev, tipo_evento: evento }));
+                            if (document.activeElement) document.activeElement.blur();
+                          }}
+                          className={`hover:bg-primary hover:text-primary-content font-black uppercase text-[10px] tracking-[0.2em] py-4 rounded-xl transition-all mb-1 ${formData.tipo_evento === evento ? "bg-primary/10 text-primary" : ""}`}
+                        >
+                          {evento}
+                        </button>
+                      </li>
                     ))}
-                  </select>
+                  </ul>
                 </div>
               </div>
+            </div>
+
+            <div className="form-control">
+              <label className="label py-1"><span className="label-text text-[10px] font-black uppercase opacity-40 tracking-widest">Horarios Disponibles</span></label>
+              {!formData.fecha ? (
+                <div className="p-8 bg-base-200/20 rounded-2xl border-2 border-dashed border-base-300 flex flex-col items-center justify-center text-center group transition-all hover:border-primary/30">
+                  <div className="w-10 h-10 rounded-full bg-base-300 flex items-center justify-center mb-3 opacity-50 group-hover:scale-110 transition-transform">📍</div>
+                  <p className="text-[10px] font-bold opacity-40 uppercase tracking-widest max-w-[200px]">Selecciona una fecha en el calendario para ver horarios</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-4 gap-2 sm:gap-3">
+                  {HORARIOS.map((h) => {
+                    const isOccupied = horasOcupadasHoy.includes(h);
+                    const isSelected = formData.hora === h;
+                    return (
+                      <button
+                        key={h}
+                        type="button"
+                        disabled={isOccupied}
+                        className={`btn btn-sm px-1 rounded-xl h-10 sm:h-12 font-black text-[10px] sm:text-[11px] tracking-tighter transition-all
+                          ${isOccupied ? "btn-disabled bg-error/10 text-red-700 dark:text-error opacity-60 cursor-not-allowed line-through" : ""}
+                          ${isSelected ? "bg-primary text-primary-content shadow-xl scale-[1.05] border-none ring-4 ring-primary/20" : ""}
+                          ${!isOccupied && !isSelected ? "bg-base-200/50 border-base-300 hover:border-primary hover:text-primary hover:scale-105" : ""}
+                        `}
+                        onClick={() => setFormData(p => ({ ...p, hora: h }))}
+                      >
+                        {h}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
             </div>
 
             <div className="form-control">
@@ -290,7 +347,7 @@ const BanqueteReservaModal = ({ banquete, isOpen, onClose }) => {
             <div className="pt-6 mt-auto">
               <button
                 type="submit"
-                disabled={loading || !formData.fecha}
+                disabled={loading || !formData.fecha || !formData.hora}
                 className="btn btn-primary w-full h-16 rounded-2xl normal-case text-lg font-black shadow-[0_20px_40px_-10px_rgba(var(--p),0.3)] hover:shadow-[0_25px_50px_-12px_rgba(var(--p),0.5)] transition-all hover:scale-[1.02] active:scale-95 border-none group disabled:opacity-50 disabled:scale-100"
               >
                 {loading ? (

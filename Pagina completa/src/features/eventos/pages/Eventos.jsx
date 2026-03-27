@@ -60,7 +60,7 @@ const Eventos = () => {
   });
 
   return (
-    <div className="min-h-screen bg-base-100 py-20 selection:bg-primary selection:text-white">
+    <div className="min-h-screen bg-base-100 py-20">
       <div className="max-w-7xl mx-auto px-6">
 
         {/* Header Section */}
