@@ -276,10 +276,7 @@ const Configuracion = () => {
                     </h2>
                     <div className="flex flex-wrap justify-center md:justify-start gap-2">
                       <span className="badge badge-primary badge-lg py-4 px-6 rounded-xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20">
-                        {user.userType || user.role || "Usuario"} Premium
-                      </span>
-                      <span className="badge badge-outline badge-lg py-4 px-6 rounded-xl font-bold uppercase tracking-widest text-[10px] opacity-50 border-base-content/20">
-                        ID: {user.id?.slice(-8) || "SENA-2024"}
+                        {user.userType || user.role || "Usuario"}
                       </span>
                     </div>
                   </div>

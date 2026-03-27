@@ -1,5 +1,5 @@
-const EstadisticasPanel = ({ totalBanquetes }) => {
-  const stats = [
+const EstadisticasPanel = ({ totalBanquetes, stats }) => {
+  const statsList = [
     {
       label: "Banquetes Publicados",
       value: totalBanquetes,
@@ -9,31 +9,24 @@ const EstadisticasPanel = ({ totalBanquetes }) => {
     },
     {
       label: "Visitas este mes",
-      value: "—",
+      value: stats?.totalVistas || 0,
       icon: "👀",
       color: "text-info",
       bg: "bg-info/10",
     },
     {
       label: "Solicitudes recibidas",
-      value: "—",
+      value: stats?.totalSolicitudes || 0,
       icon: "📩",
       color: "text-success",
       bg: "bg-success/10",
-    },
-    {
-      label: "Tasa de conversión",
-      value: "—",
-      icon: "📈",
-      color: "text-warning",
-      bg: "bg-warning/10",
     },
   ];
 
   return (
     <div>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-        {stats.map((s, i) => (
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+        {statsList.map((s, i) => (
           <div
             key={i}
             className={`rounded-3xl p-6 border border-base-content/5 ${s.bg} flex flex-col items-center text-center`}
@@ -65,9 +58,7 @@ const EstadisticasPanel = ({ totalBanquetes }) => {
           />
         </svg>
         <span className="text-sm opacity-60">
-          Las estadísticas detalladas de visitas y solicitudes estarán
-          disponibles próximamente conforme los módulos de seguimiento se
-          activen.
+          Las estadísticas de tus espacios se activan para proveer datos a medida que los usuarios los visitan.
         </span>
       </div>
     </div>

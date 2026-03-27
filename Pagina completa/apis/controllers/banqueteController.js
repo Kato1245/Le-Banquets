@@ -80,9 +80,21 @@ class BanqueteController {
         fecha_creacion: -1,
       });
 
+      // Calcular estadísticas
+      const totalVistas = banquetes.reduce((sum, b) => sum + (b.vistas || 0), 0);
+      
+      const solicitudesReserva = await Reserva.countDocuments({ propietario_id });
+      const Cita = require("../models/Cita");
+      const solicitudesCita = await Cita.countDocuments({ propietario_id });
+      const totalSolicitudes = solicitudesReserva + solicitudesCita;
+
       res.json({
         success: true,
         banquetes, // El frontend espera { banquetes: [...] }
+        stats: {
+          totalVistas,
+          totalSolicitudes
+        }
       });
     } catch (error) {
       console.error("Error al obtener banquetes:", error);
@@ -264,6 +276,10 @@ class BanqueteController {
           message: "Banquete no encontrado",
         });
       }
+
+      // Incrementar vistas
+      banquete.vistas = (banquete.vistas || 0) + 1;
+      await banquete.save();
 
       res.json({
         success: true,
