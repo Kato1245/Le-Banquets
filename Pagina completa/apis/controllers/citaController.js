@@ -30,6 +30,19 @@ class CitaController {
         });
       }
 
+      // Validar que la fecha+hora de la cita no sea en el pasado
+      if (fecha_sugerida && hora_sugerida) {
+          const [hh, mm] = hora_sugerida.split(":").map(Number);
+          const [yy, mo, dd] = fecha_sugerida.split("T")[0].split("-").map(Number);
+          const fechaCita = new Date(yy, mo - 1, dd, hh, mm, 0);
+          if (fechaCita <= new Date()) {
+              return res.status(400).json({
+                  success: false,
+                  message: "No puedes agendar una cita en una fecha y hora que ya pasaron.",
+              });
+          }
+      }
+
       const propietario_id = banquete.propietario_id;
 
       const nuevaCita = new Cita({

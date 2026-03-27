@@ -72,6 +72,16 @@ const BanqueteCitaModal = ({ banquete, isOpen, onClose }) => {
       toast.error("Seleccione una fecha y hora válidas.");
       return;
     }
+
+    // Validar que la fecha+hora seleccionada no sea en el pasado al momento de hacer submit
+    const [hh, mm] = formData.hora_sugerida.split(":").map(Number);
+    const [yy, mo, dd] = formData.fecha_sugerida.split("-").map(Number);
+    const fechaCita = new Date(yy, mo - 1, dd, hh, mm, 0);
+    if (fechaCita <= new Date()) {
+      toast.error("La fecha y hora seleccionadas ya pasaron. Por favor elige un horario futuro.");
+      return;
+    }
+
     try {
       setLoading(true);
       const citaData = {
