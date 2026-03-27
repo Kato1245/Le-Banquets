@@ -46,61 +46,65 @@ const ReviewsSection = ({ banqueteId }) => {
   ).toFixed(1);
 
   return (
-    <div className="py-20 border-t border-base-content/10 mt-16 animate-in fade-in duration-1000">
-      <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-8">
+    <div className="pb-8 animate-in fade-in duration-1000">
+      <div className="flex flex-col gap-6 mb-10">
         <div>
-          <p className="text-[10px] uppercase font-black tracking-[0.5em] opacity-30 mb-4 flex items-center gap-4">
-            <span className="w-8 h-px bg-current opacity-20"></span>
-            Experiencias de Clientes
-          </p>
-          <h3 className="text-4xl md:text-5xl font-black tracking-tighter uppercase">
+          <p className="text-[9px] uppercase font-black tracking-[0.4em] opacity-30 mb-2 flex items-center gap-3">
+            <span className="w-6 h-px bg-current opacity-20"></span>
             Testimonios
+          </p>
+          <h3 className="text-2xl font-black tracking-tighter uppercase">
+            Experiencias
           </h3>
         </div>
         
-        <div className="bg-base-200/50 p-6 rounded-[2rem] border border-base-300 flex items-center gap-6 min-w-48 justify-center">
-          <div className="flex flex-col items-center">
-            <p className="text-4xl font-black text-primary leading-none">{averageRating}</p>
-            <div className="flex text-warning text-sm mt-1">
+        <div className="bg-base-200/50 p-5 rounded-[1.5rem] border border-base-300 flex items-center gap-4 justify-between">
+          <div className="flex flex-col">
+            <p className="text-3xl font-black text-primary leading-none">{averageRating}</p>
+            <p className="text-[8px] uppercase font-black tracking-widest opacity-40 mt-1">
+              Rating Promedio
+            </p>
+          </div>
+          <div className="flex flex-col items-end">
+            <div className="flex text-warning text-xs">
               {"★".repeat(Math.round(averageRating))}
               {"☆".repeat(5 - Math.round(averageRating))}
             </div>
-            <p className="text-[9px] uppercase font-black tracking-widest opacity-40 mt-2">
-              {reviews.length} Valoraciones
+            <p className="text-[8px] font-bold opacity-30 uppercase mt-1">
+              {reviews.length} opiniones
             </p>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="space-y-4">
         {reviews.map((review) => (
-          <div key={review._id} className="p-8 bg-base-100 border border-base-300 rounded-[2.5rem] hover:shadow-xl hover:border-primary/20 transition-all flex flex-col justify-between">
-            <div>
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex text-warning text-lg drop-shadow-sm">
-                  {"★".repeat(review.calificacion)}
-                  <span className="text-base-content/20">{"★".repeat(5 - review.calificacion)}</span>
-                </div>
-                <span className="text-[10px] font-bold opacity-30 tracking-widest uppercase">
-                  {new Date(review.fecha).toLocaleDateString("es-ES", { year: 'numeric', month: 'short', day: 'numeric' })}
-                </span>
+          <div key={review._id} className="p-6 bg-base-200/20 border border-base-300 rounded-[2rem] hover:border-primary/20 transition-all">
+            <div className="flex justify-between items-start mb-3">
+              <div className="flex text-warning text-xs">
+                {"★".repeat(review.calificacion)}
+                <span className="text-base-content/10">{"★".repeat(5 - review.calificacion)}</span>
               </div>
-              <p className="text-sm font-medium leading-relaxed italic opacity-80 mb-8">
-                "{review.comentario}"
-              </p>
+              <span className="text-[8px] font-bold opacity-20 tracking-widest uppercase">
+                {new Date(review.fecha).toLocaleDateString("es-ES", { month: 'short', year: '2-digit' })}
+              </span>
             </div>
             
-            <div className="flex items-center gap-4 mt-auto pt-6 border-t border-base-content/5">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden border border-primary/20 shrink-0">
+            <p className="text-[11px] font-medium leading-relaxed italic opacity-70 mb-4">
+              "{review.comentario}"
+            </p>
+            
+            <div className="flex items-center gap-3 pt-4 border-t border-base-content/5">
+              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden border border-primary/20 shrink-0">
                 {review.usuario_id?.foto ? (
                   <img src={getImageUrl(review.usuario_id.foto)} alt="User" className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-primary font-black uppercase tracking-tighter">{review.usuario_id?.nombre?.charAt(0) || "U"}</span>
+                  <span className="text-primary font-black text-[10px] uppercase">{review.usuario_id?.nombre?.charAt(0) || "U"}</span>
                 )}
               </div>
               <div>
-                <p className="text-xs font-black uppercase tracking-wider">{review.usuario_id?.nombre || "Usuario Anónimo"}</p>
-                <p className="text-[9px] opacity-40 uppercase tracking-widest font-bold">Cliente Verificado</p>
+                <p className="text-[9px] font-black uppercase tracking-wider">{review.usuario_id?.nombre || "Usuario"}</p>
+                <p className="text-[7px] opacity-30 uppercase font-black tracking-[0.1em]">Cliente Verificado</p>
               </div>
             </div>
           </div>

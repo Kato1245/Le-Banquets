@@ -383,12 +383,15 @@ const BanqueteDetail = () => {
                 )}
               </div>
 
+              {/* Reviews Section ahora en el sidebar */}
+              <div className="mt-6 pt-6 border-t border-base-content/5">
+                <ReviewsSection banqueteId={banquete._id || banquete.id || id} />
+              </div>
+
             </div>
           </div>
         </div>
 
-        {/* Reviews Section */}
-        <ReviewsSection banqueteId={banquete._id || banquete.id || id} />
 
       </div>
 
