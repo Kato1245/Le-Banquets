@@ -8,6 +8,7 @@ import ClinkingGlasses from "../../../shared/components/ClinkingGlasses";
 
 const Salones = () => {
   const [selectedFilter, setSelectedFilter] = useState("todos");
+  const [selectedEventFilter, setSelectedEventFilter] = useState("todos");
   const [searchTerm, setSearchTerm] = useState("");
   const [salones, setSalones] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -35,6 +36,7 @@ const Salones = () => {
         direccion:
           salon.direccion || "Dirección no especificada",
         servicios: salon.servicios || [],
+        eventos: salon.eventos_que_ofrece || [],
       }));
       setSalones(salonesFormateados);
     } catch (err) {
@@ -56,10 +58,20 @@ const Salones = () => {
     { id: "general", nombre: "General" },
   ];
 
+  const eventTypes = [
+    { id: "todos", nombre: "Cualquier Evento" },
+    { id: "15 Años", nombre: "15 Años" },
+    { id: "Bodas", nombre: "Bodas" },
+    { id: "Eventos empresariales", nombre: "Corporativos" },
+    { id: "Otros", nombre: "Otros" },
+  ];
+
   const filtered = salones.filter(
     (s) =>
       (selectedFilter === "todos" ||
         s.tipo?.toLowerCase() === selectedFilter.toLowerCase()) &&
+      (selectedEventFilter === "todos" ||
+        s.eventos.some(e => e.toLowerCase() === selectedEventFilter.toLowerCase())) &&
       (s.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
         s.direccion.toLowerCase().includes(searchTerm.toLowerCase()) ||
         s.descripcion.toLowerCase().includes(searchTerm.toLowerCase())),
@@ -86,7 +98,7 @@ const Salones = () => {
         </div>
 
         {/* Buscador y Filtros */}
-        <div className="bg-base-200/50 backdrop-blur-md p-6 rounded-3xl shadow-sm border border-base-300 mb-10">
+        <div className="bg-base-200/50 backdrop-blur-md p-6 rounded-3xl shadow-sm border border-base-300 mb-10 space-y-6">
           <div className="flex flex-col lg:flex-row gap-6 items-center">
             <div className="relative flex-grow w-full">
               <span className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -113,17 +125,41 @@ const Salones = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <div className="flex flex-wrap gap-2 justify-center">
-              {types.map((t) => (
-                <button
-                  key={t.id}
-                  className={`btn btn-sm rounded-xl px-5 normal-case ${selectedFilter === t.id ? "btn-primary shadow-lg" : "btn-ghost bg-base-100 hover:bg-base-300"}`}
-                  onClick={() => setSelectedFilter(t.id)}
-                >
-                  {t.nombre}
-                </button>
-              ))}
+            
+            <div className="flex flex-col items-center gap-3 shrink-0">
+               <span className="text-[10px] font-black uppercase tracking-widest opacity-30">Ambiente</span>
+               <div className="flex flex-wrap gap-2 justify-center">
+                {types.map((t) => (
+                  <button
+                    key={t.id}
+                    className={`btn btn-xs rounded-xl px-4 normal-case border-none ${selectedFilter === t.id ? "btn-primary shadow-lg" : "bg-base-100/50 hover:bg-base-300"}`}
+                    onClick={() => setSelectedFilter(t.id)}
+                  >
+                    {t.nombre}
+                  </button>
+                ))}
+              </div>
             </div>
+          </div>
+
+          <div className="pt-6 border-t border-base-content/5 flex flex-col items-center gap-4">
+             <span className="text-[10px] font-black uppercase tracking-widest opacity-30 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-7.714 2.143L11 21l-2.286-6.857L1 12l7.714-2.143L11 3z" />
+                </svg>
+                Filtrar por Especialidad del Evento
+             </span>
+             <div className="flex flex-wrap gap-3 justify-center">
+                {eventTypes.map((et) => (
+                  <button
+                    key={et.id}
+                    className={`btn btn-sm rounded-2xl px-6 normal-case font-bold tracking-tight transition-all ${selectedEventFilter === et.id ? "btn-primary shadow-xl scale-105" : "btn-ghost bg-base-100 hover:bg-base-300"}`}
+                    onClick={() => setSelectedEventFilter(et.id)}
+                  >
+                    {et.nombre}
+                  </button>
+                ))}
+             </div>
           </div>
         </div>
 

@@ -10,23 +10,14 @@ const notificacionRoutes = require("./routes/notificacionRoutes");
 const reviewRoutes = require("./routes/reviewRoutes");
 const connectDB = require("./config/mongo");
 
-const fs = require("fs");
-const path = require("path");
-
 // Conectar a MongoDB
 connectDB();
 
 const app = express();
 
-// Log de errores a archivo
+// Log de errores a consola (Vercel no permite escritura en disco)
 const logError = (err) => {
-  const logPath = path.join(__dirname, "error_log.txt");
-  const message = `\n[${new Date().toISOString()}] ${err.stack || err}\n`;
-  try {
-    fs.appendFileSync(logPath, message);
-  } catch (e) {
-    console.error("No se pudo escribir en el log:", e);
-  }
+  console.error(`\n[${new Date().toISOString()}] ${err.stack || err}\n`);
 };
 
 const PORT = process.env.PORT || 3000;
@@ -58,7 +49,7 @@ app.use((err, req, res, next) => {
   console.error("ERROR DETALLADO:", err);
 
   // Manejo específico para errores de Multer (tamaño de archivo, etc)
-  if (err instanceof require("multer").MulterError) {
+  if (err.name === "MulterError" || err instanceof require("multer").MulterError) {
     if (err.code === "LIMIT_FILE_SIZE") {
       return res.status(413).json({
         success: false,
@@ -87,6 +78,11 @@ app.use((req, res) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`Servidor corriendo en puerto ${PORT}`);
-});
+// Exportar app para Vercel
+if (process.env.NODE_ENV !== "production") {
+    app.listen(PORT, () => {
+        console.log(`Servidor corriendo en puerto ${PORT}`);
+    });
+}
+
+module.exports = app;
