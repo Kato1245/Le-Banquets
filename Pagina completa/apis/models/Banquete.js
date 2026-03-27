@@ -33,6 +33,10 @@ const banqueteSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  vistas: {
+    type: Number,
+    default: 0,
+  },
   descripcion: {
     type: String,
     required: true,

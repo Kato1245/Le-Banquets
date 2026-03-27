@@ -55,6 +55,7 @@ const MisBanquetes = () => {
   const [error, setError] = useState("");
   const [banqueteEdit, setBanqueteEdit] = useState(null);
   const [availabilityModalData, setAvailabilityModalData] = useState({ isOpen: false, banquete: null });
+  const [stats, setStats] = useState({ totalVistas: 0, totalSolicitudes: 0 });
 
   // Sincronizar la pestaña con query params (?action=nuevo o ?tab=...)
   useEffect(() => {
@@ -76,6 +77,9 @@ const MisBanquetes = () => {
       setError("");
       const response = await apiClient.get("/banquetes/mis-banquetes");
       setBanquetes(response.data.banquetes || response.data.data || []);
+      if (response.data.stats) {
+        setStats(response.data.stats);
+      }
     } catch (err) {
       setError(err.friendlyMessage || "Error al cargar tus banquetes.");
       toast.error(err.friendlyMessage || "No se pudo conectar con el servidor.");
@@ -272,7 +276,7 @@ const MisBanquetes = () => {
                 Seguimiento del rendimiento de tus espacios publicados.
               </p>
             </div>
-            <EstadisticasPanel totalBanquetes={banquetes.length} />
+            <EstadisticasPanel totalBanquetes={banquetes.length} stats={stats} />
           </div>
         )}
 
