@@ -9,6 +9,7 @@ const INITIAL_FORM = {
   nombre: "",
   descripcion: "",
   direccion: "",
+  dimensiones: "",
   capacidad: "",
   tipo: "general",
   precio_base: "",
@@ -30,6 +31,7 @@ const BanqueteForm = ({ onSuccess, banqueteEdit }) => {
         nombre: banqueteEdit.nombre || "",
         descripcion: banqueteEdit.descripcion || "",
         direccion: banqueteEdit.direccion || "",
+        dimensiones: banqueteEdit.dimensiones || "",
         capacidad: banqueteEdit.capacidad || "",
         tipo: banqueteEdit.tipo || "general",
         precio_base: banqueteEdit.precio_base || banqueteEdit.precio || "",
@@ -61,6 +63,10 @@ const BanqueteForm = ({ onSuccess, banqueteEdit }) => {
     if (!form.direccion.trim()) e.direccion = "La Dirección es obligatoria.";
     else if (form.direccion.trim().length > 50)
       e.direccion = "La dirección no puede exceder los 50 caracteres.";
+
+    if (!form.dimensiones.trim()) e.dimensiones = "Las dimensiones son obligatorias.";
+    else if (form.dimensiones.trim().length > 20)
+      e.dimensiones = "Las dimensiones no pueden exceder los 20 caracteres.";
 
     if (!form.capacidad || parseInt(form.capacidad) < 1)
       e.capacidad = "La capacidad debe ser al menos 1 persona.";
@@ -133,7 +139,16 @@ const BanqueteForm = ({ onSuccess, banqueteEdit }) => {
       const formData = new FormData();
       formData.append("nombre", form.nombre.trim());
       formData.append("descripcion", form.descripcion.trim());
+      let dimensionAuto = form.dimensiones.trim();
+      if (/^[\d., ]+$/.test(dimensionAuto)) {
+        dimensionAuto += " m²";
+      } else {
+        // Replace 'm2' with 'm²' (case insensitive, matching word boundary if needed, but a simple replace is fine)
+        dimensionAuto = dimensionAuto.replace(/m2/i, "m²");
+      }
+
       formData.append("direccion", form.direccion.trim());
+      formData.append("dimensiones", dimensionAuto);
       formData.append("capacidad", form.capacidad);
       formData.append("tipo", form.tipo);
       formData.append("precio_base", form.precio_base);
@@ -237,6 +252,28 @@ const BanqueteForm = ({ onSuccess, banqueteEdit }) => {
           {errors.direccion && (
             <span className="label-text-alt text-error mt-1 font-medium">
               {errors.direccion}
+            </span>
+          )}
+        </div>
+
+        <div className="form-control">
+          <label className="label">
+            <span className="label-text font-bold opacity-70">
+              Dimensiones <span className="text-error">*</span>
+            </span>
+          </label>
+          <input
+            type="text"
+            name="dimensiones"
+            value={form.dimensiones}
+            onChange={handleChange}
+            maxLength={20}
+            placeholder="Ej. 1200 m²"
+            className={`input input-bordered focus:input-primary rounded-xl transition-all ${errors.dimensiones ? "input-error" : ""}`}
+          />
+          {errors.dimensiones && (
+            <span className="label-text-alt text-error mt-1 font-medium">
+              {errors.dimensiones}
             </span>
           )}
         </div>

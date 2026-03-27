@@ -14,7 +14,6 @@ class BanqueteController {
         capacidad,
         descripcion,
         precio_base,
-        equipamento,
         servicios,
         eventos_que_ofrece,
       } = req.body;
@@ -45,10 +44,10 @@ class BanqueteController {
         direccion,
         dimensiones,
         tipo,
+        dimensiones,
         capacidad,
         descripcion: descripcion?.trim(),
         precio_base,
-        equipamento,
         servicios,
         eventos_que_ofrece: eventos_que_ofrece ? JSON.parse(eventos_que_ofrece) : [],
         propietario_id,
@@ -133,7 +132,6 @@ class BanqueteController {
         capacidad,
         descripcion,
         precio_base,
-        equipamento,
         servicios,
         eventos_que_ofrece,
         imagenes_existentes,
@@ -156,7 +154,6 @@ class BanqueteController {
       if (capacidad !== undefined) banquete.capacidad = capacidad;
       if (descripcion !== undefined) banquete.descripcion = descripcion.trim();
       if (precio_base !== undefined) banquete.precio_base = precio_base;
-      if (equipamento !== undefined) banquete.equipamento = equipamento;
       if (servicios !== undefined) banquete.servicios = servicios;
       if (eventos_que_ofrece !== undefined) banquete.eventos_que_ofrece = JSON.parse(eventos_que_ofrece);
 
