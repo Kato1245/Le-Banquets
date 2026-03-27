@@ -73,6 +73,17 @@ const NotificationBell = () => {
         }
     };
 
+    const handleDeleteAll = async (e) => {
+        e.stopPropagation(); 
+        try {
+            await notificacionesService.eliminarTodas();
+            setNotificaciones([]);
+            toast.success("Todas las notificaciones han sido eliminadas.");
+        } catch (error) {
+            toast.error("No se pudieron eliminar las notificaciones.");
+        }
+    };
+
     const unreadCount = notificaciones.filter(n => !n.leido).length;
 
     return (
@@ -95,8 +106,19 @@ const NotificationBell = () => {
             <div tabIndex={0} className="mt-3 z-[100] card card-compact dropdown-content w-80 bg-base-100 shadow-2xl border border-base-200 rounded-[2rem] overflow-hidden">
                 <div className="card-body p-6">
                     <div className="flex justify-between items-center mb-4">
-                        <h3 className="font-black text-xs uppercase tracking-widest opacity-40">Notificaciones</h3>
-                        {unreadCount > 0 && <span className="badge badge-primary badge-sm font-bold text-[10px]">{unreadCount} nuevas</span>}
+                        <div className="flex items-center gap-2">
+                            <h3 className="font-black text-xs uppercase tracking-widest opacity-40">Notificaciones</h3>
+                            {unreadCount > 0 && <span className="badge badge-primary badge-sm font-bold text-[10px]">{unreadCount} nuevas</span>}
+                        </div>
+                        {notificaciones.length > 0 && (
+                            <button 
+                                onClick={handleDeleteAll}
+                                className="text-[10px] text-error opacity-70 hover:opacity-100 font-bold transition-opacity bg-error/10 px-2 py-1 rounded-md"
+                                title="Borrar todas las notificaciones"
+                            >
+                                Limpiar
+                            </button>
+                        )}
                     </div>
 
                     <div className="space-y-3 max-h-80 overflow-y-auto pr-2 custom-scrollbar">

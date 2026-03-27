@@ -101,6 +101,26 @@ class NotificacionController {
             });
         }
     }
+
+    // Eliminar todas las notificaciones
+    static async eliminarTodas(req, res) {
+        try {
+            const destinatario_id = req.user._id;
+
+            await Notificacion.deleteMany({ destinatario_id });
+
+            res.json({
+                success: true,
+                message: "Todas las notificaciones eliminadas correctamente",
+            });
+        } catch (error) {
+            console.error("Error al eliminar todas las notificaciones:", error);
+            res.status(500).json({
+                success: false,
+                message: "Error interno del servidor",
+            });
+        }
+    }
 }
 
 module.exports = NotificacionController;

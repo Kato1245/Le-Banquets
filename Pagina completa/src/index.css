@@ -26,6 +26,11 @@ input::-webkit-calendar-picker-indicator {
   flex: 1;
 }
 
+/* Inversión del logo para modo oscuro (luxury es tema oscuro) */
+[data-theme="luxury"] .logo-img {
+  filter: invert(1) brightness(2);
+}
+
 /* Cards */
 .card {
   transition: all 0.3s ease;
