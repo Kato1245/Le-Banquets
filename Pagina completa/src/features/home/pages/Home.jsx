@@ -6,7 +6,7 @@ const Home = () => {
     const { user } = useAuth();
 
     return (
-        <div className="min-h-screen bg-base-100 font-sans selection:bg-primary selection:text-white">
+        <div className="min-h-screen bg-base-100 font-sans">
             {/* Ultra Premium Hero Section */}
             <section className="relative min-h-[92vh] flex items-center justify-center overflow-hidden">
                 {/* Dynamic Background */}

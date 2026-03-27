@@ -99,9 +99,17 @@ class CitaController {
   static async getMisCitas(req, res) {
     try {
       const usuario_id = req.user._id;
+      const threeDaysAgo = new Date();
+      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
 
-      const citas = await Cita.find({ usuario_id })
-        .populate("banquete_id", "nombre direccion direccion")
+      const citas = await Cita.find({ 
+        usuario_id,
+        $or: [
+          { estado: { $ne: "cancelada" } },
+          { estado: "cancelada", updatedAt: { $gte: threeDaysAgo } }
+        ]
+      })
+        .populate("banquete_id", "nombre direccion")
         .sort({ fecha_creacion: -1 });
 
       res.json({
@@ -121,8 +129,16 @@ class CitaController {
   static async getCitasRecibidas(req, res) {
     try {
       const propietario_id = req.user._id;
+      const threeDaysAgo = new Date();
+      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
 
-      const citas = await Cita.find({ propietario_id })
+      const citas = await Cita.find({ 
+        propietario_id,
+        $or: [
+          { estado: { $ne: "cancelada" } },
+          { estado: "cancelada", updatedAt: { $gte: threeDaysAgo } }
+        ]
+      })
         .populate("usuario_id", "nombre email")
         .populate("banquete_id", "nombre")
         .sort({ fecha_creacion: -1 });

@@ -107,7 +107,7 @@ const BanqueteDetail = () => {
     );
 
   return (
-    <div className="min-h-screen bg-base-100 selection:bg-primary selection:text-white">
+    <div className="min-h-screen bg-base-100">
       {/* Hero Section / Carrusel */}
       <div className="relative h-[60vh] md:h-[80vh] w-full overflow-hidden">
         <BanqueteCarousel images={banquete.imagenes} />

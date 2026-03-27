@@ -95,8 +95,16 @@ class ReservaController {
   static async getCitasYReservasPropietario(req, res) {
     try {
       const propietario_id = req.user._id;
+      const threeDaysAgo = new Date();
+      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
 
-      const reservas = await Reserva.find({ propietario_id })
+      const reservas = await Reserva.find({ 
+        propietario_id,
+        $or: [
+          { estado: { $ne: "cancelada" } },
+          { estado: "cancelada", updatedAt: { $gte: threeDaysAgo } }
+        ]
+      })
         .populate("banquete_id", "nombre direccion imagenes")
         .populate("usuario_id", "nombre email telefono");
 
@@ -116,8 +124,16 @@ class ReservaController {
   static async getMisReservas(req, res) {
     try {
       const usuario_id = req.user._id;
+      const threeDaysAgo = new Date();
+      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
 
-      const reservas = await Reserva.find({ usuario_id })
+      const reservas = await Reserva.find({ 
+        usuario_id,
+        $or: [
+          { estado: { $ne: "cancelada" } },
+          { estado: "cancelada", updatedAt: { $gte: threeDaysAgo } }
+        ]
+      })
         .populate("banquete_id", "nombre direccion imagenes tipo")
         .populate("propietario_id", "nombre email");
 
