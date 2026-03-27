@@ -185,261 +185,263 @@ const BanqueteForm = ({ onSuccess, banqueteEdit }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} noValidate>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="form-control md:col-span-2">
-          <label className="label">
-            <span className="label-text font-bold opacity-70">
-              Nombre del Banquete <span className="text-error">*</span>
-            </span>
-          </label>
-          <input
-            type="text"
-            name="nombre"
-            value={form.nombre}
-            onChange={handleChange}
-            maxLength={50}
-            placeholder="Ej. Salón Imperial Las Flores"
-            className={`input input-bordered focus:input-primary rounded-xl transition-all ${errors.nombre ? "input-error" : ""}`}
-          />
-          {errors.nombre && (
-            <span className="label-text-alt text-error mt-1 font-medium">
-              {errors.nombre}
-            </span>
-          )}
-        </div>
+    <form onSubmit={handleSubmit} noValidate className="space-y-10">
 
-        <div className="form-control md:col-span-2">
-          <label className="label">
-            <span className="label-text font-bold opacity-70">
-              Descripción <span className="text-error">*</span>
-            </span>
-            <span className="label-text-alt opacity-40">
-              {form.descripcion.length} / 500 máx.
-            </span>
-          </label>
-          <textarea
-            name="descripcion"
-            value={form.descripcion}
-            onChange={handleChange}
-            maxLength={500}
-            placeholder="Describe tu espacio: capacidades, ambientación, servicios incluidos..."
-            rows={4}
-            className={`textarea textarea-bordered focus:textarea-primary rounded-xl transition-all resize-none ${errors.descripcion ? "textarea-error" : ""}`}
-          />
-          {errors.descripcion && (
-            <span className="label-text-alt text-error mt-1 font-medium">
-              {errors.descripcion}
-            </span>
-          )}
-        </div>
+      {/* SECCIÓN 1: Información Básica */}
+      <div className="bg-base-100 p-8 rounded-[2rem] border border-base-200/60 shadow-sm hover:shadow-md transition-all relative overflow-hidden group">
+        <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-primary to-accent opacity-80 group-hover:w-2 transition-all"></div>
+        <h3 className="text-xl font-extrabold mb-8 flex items-center gap-3 text-base-content/90">
+          <div className="p-2 bg-primary/10 rounded-xl text-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          </div>
+          Información Básica
+        </h3>
 
-        <div className="form-control">
-          <label className="label">
-            <span className="label-text font-bold opacity-70">
-              Dirección <span className="text-error">*</span>
-            </span>
-          </label>
-          <input
-            type="text"
-            name="direccion"
-            value={form.direccion}
-            onChange={handleChange}
-            maxLength={50}
-            placeholder="Ej. Calle 123, Ciudad"
-            className={`input input-bordered focus:input-primary rounded-xl transition-all ${errors.direccion ? "input-error" : ""}`}
-          />
-          {errors.direccion && (
-            <span className="label-text-alt text-error mt-1 font-medium">
-              {errors.direccion}
-            </span>
-          )}
-        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-8">
+          <div className="form-control md:col-span-2">
+            <label className="label mb-2">
+              <span className="label-text text-sm font-bold opacity-70 uppercase tracking-widest">
+                Nombre del Banquete <span className="text-error">*</span>
+              </span>
+            </label>
+            <input
+              type="text"
+              name="nombre"
+              value={form.nombre}
+              onChange={handleChange}
+              maxLength={50}
+              placeholder="Ej. Salón Imperial Las Flores"
+              className={`input input-bordered w-full h-14 bg-base-200/30 hover:bg-base-200/60 focus:bg-base-100 focus:input-primary rounded-2xl transition-all shadow-inner ${errors.nombre ? "input-error" : ""}`}
+            />
+            {errors.nombre && <span className="label-text-alt text-error mt-2 font-medium">{errors.nombre}</span>}
+          </div>
 
-        <div className="form-control">
-          <label className="label">
-            <span className="label-text font-bold opacity-70">
-              Dimensiones <span className="text-error">*</span>
-            </span>
-          </label>
-          <input
-            type="text"
-            name="dimensiones"
-            value={form.dimensiones}
-            onChange={handleChange}
-            maxLength={20}
-            placeholder="Ej. 1200 m²"
-            className={`input input-bordered focus:input-primary rounded-xl transition-all ${errors.dimensiones ? "input-error" : ""}`}
-          />
-          {errors.dimensiones && (
-            <span className="label-text-alt text-error mt-1 font-medium">
-              {errors.dimensiones}
-            </span>
-          )}
-        </div>
+          <div className="form-control md:col-span-2">
+            <label className="label mb-2 flex justify-between">
+              <span className="label-text text-sm font-bold opacity-70 uppercase tracking-widest">
+                Descripción <span className="text-error">*</span>
+              </span>
+              <span className="label-text-alt opacity-50 font-bold bg-base-200 px-3 py-1 rounded-full">
+                {form.descripcion.length} / 500
+              </span>
+            </label>
+            <textarea
+              name="descripcion"
+              value={form.descripcion}
+              onChange={handleChange}
+              maxLength={500}
+              placeholder="Describe tu espacio destacando lo que lo hace único..."
+              rows={4}
+              className={`textarea textarea-bordered w-full bg-base-200/30 hover:bg-base-200/60 focus:bg-base-100 focus:textarea-primary rounded-2xl p-5 text-base transition-all resize-none shadow-inner ${errors.descripcion ? "textarea-error" : ""}`}
+            />
+            {errors.descripcion && <span className="label-text-alt text-error mt-2 font-medium">{errors.descripcion}</span>}
+          </div>
 
-        <div className="form-control">
-          <label className="label">
-            <span className="label-text font-bold opacity-70">
-              Tipo de Espacio
-            </span>
-          </label>
-          <select
-            name="tipo"
-            value={form.tipo}
-            onChange={handleChange}
-            className="select select-bordered focus:select-primary rounded-xl transition-all capitalize"
-          >
-            {TIPOS.map((t) => (
-              <option key={t} value={t} className="capitalize">
-                {t.charAt(0).toUpperCase() + t.slice(1)}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="form-control">
-          <label className="label">
-            <span className="label-text font-bold opacity-70">
-              Capacidad (personas) <span className="text-error">*</span>
-            </span>
-          </label>
-          <input
-            type="number"
-            name="capacidad"
-            value={form.capacidad}
-            onChange={(e) => {
-              if (e.target.value.length <= 4) handleChange(e);
-            }}
-            min="1"
-            placeholder="Ej. 150"
-            className={`input input-bordered focus:input-primary rounded-xl transition-all ${errors.capacidad ? "input-error" : ""}`}
-          />
-          {errors.capacidad && (
-            <span className="label-text-alt text-error mt-1 font-medium">
-              {errors.capacidad}
-            </span>
-          )}
-        </div>
-
-        <div className="form-control">
-          <label className="label">
-            <span className="label-text font-bold opacity-70">
-              Precio Base ($ COP) <span className="text-error">*</span>
-            </span>
-          </label>
-          <input
-            type="number"
-            name="precio_base"
-            value={form.precio_base}
-            onChange={(e) => {
-              if (e.target.value.length <= 12) handleChange(e);
-            }}
-            min="0"
-            step="100"
-            placeholder="Ej. 15000"
-            className={`input input-bordered focus:input-primary rounded-xl transition-all ${errors.precio_base ? "input-error" : ""}`}
-          />
-          {errors.precio_base && (
-            <span className="label-text-alt text-error mt-1 font-medium">
-              {errors.precio_base}
-            </span>
-          )}
-        </div>
-
-        <div className="form-control md:col-span-2">
-          <label className="label">
-            <span className="label-text font-bold opacity-70">
-              Eventos que ofrece
-            </span>
-          </label>
-          <div className="flex flex-wrap gap-4 mt-2">
-            {["15 Años", "Bodas", "Eventos empresariales", "Otros"].map((evento) => (
-              <label key={evento} className="cursor-pointer label flex items-center gap-2 bg-base-200 px-4 py-2 rounded-xl border border-transparent hover:border-primary/30 transition-colors">
-                <input
-                  type="checkbox"
-                  className="checkbox checkbox-primary checkbox-sm rounded-lg"
-                  checked={form.eventos_que_ofrece.includes(evento)}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setForm((prev) => ({
-                        ...prev,
-                        eventos_que_ofrece: [...prev.eventos_que_ofrece, evento],
-                      }));
-                    } else {
-                      setForm((prev) => ({
-                        ...prev,
-                        eventos_que_ofrece: prev.eventos_que_ofrece.filter((evt) => evt !== evento),
-                      }));
-                    }
-                  }}
-                />
-                <span className="label-text font-medium">{evento}</span>
-              </label>
-            ))}
+          <div className="form-control md:col-span-2">
+            <label className="label mb-2">
+              <span className="label-text text-sm font-bold opacity-70 uppercase tracking-widest">
+                Dirección Exacta <span className="text-error">*</span>
+              </span>
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-base-content/40">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+              </div>
+              <input
+                type="text"
+                name="direccion"
+                value={form.direccion}
+                onChange={handleChange}
+                maxLength={50}
+                placeholder="Ej. Calle 12# 34-56, Ciudad"
+                className={`input input-bordered h-14 pl-12 w-full bg-base-200/30 hover:bg-base-200/60 focus:bg-base-100 focus:input-primary rounded-2xl transition-all shadow-inner ${errors.direccion ? "input-error" : ""}`}
+              />
+            </div>
+            {errors.direccion && <span className="label-text-alt text-error mt-2 font-medium">{errors.direccion}</span>}
           </div>
         </div>
+      </div>
 
-        <div className="form-control md:col-span-2">
-          <label className="label">
-            <span className="label-text font-bold opacity-70">
-              Imágenes del espacio{" "}
-              <span className="opacity-40 font-normal">(máx. 20)</span>
-            </span>
-          </label>
+      {/* SECCIÓN 2: Detalles y Capacidades */}
+      <div className="bg-base-100 p-8 rounded-[2rem] border border-base-200/60 shadow-sm hover:shadow-md transition-all relative overflow-hidden group">
+        <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-secondary to-accent opacity-80 group-hover:w-2 transition-all"></div>
+        <h3 className="text-xl font-extrabold mb-8 flex items-center gap-3 text-base-content/90">
+          <div className="p-2 bg-secondary/10 rounded-xl text-secondary">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+          </div>
+          Características del Espacio
+        </h3>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-8">
+          <div className="form-control">
+            <label className="label mb-2">
+              <span className="label-text text-sm font-bold opacity-70 uppercase tracking-widest">
+                Dimensiones <span className="text-error">*</span>
+              </span>
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                name="dimensiones"
+                value={form.dimensiones}
+                onChange={handleChange}
+                maxLength={20}
+                placeholder="Ej. 1200"
+                className={`input input-bordered h-14 w-full pr-12 bg-base-200/30 hover:bg-base-200/60 focus:bg-base-100 focus:input-secondary rounded-2xl transition-all shadow-inner ${errors.dimensiones ? "input-error" : ""}`}
+              />
+              <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-base-content/50 font-bold">
+                m²
+              </div>
+            </div>
+            {errors.dimensiones && <span className="label-text-alt text-error mt-2 font-medium">{errors.dimensiones}</span>}
+          </div>
+
+          <div className="form-control">
+            <label className="label mb-2">
+              <span className="label-text text-sm font-bold opacity-70 uppercase tracking-widest">
+                Capacidad Máxima <span className="text-error">*</span>
+              </span>
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-base-content/40">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+              </div>
+              <input
+                type="number"
+                name="capacidad"
+                value={form.capacidad}
+                onChange={(e) => { if (e.target.value.length <= 4) handleChange(e); }}
+                min="1"
+                placeholder="Ej. 150"
+                className={`input input-bordered h-14 pl-12 w-full bg-base-200/30 hover:bg-base-200/60 focus:bg-base-100 focus:input-secondary rounded-2xl transition-all shadow-inner ${errors.capacidad ? "input-error" : ""}`}
+              />
+            </div>
+            {errors.capacidad && <span className="label-text-alt text-error mt-2 font-medium">{errors.capacidad}</span>}
+          </div>
+
+          <div className="form-control">
+            <label className="label mb-2">
+              <span className="label-text text-sm font-bold opacity-70 uppercase tracking-widest">
+                Categoría / Tipo
+              </span>
+            </label>
+            <select
+              name="tipo"
+              value={form.tipo}
+              onChange={handleChange}
+              className="select select-bordered h-14 bg-base-200/30 hover:bg-base-200/60 focus:bg-base-100 focus:select-secondary rounded-2xl transition-all font-medium capitalize shadow-inner cursor-pointer"
+            >
+              {TIPOS.map((t) => (
+                <option key={t} value={t} className="capitalize">{t.charAt(0).toUpperCase() + t.slice(1)}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="form-control">
+            <label className="label mb-2">
+              <span className="label-text text-sm font-bold opacity-70 uppercase tracking-widest">
+                Precio Base (COP) <span className="text-error">*</span>
+              </span>
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-base-content/40 font-bold">
+                $
+              </div>
+              <input
+                type="number"
+                name="precio_base"
+                value={form.precio_base}
+                onChange={(e) => { if (e.target.value.length <= 12) handleChange(e); }}
+                min="0"
+                step="100"
+                placeholder="0.00"
+                className={`input input-bordered h-14 pl-10 w-full bg-base-200/30 hover:bg-base-200/60 focus:bg-base-100 focus:input-secondary rounded-2xl transition-all shadow-inner text-lg font-semibold tracking-wide ${errors.precio_base ? "input-error" : ""}`}
+              />
+            </div>
+            {errors.precio_base && <span className="label-text-alt text-error mt-2 font-medium">{errors.precio_base}</span>}
+          </div>
+
+          <div className="form-control md:col-span-2 pt-2">
+            <label className="label mb-3">
+              <span className="label-text text-sm font-bold opacity-70 uppercase tracking-widest">
+                Tipos de Eventos Soportados
+              </span>
+            </label>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {["15 Años", "Bodas", "Eventos empresariales", "Otros"].map((evento) => {
+                const isSelected = form.eventos_que_ofrece.includes(evento);
+                return (
+                  <label key={evento} className={`cursor-pointer flex flex-col items-center justify-center p-4 rounded-3xl border-2 transition-all duration-300 ${isSelected ? "border-secondary bg-secondary/10 shadow-md shadow-secondary/10 scale-105" : "border-base-200 hover:border-secondary/40 bg-base-100"}`}>
+                    <input
+                      type="checkbox"
+                      className="hidden"
+                      checked={isSelected}
+                      onChange={(e) => {
+                        if (e.target.checked) setForm((prev) => ({ ...prev, eventos_que_ofrece: [...prev.eventos_que_ofrece, evento] }));
+                        else setForm((prev) => ({ ...prev, eventos_que_ofrece: prev.eventos_que_ofrece.filter((evt) => evt !== evento) }));
+                      }}
+                    />
+                    <div className={`w-6 h-6 rounded-full border-2 mb-2 flex items-center justify-center transition-colors ${isSelected ? "bg-secondary border-secondary" : "border-base-300"}`}>
+                      {isSelected && <svg className="w-4 h-4 text-secondary-content" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>}
+                    </div>
+                    <span className={`font-bold text-sm text-center ${isSelected ? "text-secondary" : "text-base-content/70"}`}>{evento}</span>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* SECCIÓN 3: Multimedia */}
+      <div className="bg-base-100 p-8 rounded-[2rem] border border-base-200/60 shadow-sm hover:shadow-md transition-all relative overflow-hidden group">
+        <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-accent to-primary opacity-80 group-hover:w-2 transition-all"></div>
+
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-xl font-extrabold flex items-center gap-3 text-base-content/90">
+            <div className="p-2 bg-accent/10 rounded-xl text-accent">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+            </div>
+            Galería del Espacio
+          </h3>
+          <div className="badge badge-outline badge-lg opacity-80 font-bold">Máx. 20 Fotos</div>
+        </div>
+
+        <div className="form-control">
           <input
             type="file"
             accept="image/*"
             multiple
             onChange={handleImages}
-            className={`file-input file-input-bordered file-input-primary rounded-xl w-full ${errors.imagenes ? "file-input-error" : ""}`}
+            className={`file-input file-input-bordered file-input-accent file-input-lg w-full bg-base-200/40 hover:bg-base-200 shadow-inner rounded-2xl cursor-pointer ${errors.imagenes ? "file-input-error" : ""}`}
           />
-          {errors.imagenes && (
-            <span className="label-text-alt text-error mt-1 font-medium italic">
-              {errors.imagenes}
-            </span>
-          )}
+          {errors.imagenes && <span className="label-text-alt text-error mt-3 block font-medium italic">{errors.imagenes}</span>}
+
           {imagePreview.length > 0 && (
-            <div className="flex gap-3 mt-4 flex-wrap">
-              {imagePreview.map((src, i) => (
-                <div
-                  key={i}
-                  className="relative w-24 h-24 rounded-2xl overflow-hidden border-2 border-primary/30 shadow-md group"
-                >
-                  <img
-                    src={src}
-                    alt={`Preview ${i + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeImage(i)}
-                    className="absolute top-1 right-1 bg-error text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                    title="Eliminar imagen"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-3 w-3"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
+            <div className="mt-8">
+              <p className="text-sm font-bold opacity-60 mb-4 uppercase tracking-wider">Vista Previa de Imágenes ({imagePreview.length})</p>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
+                {imagePreview.map((src, i) => (
+                  <div key={i} className="relative aspect-square rounded-2xl overflow-hidden border-2 border-base-200/50 shadow-sm group hover:scale-105 hover:shadow-lg transition-all hover:border-error">
+                    <img src={src} alt={`Preview ${i + 1}`} className="w-full h-full object-cover group-hover:brightness-75 transition-all" />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(i)}
+                      className="absolute inset-0 m-auto w-10 h-10 bg-error text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all scale-75 group-hover:scale-100 shadow-xl"
+                      title="Eliminar imagen"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={4}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                  </button>
-                </div>
-              ))}
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row justify-end gap-4 mt-10 pt-8 border-t border-base-content/5">
+      {/* Botones de Acción */}
+      <div className="flex flex-col-reverse sm:flex-row justify-end items-center gap-5 mt-12 pt-6">
         <button
           type="button"
           onClick={() => {
@@ -448,19 +450,19 @@ const BanqueteForm = ({ onSuccess, banqueteEdit }) => {
             setExistingImages([]);
             setImagePreview([]);
           }}
-          className="btn btn-ghost rounded-xl px-10 normal-case font-bold"
+          className="btn btn-ghost rounded-2xl px-10 normal-case font-bold hover:bg-base-200"
           disabled={submitting}
         >
           Limpiar
         </button>
         <button
           type="submit"
-          className="btn btn-primary rounded-xl px-12 shadow-lg hover:shadow-primary/30 normal-case font-bold min-w-[200px]"
+          className="btn btn-primary rounded-2xl px-12 shadow-xl shadow-primary/20 hover:shadow-primary/40 normal-case font-bold min-w-[220px] transition-all"
           disabled={submitting}
         >
           {submitting ? (
             <>
-              <span className="loading loading-spinner loading-sm"></span>{" "}
+              <span className="loading loading-spinner loading-md"></span>{" "}
               Guardando...
             </>
           ) : banqueteEdit ? (
