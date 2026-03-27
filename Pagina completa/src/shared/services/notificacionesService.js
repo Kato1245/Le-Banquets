@@ -15,8 +15,14 @@ const eliminar = async (id) => {
     return response.data;
 };
 
+const eliminarTodas = async () => {
+    const response = await apiClient.delete("/notificaciones");
+    return response.data;
+};
+
 export default {
     getMisNotificaciones,
     marcarComoLeida,
     eliminar,
+    eliminarTodas,
 };

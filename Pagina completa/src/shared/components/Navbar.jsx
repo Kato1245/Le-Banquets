@@ -1,4 +1,4 @@
-// src/shared/components/Navbar.jsx
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import NotificationBell from "./NotificationBell";
@@ -6,6 +6,7 @@ import ThemeToggle from "./ThemeToggle";
 
 const Navbar = () => {
   const { user, logout } = useAuth();
+  const [logoError, setLogoError] = useState(false);
 
   // Unificamos la lectura de datos del usuario
   const userName = user?.nombre || user?.email || 'Usuario';
@@ -16,8 +17,17 @@ const Navbar = () => {
   return (
     <div className="navbar bg-base-100 shadow-sm sticky top-0 z-50 px-4 md:px-8">
       <div className="flex-1 flex items-center gap-1 sm:gap-2">
-        <Link to="/" className="btn btn-ghost text-xl text-primary font-bold px-2 sm:px-4">
-          Le Banquets
+        <Link to="/" className="btn btn-ghost text-xl text-primary font-bold px-2 sm:px-4 flex items-center gap-2">
+          {!logoError ? (
+            <img 
+              src="/logo.png" 
+              alt="Le Banquets" 
+              className="logo-img h-14 md:h-20 w-auto object-contain transition-all" 
+              onError={() => setLogoError(true)} 
+            />
+          ) : (
+            <span>Le Banquets</span>
+          )}
         </Link>
         <ThemeToggle />
       </div>
