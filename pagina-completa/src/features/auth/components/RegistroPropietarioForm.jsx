@@ -6,10 +6,8 @@ import ReCAPTCHA from "react-google-recaptcha";
 import { useAuth } from "../../../context/AuthContext";
 import toast from "react-hot-toast";
 
-// Lee la variable desde Vercel (o usa el fallback local)
-const RECAPTCHA_SITE_KEY =
-  import.meta.env.VITE_RECAPTCHA_KEY ||
-  "6LdUEaosAAAAAF1EmVRsI5ArwlBmzAwEA9bXwatp";
+// La clave del sitio de reCAPTCHA v2 (Hardcodeada para ignorar Vercel)
+const RECAPTCHA_SITE_KEY = "6LdUEaosAAAAAF1EmVRsI5ArwlBmzAwEA9bXwatp";
 
 const RegistroPropietarioForm = () => {
   const {
