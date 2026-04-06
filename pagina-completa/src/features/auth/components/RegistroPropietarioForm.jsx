@@ -9,7 +9,7 @@ import toast from "react-hot-toast";
 // Lee la variable desde Vercel (o usa el fallback local)
 const RECAPTCHA_SITE_KEY =
   import.meta.env.VITE_RECAPTCHA_KEY ||
-  "6LcLn78rAAAAAJvmvgAp8EuDFhKhVlNpnbWA3bHY";
+  "6LdUEaosAAAAAF1EmVRsI5ArwlBmzAwEA9bXwatp";
 
 const RegistroPropietarioForm = () => {
   const {

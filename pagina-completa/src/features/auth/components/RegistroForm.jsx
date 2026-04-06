@@ -9,7 +9,7 @@ import toast from "react-hot-toast";
 // La clave del sitio debe definirse en .env como VITE_RECAPTCHA_KEY
 const RECAPTCHA_SITE_KEY =
   import.meta.env.VITE_RECAPTCHA_KEY ||
-  "6LcLn78rAAAAAJvmvgAp8EuDFhKhVlNpnbWA3bHY";
+  "6LdUEaosAAAAAF1EmVRsI5ArwlBmzAwEA9bXwatp";
 
 const RegistroForm = () => {
   const {
